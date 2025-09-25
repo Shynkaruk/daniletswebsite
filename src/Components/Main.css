@@ -1,0 +1,49 @@
+.header {
+  width: 1792px;
+  height: 76px;
+  margin-top: 24px;
+  margin-left: 64px;
+  background: white;
+  border-radius: 64px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 32px; /* Внутрішні відступи (аналог px-8 у Tailwind = 32px) */
+}
+
+/* Логотип */
+.header-logo {
+  font-size: 1.5rem; /* 24px (аналог text-2xl) */
+  font-weight: 700; /* аналог font-bold */
+  color: black;
+}
+
+/* Навігація */
+.header-nav {
+  display: flex;
+  gap: 1rem; /* 16px (аналог space-x-4) */
+}
+
+.header-nav a {
+  color: black;
+  border: 1px solid #A1A1A5;
+  padding: 0.5rem 1rem; /* 8px 16px (аналог px-4 py-2) */
+  border-radius: 9999px; /* Повністю округлі краї (аналог rounded-full) */
+  text-decoration: none;
+  transition: background-color 0.3s ease; /* Плавний перехід (аналог transition) */
+}
+
+.header-nav a:hover {
+  background-color: rgba(245, 218, 147, 0.8); /* Фон при наведенні */
+}
+
+/* Кнопка BOOK ONLINE */
+.header-button {
+  color: black;
+  padding: 0.5rem 1rem; /* 8px 16px (аналог px-4 py-2) */
+  border-radius: 9999px; /* Повністю округлі краї (аналог rounded-full) */
+  font-weight: 600; /* аналог font-semibold */
+  background: linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%);
+  border: none;
+  cursor: pointer;
+}
