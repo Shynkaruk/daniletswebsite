@@ -151,4 +151,33 @@ function seedAdmin() {
 }
 seedAdmin();
 
+function seedCardsOnce() {
+  const count = db.prepare(`select count(*) as c from cards where type in ('service','addon')`).get().c;
+  if (count > 0) return;
+
+  const insert = db.prepare(`
+    insert into cards (type, title, subtitle, price, sort_order, published)
+    values (@type, @title, @subtitle, @price, @sort_order, @published)
+  `);
+
+  const services = [
+    { type:'service', title:'Ceramic Coating',       subtitle:'Full body ceramic coat',   price:299.99, sort_order:10, published:1 },
+    { type:'service', title:'Interior and Exterior', subtitle:'Complete detail in & out', price:199.99, sort_order:20, published:1 },
+    { type:'service', title:'Interior only',         subtitle:'Deep interior clean',      price: 99.99, sort_order:30, published:1 },
+    { type:'service', title:'Exterior only',         subtitle:'Wash, clay, wax',          price:109.99, sort_order:40, published:1 },
+  ];
+  const addons = [
+    { type:'addon', title:'Ozone Treatment',  subtitle:'Odor removal',        price:77.99, sort_order:10, published:1 },
+    { type:'addon', title:'Metal Polish',     subtitle:'Shine & protect',     price:77.99, sort_order:20, published:1 },
+    { type:'addon', title:'Sticker Removal',  subtitle:'Adhesive cleanup',    price:77.99, sort_order:30, published:1 },
+    { type:'addon', title:'Overspray',        subtitle:'Paint overspray fix', price:77.99, sort_order:40, published:1 },
+  ];
+
+  const tx = db.transaction((rows) => rows.forEach(r => insert.run(r)));
+  tx([...services, ...addons]);
+
+  console.log('[db] Seeded default services & addons');
+}
+seedCardsOnce();
+
 export default db;

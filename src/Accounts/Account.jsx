@@ -1,477 +1,423 @@
 // src/pages/Account.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Head from "../Components/Head";
 import Footer from "../Components/Footer";
-import { meApi } from "../lib/api";
-import logo from "../assets/logo/logo.svg";
+import { meApi, reqApi } from "../lib/api";
+import fon from "../assets/photo/fon-account.png";
 
-const gradient =
-  "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)";
+const GRADIENT =
+  "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
+
+const TABS = [
+  { key: "profile", label: "Personal Information" },
+  { key: "car", label: "Car Information" },
+  { key: "payment", label: "Payment Information" },
+  { key: "orders", label: "Past Orders" },
+];
 
 export default function Account() {
+  const [active, setActive] = useState("profile");
+
   return (
     <>
-      {/* Фіксований хедер поза контейнером */}
       <Head />
 
-      {/* Фон сторінки */}
       <div
-        className="min-h-screen w-full"
-        style={{ backgroundColor: "rgba(235, 235, 235, 1)" }}
+        className="min-h-screen w-full grid grid-rows-[auto,1fr,auto]"
+        style={{
+          backgroundImage: `url(${fon})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
       >
-        {/* Основний контентний контейнер */}
-        <main className="max-w-[1720px] mx-auto px-6 md:px-10 pt-48 pb-24">
-          <div className="relative bg-white/95 rounded-[40px] shadow-2xl border border-[#ECECEC] p-6 md:p-12">
-            {/* Шапка контейнера з великим логотипом */}
-            <div className="flex items-start md:items-center gap-6 mb-10">
-              <img
-                src={logo}
-                alt="Logo"
-                className="w-[160px] md:w-[190px] h-auto object-contain"
-              />
-              <div>
-                <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">
-                  My Account
-                </h1>
-                <p className="text-[#6B7280] mt-2 text-lg md:text-xl">
-                  Manage your profile, vehicles and payment methods
-                </p>
+        <main className="w-full">
+          {/* Більший відступ зверху від Header */}
+          <div className="max-w-[1160px] mx-auto px-4 pt-40 pb-6 text-center">
+            <h1 className="text-4xl font-extrabold text-[#18181B]">Your Profile</h1>
+          </div>
+
+          {/* Tabs — з великим правим відступом */}
+          <div className="max-w-[1160px] mx-auto px-4 mb-6">
+            {/* правий внутрішній відступ збільшує “повітря” праворуч */}
+            <div className="pr-24 md:pr-36 xl:pr-48">
+              <div className="inline-flex items-center bg-white/95 rounded-[999px] p-1 shadow-[0_6px_22px_rgba(0,0,0,0.07)] border border-[#ECECEC] gap-1">
+                {TABS.map((t) => {
+                  const isActive = active === t.key;
+                  return (
+                    <button
+                      key={t.key}
+                      onClick={() => setActive(t.key)}
+                      className={[
+                        "h-12 md:h-14 px-5 md:px-6 rounded-[999px] text-[14px] md:text-[15px] font-semibold transition whitespace-nowrap",
+                        isActive
+                          ? "bg-white shadow text-[#18181B]"
+                          : "text-[#5E5E61] hover:text-[#18181B]",
+                      ].join(" ")}
+                    >
+                      {t.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
+          </div>
 
-            {/* Секції — одна під одною */}
-            <div className="space-y-10">
-              <SectionCard title="Personal Information">
-                <ProfileSection />
-              </SectionCard>
-
-              <SectionCard title="Vehicles">
-                <VehiclesSection />
-              </SectionCard>
-
-              <SectionCard title="Payment Methods (safe)">
-                <PaymentsSection />
-              </SectionCard>
+          {/* Контейнер з контентом по центру */}
+          <div className="max-w-[1160px] mx-auto px-4 pb-16">
+            <div className="bg-white/95 rounded-[28px] shadow-[0_12px_38px_rgba(0,0,0,0.08)] border border-[#ECECEC] p-5 md:p-8">
+              {active === "profile" && <ProfileCard />}
+              {active === "car" && <CarCard />}
+              {active === "payment" && <PaymentCard />}
+              {active === "orders" && <OrdersCard />}
             </div>
           </div>
         </main>
-      </div>
 
-      {/* Футер поза контейнером */}
-      <Footer />
+        <Footer />
+      </div>
     </>
   );
 }
 
-/* ============== Обгортка для секцій ============== */
-function SectionCard({ title, children, right }) {
-  return (
-    <div className="bg-white rounded-[28px] border border-[#EFEFEF] shadow-md p-6 md:p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-3xl md:text-4xl font-bold">{title}</h2>
-        {right}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-/* ================= Profile ================= */
-function ProfileSection() {
+/* ======================= Personal Information ======================= */
+function ProfileCard() {
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
     phone: "",
+    birthday: "",
     email: "",
   });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    meApi.profile().then((u) => u && setForm(u));
+    (async () => {
+      try {
+        const u = await meApi.profile();
+        if (u) {
+          setForm((f) => ({
+            ...f,
+            first_name: u.first_name || "",
+            last_name: u.last_name || "",
+            phone: u.phone || "",
+            email: u.email || "",
+          }));
+        }
+      } catch {}
+    })();
   }, []);
 
   const onSave = async () => {
     setSaving(true);
-    await meApi.updateProfile({
-      first_name: form.first_name,
-      last_name: form.last_name,
-      phone: form.phone,
-    });
-    setSaving(false);
-    alert("Profile saved");
+    try {
+      await meApi.updateProfile({
+        first_name: form.first_name,
+        last_name: form.last_name,
+        phone: form.phone,
+      });
+      alert("Profile saved");
+    } catch {
+      alert("Failed to save profile");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <div>
-      <div className="grid md:grid-cols-2 gap-6">
-        <Field
-          label="First name"
+    <Section title="Your Contact Details">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+        <Input
+          placeholder="Enter your first name"
           value={form.first_name}
           onChange={(v) => setForm({ ...form, first_name: v })}
-          large
         />
-        <Field
-          label="Last name"
+        <Input
+          placeholder="Enter your last name"
           value={form.last_name}
           onChange={(v) => setForm({ ...form, last_name: v })}
-          large
         />
-      </div>
-      <div className="grid md:grid-cols-2 gap-6 mt-6">
-        <Field
-          label="Phone"
-          value={form.phone || ""}
+        <Input
+          placeholder="Enter your phone number"
+          value={form.phone}
           onChange={(v) => setForm({ ...form, phone: v })}
-          large
         />
-        <Field label="Email" value={form.email || ""} disabled large />
+        <Input
+          placeholder="Enter your birthday"
+          value={form.birthday}
+          onChange={(v) => setForm({ ...form, birthday: v })}
+        />
+        <Input
+          className="md:col-span-2"
+          placeholder="Enter your email"
+          value={form.email}
+          disabled
+        />
       </div>
-      <div className="mt-8">
-        <Button onClick={onSave} disabled={saving}>
-          {saving ? "Saving..." : "Save Profile"}
-        </Button>
-      </div>
-    </div>
+
+      <Actions
+        onChange={() => window.location.reload()}
+        onSave={onSave}
+        saveLabel={saving ? "Saving..." : "Save"}
+      />
+    </Section>
   );
 }
 
-/* ================= Vehicles ================= */
-function VehiclesSection() {
-  const empty = {
-    id: null,
-    make: "",
-    model: "",
-    year: "",
-    color: "",
-    plate: "",
-    vin: "",
-    notes: "",
+/* ======================= Car Information ======================= */
+function CarCard() {
+  const [year, setYear] = useState("");
+  const [make, setMake] = useState("");
+  const [model, setModel] = useState("");
+
+  const canSave = year.trim() || make.trim() || model.trim();
+
+  const onSave = async () => {
+    try {
+      await meApi.saveVehicle({ year, make, model });
+      alert("Vehicle saved");
+    } catch {
+      alert("Failed to save vehicle");
+    }
   };
+
+  return (
+    <Section title="Your Car Details">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+        <Input placeholder="Year of your car" value={year} onChange={setYear} />
+        <Input placeholder="Make of your car" value={make} onChange={setMake} />
+        <Input
+          className="md:col-span-2"
+          placeholder="Your car model"
+          value={model}
+          onChange={setModel}
+        />
+      </div>
+
+      <Actions
+        onChange={() => {
+          setYear("");
+          setMake("");
+          setModel("");
+        }}
+        onSave={onSave}
+        saveDisabled={!canSave}
+      />
+    </Section>
+  );
+}
+
+/* ======================= Payment Information ======================= */
+function PaymentCard() {
+  const [holder, setHolder] = useState("");
+  const [cvc, setCvc] = useState("");
+  const [exp, setExp] = useState("");
+  const [card, setCard] = useState("");
+
+  const onSave = () => {
+    alert("Demo only. Integrate your PSP (e.g., Stripe) to save cards securely.");
+  };
+
+  return (
+    <Section title="Your Payment Details">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+        <Input
+          className="md:col-span-2"
+          placeholder="Enter your cardholder name"
+          value={holder}
+          onChange={setHolder}
+        />
+        <Input placeholder="Enter your CVV / CVC" value={cvc} onChange={setCvc} />
+        <Input
+          placeholder="Enter your expiration date"
+          value={exp}
+          onChange={setExp}
+        />
+        <Input
+          className="md:col-span-2"
+          placeholder="Enter your card number"
+          value={card}
+          onChange={setCard}
+        />
+      </div>
+
+      <Actions onChange={() => {}} onSave={onSave} />
+    </Section>
+  );
+}
+
+/* ======================= Past Orders ======================= */
+function OrdersCard() {
   const [list, setList] = useState([]);
-  const [form, setForm] = useState(empty);
   const [loading, setLoading] = useState(true);
 
-  const load = async () => {
-    setLoading(true);
-    const r = await meApi.myVehicles();
-    setList(r || []);
-    setLoading(false);
-  };
   useEffect(() => {
-    load();
+    (async () => {
+      setLoading(true);
+      try {
+        const u = await meApi.profile();
+        const email = u?.email || "";
+        const first = u?.first_name || "";
+        const last = u?.last_name || "";
+
+        let orders = [];
+        if (typeof reqApi.my === "function") {
+          orders = (await reqApi.my()) || [];
+        } else if (typeof reqApi.listMine === "function") {
+          orders = (await reqApi.listMine()) || [];
+        } else if (typeof reqApi.list === "function") {
+          orders =
+            (await reqApi.list({
+              email,
+              first_name: first,
+              last_name: last,
+              limit: 50,
+            })) || [];
+        }
+
+        const normalized = (orders || []).map((o) => {
+          const items = safeParseJSON(o.items_json) || [];
+          const main = items[0]?.title || "Service";
+          return {
+            id: o.id,
+            title: main,
+            subtotal: Number(o.subtotal || 0),
+            tax: Number(o.tax || 0),
+            total: Number(o.total || 0),
+            status: o.status || "new",
+            created_at: o.created_at || o.createdAt || o.date || "",
+          };
+        });
+
+        setList(normalized);
+      } catch {
+        setList([]);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
-  const onSave = async () => {
-    await meApi.saveVehicle(form);
-    setForm(empty);
-    load();
-  };
-  const onDelete = async (id) => {
-    await meApi.deleteVehicle(id);
-    load();
-  };
-
   return (
-    <div className="space-y-8">
-      {/* Список */}
-      <div>
-        <h3 className="text-2xl md:text-3xl font-semibold mb-4">
-          Saved vehicles
-        </h3>
-        {loading ? (
-          <div className="text-xl">Loading…</div>
-        ) : (
-          <ul className="space-y-4">
-            {list.map((v) => (
-              <li
-                key={v.id}
-                className="p-5 rounded-2xl bg-[#F8F8F8] border shadow-sm flex items-start justify-between gap-4"
-              >
-                <div>
-                  <div className="text-2xl font-semibold">
-                    {v.year} {v.make} {v.model}
-                  </div>
-                  <div className="text-[#6B7280] text-lg">
-                    {v.color || "-"}
-                    {v.plate ? ` • ${v.plate}` : ""}
-                  </div>
-                  {v.notes && (
-                    <div className="text-base text-[#6B7280] mt-1">{v.notes}</div>
-                  )}
-                </div>
-                <div className="flex gap-3 shrink-0">
-                  <SmallButton onClick={() => setForm(v)}>Edit</SmallButton>
-                  <SmallButton onClick={() => onDelete(v.id)}>Delete</SmallButton>
-                </div>
-              </li>
-            ))}
-            {list.length === 0 && (
-              <li className="text-lg text-[#6B7280]">No vehicles yet</li>
-            )}
-          </ul>
-        )}
-      </div>
-
-      {/* Форма */}
-      <div>
-        <h3 className="text-2xl md:text-3xl font-semibold mb-4">
-          {form.id ? "Edit vehicle" : "Add vehicle"}
-        </h3>
-        <div className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
-            <Field
-              label="Make"
-              value={form.make}
-              onChange={(v) => setForm({ ...form, make: v })}
-              large
-            />
-            <Field
-              label="Model"
-              value={form.model}
-              onChange={(v) => setForm({ ...form, model: v })}
-              large
-            />
-          </div>
-          <div className="grid md:grid-cols-3 gap-4">
-            <Field
-              label="Year"
-              value={form.year}
-              onChange={(v) => setForm({ ...form, year: v })}
-              large
-            />
-            <Field
-              label="Color"
-              value={form.color}
-              onChange={(v) => setForm({ ...form, color: v })}
-              large
-            />
-            <Field
-              label="Plate"
-              value={form.plate}
-              onChange={(v) => setForm({ ...form, plate: v })}
-              large
-            />
-          </div>
-          <Field
-            label="VIN"
-            value={form.vin}
-            onChange={(v) => setForm({ ...form, vin: v })}
-            large
-          />
-          <TextArea
-            label="Notes"
-            value={form.notes || ""}
-            onChange={(v) => setForm({ ...form, notes: v })}
-            large
-          />
-          <div className="flex gap-3">
-            <Button onClick={onSave}>
-              {form.id ? "Save Changes" : "Add Vehicle"}
-            </Button>
-            {form.id && (
-              <OutlineButton onClick={() => setForm(empty)}>
-                Cancel
-              </OutlineButton>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ================= Payments (safe) ================= */
-function PaymentsSection() {
-  const empty = {
-    id: null,
-    brand: "visa",
-    last4: "",
-    exp_month: "",
-    exp_year: "",
-    is_default: false,
-  };
-  const [list, setList] = useState([]);
-  const [form, setForm] = useState(empty);
-
-  const load = async () => {
-    const r = await meApi.myPaymentMethods();
-    setList(r || []);
-  };
-  useEffect(() => {
-    load();
-  }, []);
-
-  const onSave = async () => {
-    if (!/^\d{4}$/.test(String(form.last4))) {
-      alert("Enter last 4 digits only");
-      return;
-    }
-    await meApi.savePaymentMethod(form);
-    setForm(empty);
-    load();
-  };
-  const onDelete = async (id) => {
-    await meApi.deletePaymentMethod(id);
-    load();
-  };
-
-  return (
-    <div className="space-y-8">
-      {/* Список */}
-      <div>
-        <h3 className="text-2xl md:text-3xl font-semibold mb-4">Saved cards</h3>
-        <ul className="space-y-4">
-          {list.map((pm) => (
-            <li
-              key={pm.id}
-              className="p-5 rounded-2xl bg-[#F8F8F8] border shadow-sm flex items-center justify-between"
+    <Section title="Your Past Orders">
+      {loading ? (
+        <div className="text-[#6B7280]">Loading…</div>
+      ) : list.length === 0 ? (
+        <div className="text-[#6B7280]">You don’t have any orders yet.</div>
+      ) : (
+        <div className="space-y-3">
+          {list.map((o, i) => (
+            <div
+              key={o.id ?? i}
+              className={[
+                "w-full rounded-[16px] border px-4 py-3 flex items-center justify-between",
+                i === 0 ? "bg-[#FAF3E6] border-[#F0E1C8]" : "bg-white border-[#EAEAEA]",
+              ].join(" ")}
             >
-              <div>
-                <div className="text-2xl font-semibold uppercase">
-                  {pm.brand} •••• {pm.last4}{" "}
-                  {pm.is_default ? (
-                    <span className="text-base font-normal text-[#6B7280]">
-                      (default)
-                    </span>
-                  ) : null}
+              <div className="min-w-0">
+                <div className="font-semibold text-[#18181B] truncate">
+                  {o.title}
                 </div>
-                <div className="text-lg text-[#6B7280]">
-                  exp {pm.exp_month}/{pm.exp_year}
+                <div className="text-sm text-[#6B7280]">
+                  {formatDate(o.created_at)}
                 </div>
               </div>
-              <div className="flex gap-3">
-                <SmallButton onClick={() => setForm(pm)}>Edit</SmallButton>
-                <SmallButton onClick={() => onDelete(pm.id)}>Delete</SmallButton>
+              <div className="shrink-0 text-sm text-[#111] font-semibold">
+                ${o.total.toFixed(2)}
               </div>
-            </li>
+            </div>
           ))}
-          {list.length === 0 && (
-            <li className="text-lg text-[#6B7280]">No cards saved</li>
-          )}
-        </ul>
-      </div>
-
-      {/* Форма */}
-      <div>
-        <h3 className="text-2xl md:text-3xl font-semibold mb-4">
-          {form.id ? "Edit card (safe fields)" : "Add card (safe fields)"}
-        </h3>
-        <div className="space-y-4">
-          <Field
-            label="Brand"
-            value={form.brand}
-            onChange={(v) => setForm({ ...form, brand: v })}
-            large
-          />
-          <div className="grid md:grid-cols-3 gap-4">
-            <Field
-              label="Last 4"
-              value={form.last4}
-              onChange={(v) => setForm({ ...form, last4: v })}
-              large
-            />
-            <Field
-              label="Exp Month"
-              value={form.exp_month}
-              onChange={(v) => setForm({ ...form, exp_month: v })}
-              large
-            />
-            <Field
-              label="Exp Year"
-              value={form.exp_year}
-              onChange={(v) => setForm({ ...form, exp_year: v })}
-              large
-            />
-          </div>
-          <label className="inline-flex items-center gap-3 text-lg">
-            <input
-              type="checkbox"
-              className="w-5 h-5"
-              checked={form.is_default}
-              onChange={(e) =>
-                setForm({ ...form, is_default: e.target.checked })
-              }
-            />
-            <span>Set as default</span>
-          </label>
-          <div className="flex gap-3">
-            <Button onClick={onSave}>
-              {form.id ? "Save Changes" : "Save Card"}
-            </Button>
-            {form.id && (
-              <OutlineButton onClick={() => setForm(empty)}>
-                Cancel
-              </OutlineButton>
-            )}
-          </div>
         </div>
+      )}
+
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+        <GrayButton>Previous Order Details</GrayButton>
+        <GoldButton>Repeat Order</GoldButton>
       </div>
+    </Section>
+  );
+}
+
+/* ======================= Reusable UI ======================= */
+function Section({ title, children }) {
+  return (
+    <div>
+      <div className="text-[15px] md:text-base font-semibold text-[#111] mb-3">
+        {title}
+      </div>
+      {children}
     </div>
   );
 }
 
-/* ================= UI helpers ================= */
-function Field({ label, value, onChange, disabled, large }) {
+function Input({ placeholder, value, onChange, disabled, className }) {
   return (
-    <label className="block">
-      <div className="text-xl md:text-2xl mb-2 font-semibold">{label}</div>
-      <input
-        disabled={disabled}
-        value={value ?? ""}
-        onChange={(e) => onChange?.(e.target.value)}
-        className={`w-full rounded-[16px] bg-[#F4F4F5] px-4 outline-none font-semibold
-          ${large ? "h-14 text-lg" : "h-12 text-base"} disabled:opacity-60`}
-      />
-    </label>
+    <input
+      placeholder={placeholder}
+      value={value}
+      disabled={disabled}
+      onChange={(e) => onChange?.(e.target.value)}
+      className={[
+        "w-full rounded-[16px] bg-[#F4F4F5] outline-none",
+        "h-[54px] md:h-[60px] px-4 md:px-5 text-[15px] md:text-[16px] font-medium",
+        "placeholder:text-[#9CA3AF] text-[#18181B]",
+        "disabled:opacity-60",
+        className || "",
+      ].join(" ")}
+    />
   );
 }
 
-function TextArea({ label, value, onChange, large }) {
+function Actions({ onChange, onSave, saveLabel = "Save", saveDisabled }) {
   return (
-    <label className="block">
-      <div className="text-xl md:text-2xl mb-2 font-semibold">{label}</div>
-      <textarea
-        rows={large ? 5 : 4}
-        value={value ?? ""}
-        onChange={(e) => onChange?.(e.target.value)}
-        className={`w-full rounded-[16px] bg-[#F4F4F5] px-4 py-3 outline-none font-semibold
-          ${large ? "text-lg" : "text-base"}`}
-      />
-    </label>
+    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+      <GrayButton onClick={onChange}>Change</GrayButton>
+      <GoldButton onClick={onSave} disabled={saveDisabled}>
+        {saveLabel}
+      </GoldButton>
+    </div>
   );
 }
 
-function Button({ children, onClick, disabled }) {
+function GrayButton({ children, onClick, disabled }) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className="h-14 px-7 rounded-[16px] text-lg font-semibold text-black disabled:opacity-60"
-      style={{ background: gradient }}
+      className="h-[48px] md:h-[56px] rounded-[16px] px-6 font-semibold text-[#111] bg-[#E9E9EB] hover:bg-[#E4E4E6] disabled:opacity-60"
     >
       {children}
     </button>
   );
 }
 
-function OutlineButton({ children, onClick }) {
+function GoldButton({ children, onClick, disabled }) {
   return (
     <button
       onClick={onClick}
-      className="h-14 px-7 rounded-[16px] text-lg font-semibold border"
+      disabled={disabled}
+      className="h-[48px] md:h-[56px] rounded-[16px] px-6 font-semibold text-black disabled:opacity-60"
+      style={{ background: GRADIENT }}
     >
       {children}
     </button>
   );
 }
 
-function SmallButton({ children, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className="h-11 px-5 rounded-[12px] text-base font-semibold border"
-    >
-      {children}
-    </button>
-  );
+/* ======================= Helpers ======================= */
+function safeParseJSON(v) {
+  if (!v) return null;
+  try {
+    return JSON.parse(v);
+  } catch {
+    return null;
+  }
+}
+function formatDate(v) {
+  if (!v) return "";
+  const d = new Date(v);
+  if (isNaN(d)) return String(v);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
 }

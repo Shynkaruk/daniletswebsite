@@ -8,14 +8,27 @@ const gradient =
 // 3 request statuses
 const UI_STATUSES = ["confirmed", "cancelled", "done"];
 const TABS = ["confirmed", "cancelled", "done", "services"];
+const CATEGORIES = [
+  { key: "cleaning", label: "Cleaning" },
+  { key: "detailing", label: "Detailing" },
+  { key: "media", label: "Media" },
+  { key: "pickleball", label: "Pickleball" },
+];
+const TYPE_TABS = ["service", "addon"];
 
 /* ================= MAIN ================= */
 
 export default function AdminRequests() {
   const [activeTab, setActiveTab] = useState("confirmed");
+  const [svcTypeTab, setSvcTypeTab] = useState("service"); // "service" | "addon"
+  const [svcCategory, setSvcCategory] = useState(""); // "" = All
 
   // ----- requests state -----
-  const [lists, setLists] = useState({ confirmed: [], cancelled: [], done: [] });
+  const [lists, setLists] = useState({
+    confirmed: [],
+    cancelled: [],
+    done: [],
+  });
   const [reqLoading, setReqLoading] = useState(false);
   const [editing, setEditing] = useState(null);
 
@@ -38,14 +51,16 @@ export default function AdminRequests() {
       setReqLoading(false);
     }
   };
-  useEffect(() => { loadAllReq(); }, []);
+  useEffect(() => {
+    loadAllReq();
+  }, []);
 
   const upsertReqIntoTab = (row, statusKey) => {
-    setLists(prev => {
+    setLists((prev) => {
       const next = {
-        confirmed: prev.confirmed.filter(x => x.id !== row.id),
-        cancelled: prev.cancelled.filter(x => x.id !== row.id),
-        done: prev.done.filter(x => x.id !== row.id),
+        confirmed: prev.confirmed.filter((x) => x.id !== row.id),
+        cancelled: prev.cancelled.filter((x) => x.id !== row.id),
+        done: prev.done.filter((x) => x.id !== row.id),
       };
       next[statusKey] = [row, ...next[statusKey]];
       return next;
@@ -71,8 +86,15 @@ export default function AdminRequests() {
   const loadServices = async () => {
     setSvcLoading(true);
     try {
-      const rows = await cardsApi.list({ type: "service" });
-      setServices(rows || []);
+      // тягнемо потрібний тип (service | addon)
+      const rows = await cardsApi.list({ type: svcTypeTab });
+      const filtered = Array.isArray(rows)
+        ? rows
+            // фільтр по категорії (slug зберігає category key)
+            .filter((r) => !svcCategory || (r.slug || "") === svcCategory)
+            .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+        : [];
+      setServices(filtered);
     } finally {
       setSvcLoading(false);
     }
@@ -80,13 +102,17 @@ export default function AdminRequests() {
 
   useEffect(() => {
     if (activeTab === "services") loadServices();
-  }, [activeTab]);
+  }, [activeTab, svcTypeTab, svcCategory]);
 
   const onSaveService = async () => {
-    const payload = { ...svcEditing, type: "service", price: +svcEditing.price || 0 };
+    const payload = {
+      ...svcEditing,
+      type: svcEditing.type || svcTypeTab, // service | addon
+      price: +svcEditing.price || 0,
+      slug: (svcEditing.slug ?? svcCategory) || "", // category key у slug
+    };
     const saved = await cardsApi.save(payload);
     setSvcEditing(null);
-    // refresh list
     await loadServices();
     return saved;
   };
@@ -147,7 +173,11 @@ export default function AdminRequests() {
           {TABS.map((t) => {
             const isActive = activeTab === t;
             const count =
-              t === "services" ? undefined : (counters[t] ? ` (${counters[t]})` : "");
+              t === "services"
+                ? undefined
+                : counters[t]
+                ? ` (${counters[t]})`
+                : "";
             const label = t === "services" ? "Services & Prices" : t;
             return (
               <button
@@ -155,10 +185,13 @@ export default function AdminRequests() {
                 onClick={() => setActiveTab(t)}
                 className={[
                   "px-6 py-3 rounded-full text-[16px] font-semibold transition whitespace-nowrap",
-                  isActive ? "bg-white shadow text-[#18181B]" : "text-[#5E5E61] hover:text-[#18181B]"
+                  isActive
+                    ? "bg-white shadow text-[#18181B]"
+                    : "text-[#5E5E61] hover:text-[#18181B]",
                 ].join(" ")}
               >
-                {label}{count || ""}
+                {label}
+                {count || ""}
               </button>
             );
           })}
@@ -166,8 +199,8 @@ export default function AdminRequests() {
       </div>
 
       {/* -------- Requests lists -------- */}
-      {activeTab !== "services" && (
-        reqLoading ? (
+      {activeTab !== "services" &&
+        (reqLoading ? (
           <div className="text-[#6B7280]">Loading…</div>
         ) : (
           <div className="grid md:grid-cols-2 gap-6">
@@ -178,7 +211,9 @@ export default function AdminRequests() {
                 onEdit={() => setEditing(r)}
                 onStatusChange={async (s) => {
                   const updated = await adminReqApi.save({ ...r, status: s });
-                  const key = UI_STATUSES.includes(updated.status) ? updated.status : "confirmed";
+                  const key = UI_STATUSES.includes(updated.status)
+                    ? updated.status
+                    : "confirmed";
                   upsertReqIntoTab(updated, key);
                 }}
               />
@@ -187,20 +222,85 @@ export default function AdminRequests() {
               <div className="text-[#6B7280]">No requests in this tab.</div>
             )}
           </div>
-        )
-      )}
+        ))}
 
       {/* -------- Services tab -------- */}
       {activeTab === "services" && (
         <div className="bg-white rounded-2xl border border-[#eee] shadow-sm">
-          <div className="p-4 flex items-center justify-between">
-            <div className="font-bold">Services & Prices</div>
+          <div className="p-4 flex items-center gap-3 flex-wrap">
+            <div className="font-bold mr-auto">Services & Prices</div>
+
+            {/* Type tabs */}
+            <div className="inline-flex gap-2 bg-[#F2F2F2] rounded-full p-1">
+              {TYPE_TABS.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setSvcTypeTab(t)}
+                  className={[
+                    "px-4 py-2 rounded-full text-sm font-semibold",
+                    svcTypeTab === t
+                      ? "bg-white shadow text-[#18181B]"
+                      : "text-[#5E5E61]",
+                  ].join(" ")}
+                >
+                  {t === "service" ? "Services" : "Add-ons"}
+                </button>
+              ))}
+            </div>
+
+            {/* Category filter */}
+            <div className="inline-flex gap-2 bg-[#F2F2F2] rounded-full p-1">
+              <button
+                onClick={() => setSvcCategory("")}
+                className={[
+                  "px-4 py-2 rounded-full text-sm font-semibold",
+                  svcCategory === ""
+                    ? "bg-white shadow text-[#18181B]"
+                    : "text-[#5E5E61]",
+                ].join(" ")}
+              >
+                All
+              </button>
+              {CATEGORIES.map((c) => (
+                <button
+                  key={c.key}
+                  onClick={() => setSvcCategory(c.key)}
+                  className={[
+                    "px-4 py-2 rounded-full text-sm font-semibold",
+                    svcCategory === c.key
+                      ? "bg-white shadow text-[#18181B]"
+                      : "text-[#5E5E61]",
+                  ].join(" ")}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+
             <button
               onClick={loadServices}
               className="px-3 py-2 rounded-xl border bg-white"
-              title="Refresh"
             >
               Refresh
+            </button>
+            <button
+              onClick={() =>
+                setSvcEditing({
+                  id: undefined,
+                  type: svcTypeTab,
+                  title: "",
+                  subtitle: "",
+                  body: "",
+                  price: 0,
+                  sort_order: 0,
+                  published: 1,
+                  slug: svcCategory || "",
+                })
+              }
+              className="px-5 py-2 rounded-[12px] font-semibold text-black"
+              style={{ background: gradient }}
+            >
+              New {svcTypeTab === "service" ? "Service" : "Add-on"}
             </button>
           </div>
 
@@ -209,14 +309,15 @@ export default function AdminRequests() {
           ) : (
             <div className="p-4 pt-0">
               {services.length === 0 ? (
-                <div className="text-[#6B7280]">No services yet.</div>
+                <div className="text-[#6B7280]">No items yet.</div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left min-w-[720px]">
+                  <table className="w-full text-left min-w-[860px]">
                     <thead>
                       <tr className="text-[#6B7280] text-sm border-b">
                         <th className="py-3 pr-3">Title</th>
                         <th className="py-3 pr-3">Subtitle</th>
+                        <th className="py-3 pr-3">Category</th>
                         <th className="py-3 pr-3">Price</th>
                         <th className="py-3 pr-3">Sort</th>
                         <th className="py-3 pr-3">Published</th>
@@ -227,14 +328,26 @@ export default function AdminRequests() {
                       {services.map((s) => (
                         <tr key={s.id} className="border-b last:border-b-0">
                           <td className="py-3 pr-3">{s.title}</td>
-                          <td className="py-3 pr-3 text-[#6B7280]">{s.subtitle || "—"}</td>
-                          <td className="py-3 pr-3">${(s.price ?? 0).toFixed(2)}</td>
+                          <td className="py-3 pr-3 text-[#6B7280]">
+                            {s.subtitle || "—"}
+                          </td>
+                          <td className="py-3 pr-3">
+                            {CATEGORIES.find((c) => c.key === (s.slug || ""))
+                              ?.label || "—"}
+                          </td>
+                          <td className="py-3 pr-3">
+                            ${(s.price ?? 0).toFixed(2)}
+                          </td>
                           <td className="py-3 pr-3">{s.sort_order ?? 0}</td>
                           <td className="py-3 pr-3">
                             {s.published ? (
-                              <span className="px-2 py-1 rounded-full text-xs bg-[#ECFDF5] text-[#059669]">published</span>
+                              <span className="px-2 py-1 rounded-full text-xs bg-[#ECFDF5] text-[#059669]">
+                                published
+                              </span>
                             ) : (
-                              <span className="px-2 py-1 rounded-full text-xs bg-[#F3F4F6] text-[#6B7280]">draft</span>
+                              <span className="px-2 py-1 rounded-full text-xs bg-[#F3F4F6] text-[#6B7280]">
+                                draft
+                              </span>
                             )}
                           </td>
                           <td className="py-3 pr-3">
@@ -268,9 +381,14 @@ export default function AdminRequests() {
       {editing && (
         <Modal onClose={() => setEditing(null)}>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold">Edit Request #{editing.id ?? "new"}</h3>
+            <h3 className="text-xl font-bold">
+              Edit Request #{editing.id ?? "new"}
+            </h3>
             <div className="flex gap-2">
-              <button onClick={() => setEditing(null)} className="px-4 py-2 rounded-xl border bg-white">
+              <button
+                onClick={() => setEditing(null)}
+                className="px-4 py-2 rounded-xl border bg-white"
+              >
                 Cancel
               </button>
               <button
@@ -284,29 +402,85 @@ export default function AdminRequests() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
-            <Field label="User ID" value={editing.user_id || ""} onChange={(v)=>setEditing({ ...editing, user_id: v })} />
-            <Select label="Status" value={editing.status} options={UI_STATUSES} onChange={(v)=>setEditing({ ...editing, status: v })} />
-            <Select label="Location Type" value={editing.location_type} options={["shop","mobile","pickup"]} onChange={(v)=>setEditing({ ...editing, location_type: v })} />
-            <Field label="Service Date" value={editing.service_date || ""} onChange={(v)=>setEditing({ ...editing, service_date: v })}/>
-            <Field label="Time Window" value={editing.time_window || ""} onChange={(v)=>setEditing({ ...editing, time_window: v })}/>
-            <Field label="Service address" value={editing.service_address || ""} onChange={(v)=>setEditing({ ...editing, service_address: v })}/>
-            <Field label="Pickup address" value={editing.pickup_address || ""} onChange={(v)=>setEditing({ ...editing, pickup_address: v })}/>
-            <Field label="Drop-off address" value={editing.dropoff_address || ""} onChange={(v)=>setEditing({ ...editing, dropoff_address: v })}/>
+            <Field
+              label="User ID"
+              value={editing.user_id || ""}
+              onChange={(v) => setEditing({ ...editing, user_id: v })}
+            />
+            <Select
+              label="Status"
+              value={editing.status}
+              options={UI_STATUSES}
+              onChange={(v) => setEditing({ ...editing, status: v })}
+            />
+            <Select
+              label="Location Type"
+              value={editing.location_type}
+              options={["shop", "mobile", "pickup"]}
+              onChange={(v) => setEditing({ ...editing, location_type: v })}
+            />
+            <Field
+              label="Service Date"
+              value={editing.service_date || ""}
+              onChange={(v) => setEditing({ ...editing, service_date: v })}
+            />
+            <Field
+              label="Time Window"
+              value={editing.time_window || ""}
+              onChange={(v) => setEditing({ ...editing, time_window: v })}
+            />
+            <Field
+              label="Service address"
+              value={editing.service_address || ""}
+              onChange={(v) => setEditing({ ...editing, service_address: v })}
+            />
+            <Field
+              label="Pickup address"
+              value={editing.pickup_address || ""}
+              onChange={(v) => setEditing({ ...editing, pickup_address: v })}
+            />
+            <Field
+              label="Drop-off address"
+              value={editing.dropoff_address || ""}
+              onChange={(v) => setEditing({ ...editing, dropoff_address: v })}
+            />
 
             <ServicesEditor
               itemsJson={editing.items_json}
-              onChange={(json)=>setEditing({ ...editing, items_json: json })}
-              onTotals={(sub,tax,total)=>setEditing({ ...editing, subtotal: sub, tax, total })}
+              onChange={(json) => setEditing({ ...editing, items_json: json })}
+              onTotals={(sub, tax, total) =>
+                setEditing({ ...editing, subtotal: sub, tax, total })
+              }
             />
 
             <div className="grid grid-cols-3 gap-3">
-              <Field label="Subtotal" value={editing.subtotal ?? 0} onChange={(v)=>setEditing({ ...editing, subtotal: +v || 0 })}/>
-              <Field label="Tax" value={editing.tax ?? 0} onChange={(v)=>setEditing({ ...editing, tax: +v || 0 })}/>
-              <Field label="Total" value={editing.total ?? 0} onChange={(v)=>setEditing({ ...editing, total: +v || 0 })}/>
+              <Field
+                label="Subtotal"
+                value={editing.subtotal ?? 0}
+                onChange={(v) => setEditing({ ...editing, subtotal: +v || 0 })}
+              />
+              <Field
+                label="Tax"
+                value={editing.tax ?? 0}
+                onChange={(v) => setEditing({ ...editing, tax: +v || 0 })}
+              />
+              <Field
+                label="Total"
+                value={editing.total ?? 0}
+                onChange={(v) => setEditing({ ...editing, total: +v || 0 })}
+              />
             </div>
 
-            <TextArea label="Customer notes" value={editing.notes_customer || ""} onChange={(v)=>setEditing({ ...editing, notes_customer: v })}/>
-            <TextArea label="Admin notes" value={editing.notes_admin || ""} onChange={(v)=>setEditing({ ...editing, notes_admin: v })}/>
+            <TextArea
+              label="Customer notes"
+              value={editing.notes_customer || ""}
+              onChange={(v) => setEditing({ ...editing, notes_customer: v })}
+            />
+            <TextArea
+              label="Admin notes"
+              value={editing.notes_admin || ""}
+              onChange={(v) => setEditing({ ...editing, notes_admin: v })}
+            />
           </div>
         </Modal>
       )}
@@ -316,10 +490,17 @@ export default function AdminRequests() {
         <Modal onClose={() => setSvcEditing(null)}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold">
-              {svcEditing.id ? `Edit Service #${svcEditing.id}` : "New Service"}
+              {svcEditing.id
+                ? `Edit ${
+                    svcEditing.type === "addon" ? "Add-on" : "Service"
+                  } #${svcEditing.id}`
+                : `New ${svcEditing.type === "addon" ? "Add-on" : "Service"}`}
             </h3>
             <div className="flex gap-2">
-              <button onClick={() => setSvcEditing(null)} className="px-4 py-2 rounded-xl border bg-white">
+              <button
+                onClick={() => setSvcEditing(null)}
+                className="px-4 py-2 rounded-xl border bg-white"
+              >
                 Cancel
               </button>
               <button
@@ -333,20 +514,55 @@ export default function AdminRequests() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
-            <Field label="Title" value={svcEditing.title || ""} onChange={(v)=>setSvcEditing({ ...svcEditing, title: v })}/>
-            <Field label="Price (USD)" value={svcEditing.price ?? 0} onChange={(v)=>setSvcEditing({ ...svcEditing, price: v })}/>
-            <Field label="Subtitle" value={svcEditing.subtitle || ""} onChange={(v)=>setSvcEditing({ ...svcEditing, subtitle: v })}/>
-            <Field label="Sort order" value={svcEditing.sort_order ?? 0} onChange={(v)=>setSvcEditing({ ...svcEditing, sort_order: +v || 0 })}/>
+            {/* NEW: Type */}
+            <Select
+              label="Type"
+              value={svcEditing.type || "service"}
+              options={["service", "addon"]}
+              onChange={(v) => setSvcEditing({ ...svcEditing, type: v })}
+            />
+            {/* NEW: Category (stored in slug) */}
+            <Select
+              label="Category"
+              value={svcEditing.slug || ""}
+              options={["", ...CATEGORIES.map((c) => c.key)]}
+              onChange={(v) => setSvcEditing({ ...svcEditing, slug: v })}
+            />
+
+            <Field
+              label="Title"
+              value={svcEditing.title || ""}
+              onChange={(v) => setSvcEditing({ ...svcEditing, title: v })}
+            />
+            <Field
+              label="Price (USD)"
+              value={svcEditing.price ?? 0}
+              onChange={(v) => setSvcEditing({ ...svcEditing, price: v })}
+            />
+            <Field
+              label="Subtitle"
+              value={svcEditing.subtitle || ""}
+              onChange={(v) => setSvcEditing({ ...svcEditing, subtitle: v })}
+            />
+            <Field
+              label="Sort order"
+              value={svcEditing.sort_order ?? 0}
+              onChange={(v) =>
+                setSvcEditing({ ...svcEditing, sort_order: +v || 0 })
+              }
+            />
             <Select
               label="Published"
-              value={(svcEditing.published ?? 1) ? "1" : "0"}
-              options={["1","0"]}
-              onChange={(v)=>setSvcEditing({ ...svcEditing, published: v === "1" ? 1 : 0 })}
+              value={svcEditing.published ?? 1 ? "1" : "0"}
+              options={["1", "0"]}
+              onChange={(v) =>
+                setSvcEditing({ ...svcEditing, published: v === "1" ? 1 : 0 })
+              }
             />
             <TextArea
               label="Description"
               value={svcEditing.body || ""}
-              onChange={(v)=>setSvcEditing({ ...svcEditing, body: v })}
+              onChange={(v) => setSvcEditing({ ...svcEditing, body: v })}
             />
           </div>
         </Modal>
@@ -358,7 +574,10 @@ export default function AdminRequests() {
 /* ================= REQUEST CARD ================= */
 
 function RequestCard({ row, onEdit, onStatusChange }) {
-  const fullName = (row.user_full_name && row.user_full_name.trim()) ? row.user_full_name : "Unknown name";
+  const fullName =
+    row.user_full_name && row.user_full_name.trim()
+      ? row.user_full_name
+      : "Unknown name";
   const total = (row.total ?? 0).toFixed(2);
   const phone = normalizePhone(row.user_phone || "");
   const hasPhone = !!phone;
@@ -369,11 +588,14 @@ function RequestCard({ row, onEdit, onStatusChange }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="font-semibold text-[18px] leading-tight truncate">
-            <span className="mr-1">#{row.id}</span>• <span className="ml-1">{fullName}</span>
+            <span className="mr-1">#{row.id}</span>•{" "}
+            <span className="ml-1">{fullName}</span>
           </div>
           <div className="text-sm text-[#6B7280] mt-1 break-words">
             {hasPhone ? (
-              <a className="underline" href={`tel:${phone}`}>{formatDisplayPhone(phone)}</a>
+              <a className="underline" href={`tel:${phone}`}>
+                {formatDisplayPhone(phone)}
+              </a>
             ) : (
               <>No phone</>
             )}
@@ -390,24 +612,25 @@ function RequestCard({ row, onEdit, onStatusChange }) {
       <div className="mt-3 text-[14px] text-[#111] space-y-2 break-words">
         <Section title="Vehicle">
           <div className="text-[14px]">
-            {row.vehicle_year || row.vehicle_make || row.vehicle_model
-              ? (
-                <>
-                  <div className="font-medium">
-                    {row.vehicle_year ? `${row.vehicle_year} ` : ""}
-                    {row.vehicle_make || ""} {row.vehicle_model || ""}
-                  </div>
-                  <div className="text-[#6B7280]">ID: {row.vehicle_id ?? "—"}</div>
-                </>
-              )
-              : <span className="text-[#6B7280]">—</span>
-            }
+            {row.vehicle_year || row.vehicle_make || row.vehicle_model ? (
+              <>
+                <div className="font-medium">
+                  {row.vehicle_year ? `${row.vehicle_year} ` : ""}
+                  {row.vehicle_make || ""} {row.vehicle_model || ""}
+                </div>
+                <div className="text-[#6B7280]">
+                  ID: {row.vehicle_id ?? "—"}
+                </div>
+              </>
+            ) : (
+              <span className="text-[#6B7280]">—</span>
+            )}
           </div>
         </Section>
 
         <div className="grid grid-cols-[110px_1fr] gap-x-2 gap-y-1">
           <span className="text-[#6B7280]">Location:</span>
-          <span className="truncate">{row.location_type?.slice(0,4)}…</span>
+          <span className="truncate">{row.location_type?.slice(0, 4)}…</span>
 
           <span className="text-[#6B7280]">Date:</span>
           <span> {row.service_date || "—"} </span>
@@ -451,7 +674,7 @@ function RequestCard({ row, onEdit, onStatusChange }) {
           Edit
         </button>
 
-        <StatusSelect value={row.status} onChange={onStatusChange}/>
+        <StatusSelect value={row.status} onChange={onStatusChange} />
       </div>
     </div>
   );
@@ -467,7 +690,9 @@ function Badge({ status }) {
   };
   const cls = map[status] || "bg-[#F3F4F6] text-[#6B7280]";
   return (
-    <div className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold ${cls}`}>
+    <div
+      className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold ${cls}`}
+    >
       {status || "new"}
     </div>
   );
@@ -476,7 +701,9 @@ function Badge({ status }) {
 function Section({ title, children }) {
   return (
     <div className="rounded-xl border border-[#eee] p-3 bg-[#FAFAFA]">
-      <div className="text-[13px] font-semibold text-[#6B7280] mb-2">{title}</div>
+      <div className="text-[13px] font-semibold text-[#6B7280] mb-2">
+        {title}
+      </div>
       {children}
     </div>
   );
@@ -484,14 +711,21 @@ function Section({ title, children }) {
 
 function ItemsList({ itemsJson }) {
   let items = [];
-  try { items = JSON.parse(itemsJson || "[]") || []; } catch {}
+  try {
+    items = JSON.parse(itemsJson || "[]") || [];
+  } catch {}
   if (!items.length) return <div className="text-[#6B7280]">No services</div>;
   return (
     <div className="space-y-1">
       {items.map((it, i) => (
-        <div key={i} className="flex items-center justify-between gap-2 text-[14px]">
+        <div
+          key={i}
+          className="flex items-center justify-between gap-2 text-[14px]"
+        >
           <span className="truncate">{it.title}</span>
-          <span className="shrink-0">${(it.price ?? 0).toFixed(2)} × {it.qty ?? 1}</span>
+          <span className="shrink-0">
+            ${(it.price ?? 0).toFixed(2)} × {it.qty ?? 1}
+          </span>
         </div>
       ))}
     </div>
@@ -504,12 +738,18 @@ function StatusSelect({ value, onChange }) {
     <div className="relative">
       <select
         value={val}
-        onChange={(e)=>onChange?.(e.target.value)}
+        onChange={(e) => onChange?.(e.target.value)}
         className="h-12 min-w-[180px] rounded-2xl border px-4 pr-10 bg-white"
       >
-        {UI_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+        {UI_STATUSES.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
       </select>
-      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">▾</span>
+      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+        ▾
+      </span>
     </div>
   );
 }
@@ -533,35 +773,67 @@ function Modal({ children, onClose }) {
 
 function ServicesEditor({ itemsJson, onChange, onTotals }) {
   let initial = [];
-  try { initial = JSON.parse(itemsJson || "[]") || []; } catch {}
+  try {
+    initial = JSON.parse(itemsJson || "[]") || [];
+  } catch {}
   const [rows, setRows] = useState(initial);
 
   useEffect(() => {
     const json = JSON.stringify(rows);
     onChange?.(json);
-    const sub = rows.reduce((s,r)=>s + (Number(r.price)||0) * (Number(r.qty)||1), 0);
+    const sub = rows.reduce(
+      (s, r) => s + (Number(r.price) || 0) * (Number(r.qty) || 1),
+      0
+    );
     const tax = +(sub * 0.07).toFixed(2);
     const total = +(sub + tax).toFixed(2);
     onTotals?.(sub, tax, total);
   }, [rows]);
 
-  const update = (i, patch) => setRows(prev => prev.map((r,idx)=> idx===i ? { ...r, ...patch } : r));
-  const add = () => setRows(prev => [...prev, { title:"", price:0, qty:1 }]);
-  const remove = (i) => setRows(prev => prev.filter((_,idx)=>idx!==i));
+  const update = (i, patch) =>
+    setRows((prev) =>
+      prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r))
+    );
+  const add = () =>
+    setRows((prev) => [...prev, { title: "", price: 0, qty: 1 }]);
+  const remove = (i) => setRows((prev) => prev.filter((_, idx) => idx !== i));
 
   return (
     <div className="md:col-span-2">
       <div className="text-sm font-semibold mb-2">Services & Prices</div>
       <div className="space-y-2">
-        {rows.map((r,i)=>(
+        {rows.map((r, i) => (
           <div key={i} className="grid grid-cols-[1fr_120px_100px_36px] gap-2">
-            <input className="h-11 rounded-xl bg-[#F4F4F5] px-3 outline-none" placeholder="Service title" value={r.title} onChange={(e)=>update(i,{title:e.target.value})}/>
-            <input className="h-11 rounded-xl bg-[#F4F4F5] px-3 outline-none" placeholder="Price" value={r.price} onChange={(e)=>update(i,{price: +e.target.value || 0})}/>
-            <input className="h-11 rounded-xl bg-[#F4F4F5] px-3 outline-none" placeholder="Qty" value={r.qty} onChange={(e)=>update(i,{qty: +e.target.value || 1})}/>
-            <button onClick={()=>remove(i)} className="h-11 rounded-xl border" title="Remove">×</button>
+            <input
+              className="h-11 rounded-xl bg-[#F4F4F5] px-3 outline-none"
+              placeholder="Service title"
+              value={r.title}
+              onChange={(e) => update(i, { title: e.target.value })}
+            />
+            <input
+              className="h-11 rounded-xl bg-[#F4F4F5] px-3 outline-none"
+              placeholder="Price"
+              value={r.price}
+              onChange={(e) => update(i, { price: +e.target.value || 0 })}
+            />
+            <input
+              className="h-11 rounded-xl bg-[#F4F4F5] px-3 outline-none"
+              placeholder="Qty"
+              value={r.qty}
+              onChange={(e) => update(i, { qty: +e.target.value || 1 })}
+            />
+            <button
+              onClick={() => remove(i)}
+              className="h-11 rounded-xl border"
+              title="Remove"
+            >
+              ×
+            </button>
           </div>
         ))}
-        <button onClick={add} className="px-4 h-11 rounded-xl border">Add service</button>
+        <button onClick={add} className="px-4 h-11 rounded-xl border">
+          Add service
+        </button>
       </div>
     </div>
   );
@@ -575,7 +847,7 @@ function Field({ label, value, onChange }) {
       <div className="text-sm mb-1">{label}</div>
       <input
         value={value ?? ""}
-        onChange={(e)=>onChange?.(e.target.value)}
+        onChange={(e) => onChange?.(e.target.value)}
         className="w-full h-11 rounded-xl bg-[#F4F4F5] px-3 outline-none"
       />
     </label>
@@ -588,7 +860,7 @@ function TextArea({ label, value, onChange }) {
       <textarea
         rows={4}
         value={value ?? ""}
-        onChange={(e)=>onChange?.(e.target.value)}
+        onChange={(e) => onChange?.(e.target.value)}
         className="w-full rounded-xl bg-[#F4F4F5] px-3 py-2 outline-none"
       />
     </label>
@@ -600,10 +872,14 @@ function Select({ label, value, onChange, options }) {
       <div className="text-sm mb-1">{label}</div>
       <select
         value={value}
-        onChange={(e)=>onChange?.(e.target.value)}
+        onChange={(e) => onChange?.(e.target.value)}
         className="w-full h-11 rounded-xl bg-[#F4F4F5] px-3 outline-none"
       >
-        {options.map(o => <option key={o} value={o}>{o}</option>)}
+        {options.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
       </select>
     </label>
   );
@@ -612,7 +888,7 @@ function Select({ label, value, onChange, options }) {
 /* ================= PHONE HELPERS ================= */
 
 function normalizePhone(raw) {
-  const digits = String(raw || "").replace(/\D+/g,"");
+  const digits = String(raw || "").replace(/\D+/g, "");
   if (!digits) return "";
   if (digits.length === 10) return "+1" + digits;
   if (digits.startsWith("1") && digits.length === 11) return "+" + digits;
@@ -620,13 +896,17 @@ function normalizePhone(raw) {
   return raw;
 }
 function formatDisplayPhone(p) {
-  const d = p.replace(/\D+/g,"");
+  const d = p.replace(/\D+/g, "");
   if (d.length === 11 && d.startsWith("1")) {
-    const a = d.slice(1,4), b = d.slice(4,7), c = d.slice(7);
+    const a = d.slice(1, 4),
+      b = d.slice(4, 7),
+      c = d.slice(7);
     return `+1 (${a}) ${b}-${c}`;
   }
   if (d.length === 10) {
-    const a = d.slice(0,3), b = d.slice(3,6), c = d.slice(6);
+    const a = d.slice(0, 3),
+      b = d.slice(3, 6),
+      c = d.slice(6);
     return `+1 (${a}) ${b}-${c}`;
   }
   return p;

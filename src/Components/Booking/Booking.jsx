@@ -15,13 +15,18 @@ import { LuTruck, LuStore, LuStar } from "react-icons/lu";
 import { auth, meApi, reqApi, cardsApi } from "../../lib/api";
 
 /** ======= Google Places loader (без сторонніх бібліотек) ======= */
-function useGooglePlaces({ language = "en", region = "US", countries = ["us"] } = {}) {
+function useGooglePlaces({
+  language = "en",
+  region = "US",
+  countries = ["us"],
+} = {}) {
   const [ready, setReady] = useState(false);
   const autoSvcRef = useRef(null);
   const placesSvcRef = useRef(null);
 
   useEffect(() => {
-    const existing = window.google && window.google.maps && window.google.maps.places;
+    const existing =
+      window.google && window.google.maps && window.google.maps.places;
     if (existing) {
       setReady(true);
       return;
@@ -61,7 +66,9 @@ function useGooglePlaces({ language = "en", region = "US", countries = ["us"] } 
         {
           input,
           types: ["address"],
-          componentRestrictions: countries?.length ? { country: countries } : undefined,
+          componentRestrictions: countries?.length
+            ? { country: countries }
+            : undefined,
         },
         (preds) => resolve(preds || [])
       );
@@ -74,7 +81,13 @@ function useGooglePlaces({ language = "en", region = "US", countries = ["us"] } 
       placesSvcRef.current.getDetails(
         {
           placeId,
-          fields: ["formatted_address", "geometry", "address_components", "name", "place_id"],
+          fields: [
+            "formatted_address",
+            "geometry",
+            "address_components",
+            "name",
+            "place_id",
+          ],
         },
         (res, status) => resolve(status === "OK" ? res : null)
       );
@@ -86,13 +99,25 @@ function useGooglePlaces({ language = "en", region = "US", countries = ["us"] } 
 
 const GOLD = "#E1C07B";
 const GRAY = "#A8A8AD";
+  const CATEGORY_TABS = [
+    { label: "Cleaning", key: "cleaning" },
+    { label: "Detailing", key: "detailing" },
+    { label: "Media", key: "media" },
+    { label: "Pickleball", key: "pickleball" },
+  ];
 
 // податок (7%)
 const TAX_RATE = 0.07;
 
 const Booking = () => {
-  const tabs = ["Cleaning", "Detailing", "Media", "Pickleball"];
+  // таби формуємо з мапи категорій
+  const tabs = CATEGORY_TABS.map((t) => t.label);
   const [active, setActive] = useState(tabs[0]);
+  // ключ (slug) активної категорії для запитів у БД
+  const activeKey = React.useMemo(
+    () => CATEGORY_TABS.find((t) => t.label === active)?.key || "",
+    [active]
+  );
 
   // Steps:
   // 1 — Search; 2 — Choose Locations; 3 — Our Shop Locations; 4 — Vehicle; 5 — Select Service;
@@ -114,9 +139,11 @@ const Booking = () => {
 
   const fallbackSuggestions = useMemo(
     () =>
-      ["10950 SW 5th St, Beaverton", "10950 SW 5th St, Beaverton", "10950 SW 5th St, Beaverton"].map(
-        (addr, i) => ({ description: addr, place_id: `fallback-${i}` })
-      ),
+      [
+        "10950 SW 5th St, Beaverton",
+        "10950 SW 5th St, Beaverton",
+        "10950 SW 5th St, Beaverton",
+      ].map((addr, i) => ({ description: addr, place_id: `fallback-${i}` })),
     []
   );
 
@@ -156,7 +183,11 @@ const Booking = () => {
     const target = selected || predictions[0];
     if (!target) return;
     const details = target.place_id?.startsWith("fallback-")
-      ? { formatted_address: target.description, geometry: null, place_id: target.place_id }
+      ? {
+          formatted_address: target.description,
+          geometry: null,
+          place_id: target.place_id,
+        }
       : await getPlaceDetails(target.place_id);
 
     console.log("Search result:", details || target);
@@ -212,15 +243,18 @@ const Booking = () => {
     setPickupPreds([]);
   };
 
-  const canContinueShop = shopMode === "dropoff" ? true : pickupQuery.trim().length > 0;
+  const canContinueShop =
+    shopMode === "dropoff" ? true : pickupQuery.trim().length > 0;
 
   /** ---------- STEP 4: Vehicle ---------- */
- const [vehicleYear, setVehicleYear] = useState("");
- const [vehicleMake, setVehicleMake] = useState("");
- const [vehicleModel, setVehicleModel] = useState("");
+  const [vehicleYear, setVehicleYear] = useState("");
+  const [vehicleMake, setVehicleMake] = useState("");
+  const [vehicleModel, setVehicleModel] = useState("");
 
-  const validYear = (y) => /^\d{4}$/.test(y) && +y >= 1980 && +y <= new Date().getFullYear() + 1;
-  const canContinueVehicle = validYear(vehicleYear) && vehicleMake.trim() && vehicleModel.trim();
+  const validYear = (y) =>
+    /^\d{4}$/.test(y) && +y >= 1980 && +y <= new Date().getFullYear() + 1;
+  const canContinueVehicle =
+    validYear(vehicleYear) && vehicleMake.trim() && vehicleModel.trim();
 
   /** ---------- SERVICES FROM DB ---------- */
   const [servicesDb, setServicesDb] = useState([]);
@@ -233,12 +267,17 @@ const Booking = () => {
     [servicesDb, selectedServiceId]
   );
 
+  // завантаження сервісів для активної категорії
   useEffect(() => {
     let ignore = false;
     (async () => {
       setLoadingServices(true);
       try {
-        const svc = await cardsApi.list({ type: "service", published: 1 });
+        const svc = await cardsApi.list({
+          type: "service",
+          published: 1,
+          category: activeKey, // ✅ додаємо категорію
+        });
         if (!ignore) {
           setServicesDb(Array.isArray(svc) ? svc : []);
           if (!selectedServiceId && Array.isArray(svc) && svc.length) {
@@ -249,23 +288,35 @@ const Booking = () => {
         if (!ignore) setLoadingServices(false);
       }
     })();
-    return () => { ignore = true; };
-  }, []); // завантаження сервісів
+    return () => {
+      ignore = true;
+    };
+  }, [activeKey]); // ✅ перезапуск при зміні таба
 
+  // завантаження аддонів для активної категорії
   useEffect(() => {
     let ignore = false;
     (async () => {
       setLoadingAddons(true);
       try {
-        // опційно: аддони як окремий тип
-        const ad = await cardsApi.list({ type: "addon", published: 1 });
+        const ad = await cardsApi.list({
+          type: "addon",
+          published: 1,
+          category: activeKey, // ✅ додаємо категорію
+        });
         if (!ignore) setAddonsDb(Array.isArray(ad) ? ad : []);
       } finally {
         if (!ignore) setLoadingAddons(false);
       }
     })();
-    return () => { ignore = true; };
-  }, []); // завантаження аддонів
+    return () => {
+      ignore = true;
+    };
+  }, [activeKey]); // ✅ перезапуск при зміні таба
+
+  useEffect(() => {
+    setSelectedAddOns(new Set());
+  }, [activeKey]);
 
   /** ---------- STEP 5: Select Service ---------- */
   const canNextService = !!selectedServiceId;
@@ -289,7 +340,8 @@ const Booking = () => {
 
   const isEmail = (v) => /\S+@\S+\.\S+/.test(v);
   const isPhone = (v) => v.replace(/[^\d]/g, "").length >= 7;
-  const canContinueContact = firstName.trim() && lastName.trim() && isPhone(phone) && isEmail(email);
+  const canContinueContact =
+    firstName.trim() && lastName.trim() && isPhone(phone) && isEmail(email);
 
   /** ---------- STEP 8: Checkout ---------- */
   const [receiptOnly, setReceiptOnly] = useState(false);
@@ -304,11 +356,16 @@ const Booking = () => {
   const [includeExtraAddress, setIncludeExtraAddress] = useState(true);
 
   // підрахунки
-  const mainServicePrice = selectedServiceObj?.price ? Number(selectedServiceObj.price) : 0;
-  const selectedAddOnsArr = useMemo(() => Array.from(selectedAddOns), [selectedAddOns]);
+  const mainServicePrice = selectedServiceObj?.price
+    ? Number(selectedServiceObj.price)
+    : 0;
+  const selectedAddOnsArr = useMemo(
+    () => Array.from(selectedAddOns),
+    [selectedAddOns]
+  );
   const addOnsTotal = selectedAddOnsArr.reduce((acc, id) => {
     const found = addonsDb.find((a) => a.id === id);
-    return acc + (found ? (Number(found.price) || 0) : 0);
+    return acc + (found ? Number(found.price) || 0 : 0);
   }, 0);
   const subTotal = mainServicePrice + addOnsTotal;
   const tax = +(subTotal * TAX_RATE).toFixed(2);
@@ -334,7 +391,9 @@ const Booking = () => {
         }
       } catch {}
     })();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [isLoggedIn]);
 
   function buildLocationFields() {
@@ -379,7 +438,8 @@ const Booking = () => {
     }
     selectedAddOnsArr.forEach((id) => {
       const add = addonsDb.find((a) => a.id === id);
-      if (add) items.push({ title: add.title, price: Number(add.price) || 0, qty: 1 });
+      if (add)
+        items.push({ title: add.title, price: Number(add.price) || 0, qty: 1 });
     });
     if (tip > 0) items.push({ title: "Tip", price: tip, qty: 1 });
     return items;
@@ -392,8 +452,10 @@ const Booking = () => {
       const found = (my || []).find(
         (v) =>
           String(v.year || "") === String(vehicleYear || "") &&
-          String(v.make || "").toLowerCase() === String(vehicleMake || "").toLowerCase() &&
-          String(v.model || "").toLowerCase() === String(vehicleModel || "").toLowerCase()
+          String(v.make || "").toLowerCase() ===
+            String(vehicleMake || "").toLowerCase() &&
+          String(v.model || "").toLowerCase() ===
+            String(vehicleModel || "").toLowerCase()
       );
       if (found) return found.id;
 
@@ -462,7 +524,9 @@ const Booking = () => {
       };
 
       const saved = await reqApi.saveMine(payload);
-      alert(`✅ Заявка створена (#${saved.id}). Ми звʼяжемось із вами найближчим часом.`);
+      alert(
+        `✅ Заявка створена (#${saved.id}). Ми звʼяжемось із вами найближчим часом.`
+      );
       // Напр. редірект у профіль:
       // window.location.href = '/profile/requests';
     } catch (e) {
@@ -522,7 +586,9 @@ const Booking = () => {
                     onClick={() => setActive(t)}
                     className={[
                       "px-6 py-3 rounded-full text-[16px] sm:text-[18px] font-semibold transition",
-                      isActive ? "bg-white shadow text-[#18181B]" : "text-[#5E5E61] hover:text-[#18181B]",
+                      isActive
+                        ? "bg-white shadow text-[#18181B]"
+                        : "text-[#5E5E61] hover:text-[#18181B]",
                     ].join(" ")}
                   >
                     {t}
@@ -588,8 +654,14 @@ const Booking = () => {
                         <span className="text-[#18181B] text-[15px] sm:text-[16px] truncate">
                           {item.sf?.main_text ? (
                             <>
-                              <span className="font-semibold">{item.sf.main_text}</span>
-                              {item.sf.secondary_text ? <span className="opacity-80">, {item.sf.secondary_text}</span> : null}
+                              <span className="font-semibold">
+                                {item.sf.main_text}
+                              </span>
+                              {item.sf.secondary_text ? (
+                                <span className="opacity-80">
+                                  , {item.sf.secondary_text}
+                                </span>
+                              ) : null}
                             </>
                           ) : (
                             item.description
@@ -609,7 +681,9 @@ const Booking = () => {
               <div className="bg-white/90 backdrop-blur rounded-[24px] p-4 sm:p-5 shadow space-y-4">
                 <div className="flex items-center gap-3">
                   <span className="w-6 h-6 rounded-full border-2 border-[#E5E7EB] bg-white inline-block" />
-                  <h2 className="text-[18px] sm:text-[20px] font-extrabold text-[#18181B]">Choose Locations</h2>
+                  <h2 className="text-[18px] sm:text-[20px] font-extrabold text-[#18181B]">
+                    Choose Locations
+                  </h2>
                 </div>
 
                 {progress(1)}
@@ -619,14 +693,27 @@ const Booking = () => {
                     onClick={() => setServiceType("mobile")}
                     aria-pressed={serviceType === "mobile"}
                     className={`w-full rounded-[16px] px-3 py-3 shadow flex items-center justify-between
-                      ${serviceType === "mobile" ? "bg-[#F8F4EC]" : "bg-white"}`}
+                      ${
+                        serviceType === "mobile" ? "bg-[#F8F4EC]" : "bg-white"
+                      }`}
                   >
                     <div className="flex items-center gap-3">
-                      <LuTruck className="w-6 h-6" style={{ color: mobileColor }} />
-                      <span className="text-[15px] sm:text-[16px] text-[#18181B]">Mobile Service</span>
+                      <LuTruck
+                        className="w-6 h-6"
+                        style={{ color: mobileColor }}
+                      />
+                      <span className="text-[15px] sm:text-[16px] text-[#18181B]">
+                        Mobile Service
+                      </span>
                     </div>
-                    <span className={`w-7 h-7 rounded-full flex items-center justify-center
-                      ${serviceType === "mobile" ? "bg-[#E7D3A3]" : "bg-[#EFEFEF]"}`}>
+                    <span
+                      className={`w-7 h-7 rounded-full flex items-center justify-center
+                      ${
+                        serviceType === "mobile"
+                          ? "bg-[#E7D3A3]"
+                          : "bg-[#EFEFEF]"
+                      }`}
+                    >
                       {serviceType === "mobile" ? "✓" : ""}
                     </span>
                   </button>
@@ -638,11 +725,20 @@ const Booking = () => {
                       ${serviceType === "shop" ? "bg-[#F8F4EC]" : "bg-white"}`}
                   >
                     <div className="flex items-center gap-3">
-                      <LuStore className="w-6 h-6" style={{ color: shopColor }} />
-                      <span className="text-[15px] sm:text-[16px] text-[#18181B]">Shop Service</span>
+                      <LuStore
+                        className="w-6 h-6"
+                        style={{ color: shopColor }}
+                      />
+                      <span className="text-[15px] sm:text-[16px] text-[#18181B]">
+                        Shop Service
+                      </span>
                     </div>
-                    <span className={`w-7 h-7 rounded-full flex items-center justify-center
-                      ${serviceType === "shop" ? "bg-[#E7D3A3]" : "bg-[#EFEFEF]"}`}>
+                    <span
+                      className={`w-7 h-7 rounded-full flex items-center justify-center
+                      ${
+                        serviceType === "shop" ? "bg-[#E7D3A3]" : "bg-[#EFEFEF]"
+                      }`}
+                    >
                       {serviceType === "shop" ? "✓" : ""}
                     </span>
                   </button>
@@ -651,12 +747,16 @@ const Booking = () => {
                     <span className="inline-flex items-center justify-center w-6 h-6 shrink-0">
                       <FiAlertTriangle className="text-[18px]" />
                     </span>
-                    <span className="pr-2">We only offer mobile service for 3 or more vehicles</span>
+                    <span className="pr-2">
+                      We only offer mobile service for 3 or more vehicles
+                    </span>
                   </div>
                 </div>
 
                 <button
-                  onClick={() => (serviceType === "shop" ? setStep(3) : setStep(4))}
+                  onClick={() =>
+                    serviceType === "shop" ? setStep(3) : setStep(4)
+                  }
                   className="w-full h-[52px] rounded-[88px] font-semibold text-black shadow inline-flex items-center justify-center gap-2"
                   style={{
                     background:
@@ -681,7 +781,9 @@ const Booking = () => {
                   >
                     <FiChevronLeft className="text-[18px] text-[#18181B]" />
                   </button>
-                  <h2 className="text-[20px] sm:text-[22px] font-extrabold text-[#18181B]">Our Shop Locations</h2>
+                  <h2 className="text-[20px] sm:text-[22px] font-extrabold text-[#18181B]">
+                    Our Shop Locations
+                  </h2>
                 </div>
 
                 {progress(2)}
@@ -691,21 +793,38 @@ const Booking = () => {
                     onClick={() => setShopMode("dropoff")}
                     aria-pressed={shopMode === "dropoff"}
                     className={`w-full rounded-[20px] px-4 py-4 flex items-center justify-between
-                      ${shopMode === "dropoff" ? "bg-[#F8F4EC] shadow" : "bg-white border border-[#E5E7EB]"}`}
+                      ${
+                        shopMode === "dropoff"
+                          ? "bg-[#F8F4EC] shadow"
+                          : "bg-white border border-[#E5E7EB]"
+                      }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-full bg-[#F2F2F2] inline-flex items-center justify-center">
-                        <LuStore className="w-5 h-5" style={{ color: shopMode === "dropoff" ? GOLD : GRAY }} />
+                        <LuStore
+                          className="w-5 h-5"
+                          style={{
+                            color: shopMode === "dropoff" ? GOLD : GRAY,
+                          }}
+                        />
                       </div>
                       <div className="leading-tight">
-                        <div className="text-[16px] sm:text-[17px] font-bold text-[#18181B]">Customer Drop-off</div>
+                        <div className="text-[16px] sm:text-[17px] font-bold text-[#18181B]">
+                          Customer Drop-off
+                        </div>
                         <div className="text-[14px] text-[#6B7280] truncate max-w-[220px] sm:max-w-[280px]">
                           {shopAddress}
                         </div>
                       </div>
                     </div>
-                    <span className={`w-8 h-8 rounded-full flex items-center justify-center
-                        ${shopMode === "dropoff" ? "bg-[#E7D3A3]" : "bg-[#EFEFEF]"}`}>
+                    <span
+                      className={`w-8 h-8 rounded-full flex items-center justify-center
+                        ${
+                          shopMode === "dropoff"
+                            ? "bg-[#E7D3A3]"
+                            : "bg-[#EFEFEF]"
+                        }`}
+                    >
                       {shopMode === "dropoff" ? "✓" : ""}
                     </span>
                   </button>
@@ -714,21 +833,36 @@ const Booking = () => {
                     onClick={() => setShopMode("pickup")}
                     aria-pressed={shopMode === "pickup"}
                     className={`w-full rounded-[20px] px-4 py-4 flex items-center justify-between
-                      ${shopMode === "pickup" ? "bg-[#F8F4EC] shadow" : "bg-white border border-[#E5E7EB]"}`}
+                      ${
+                        shopMode === "pickup"
+                          ? "bg-[#F8F4EC] shadow"
+                          : "bg-white border border-[#E5E7EB]"
+                      }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-full bg-[#F2F2F2] inline-flex items-center justify-center">
-                        <LuStore className="w-5 h-5" style={{ color: shopMode === "pickup" ? GOLD : GRAY }} />
+                        <LuStore
+                          className="w-5 h-5"
+                          style={{ color: shopMode === "pickup" ? GOLD : GRAY }}
+                        />
                       </div>
                       <div className="leading-tight">
                         <div className="text-[16px] sm:text-[17px] font-bold text-[#18181B]">
                           Pick up &amp; Drop-off Service
                         </div>
-                        <div className="text-[14px] text-[#6B7280]">$5/mile</div>
+                        <div className="text-[14px] text-[#6B7280]">
+                          $5/mile
+                        </div>
                       </div>
                     </div>
-                    <span className={`w-8 h-8 rounded-full flex items-center justify-center
-                        ${shopMode === "pickup" ? "bg-[#E7D3A3]" : "bg-[#EFEFEF]"}`}>
+                    <span
+                      className={`w-8 h-8 rounded-full flex items-center justify-center
+                        ${
+                          shopMode === "pickup"
+                            ? "bg-[#E7D3A3]"
+                            : "bg-[#EFEFEF]"
+                        }`}
+                    >
                       {shopMode === "pickup" ? "✓" : ""}
                     </span>
                   </button>
@@ -773,9 +907,13 @@ const Booking = () => {
                                 <span className="text-[#18181B] text-[15px] truncate">
                                   {item.sf?.main_text ? (
                                     <>
-                                      <span className="font-semibold">{item.sf.main_text}</span>
+                                      <span className="font-semibold">
+                                        {item.sf.main_text}
+                                      </span>
                                       {item.sf.secondary_text ? (
-                                        <span className="opacity-80">, {item.sf.secondary_text}</span>
+                                        <span className="opacity-80">
+                                          , {item.sf.secondary_text}
+                                        </span>
                                       ) : null}
                                     </>
                                   ) : (
@@ -792,9 +930,14 @@ const Booking = () => {
 
                   <div className="w-full rounded-[20px] px-4 py-3 bg-[#F2F2F2] text-[#1F2937] text-[14px] leading-snug flex items-start gap-3">
                     <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#EDE4D1] shrink-0">
-                      <FiAlertTriangle className="text-[18px]" style={{ color: "#C89C3C" }} />
+                      <FiAlertTriangle
+                        className="text-[18px]"
+                        style={{ color: "#C89C3C" }}
+                      />
                     </span>
-                    <span className="pr-2">Pick-up pricing calculated from shop location</span>
+                    <span className="pr-2">
+                      Pick-up pricing calculated from shop location
+                    </span>
                   </div>
                 </div>
 
@@ -859,7 +1002,9 @@ const Booking = () => {
                   onClick={() => setStep(5)}
                   disabled={!canContinueVehicle}
                   className={`w-full h-[52px] rounded-[88px] font-semibold text_black shadow inline-flex items-center justify-center gap-2
-                    ${!canContinueVehicle ? "opacity-60 cursor-not-allowed" : ""}`.replace("text_black", "text-black")}
+                    ${
+                      !canContinueVehicle ? "opacity-60 cursor-not-allowed" : ""
+                    }`.replace("text_black", "text-black")}
                   style={{
                     background:
                       "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)",
@@ -883,7 +1028,9 @@ const Booking = () => {
                   >
                     <FiChevronLeft className="text-[18px] text-[#18181B]" />
                   </button>
-                  <h2 className="text-[20px] sm:text-[22px] font-extrabold text-[#18181B]">Select Service</h2>
+                  <h2 className="text-[20px] sm:text-[22px] font-extrabold text-[#18181B]">
+                    Select Service
+                  </h2>
                 </div>
 
                 {progress(4)}
@@ -902,21 +1049,34 @@ const Booking = () => {
                           onClick={() => setSelectedServiceId(svc.id)}
                           aria-pressed={active}
                           className={`w-full rounded-[20px] px-4 py-4 flex items-center justify-between
-                            ${active ? "bg-[#F8F4EC] shadow" : "bg-white border border-[#E5E7EB]"}`}
+                            ${
+                              active
+                                ? "bg-[#F8F4EC] shadow"
+                                : "bg-white border border-[#E5E7EB]"
+                            }`}
                         >
                           <div className="flex items-center gap-3">
-                            <LuStar className="w-5 h-5" style={{ color: active ? GOLD : "#D5D5D8" }} />
+                            <LuStar
+                              className="w-5 h-5"
+                              style={{ color: active ? GOLD : "#D5D5D8" }}
+                            />
                             <span className="text-[16px] font-semibold text-[#18181B]">
                               {svc.title}
-                              {svc.subtitle ? <span className="ml-2 text-[#6B7280] font-normal">· {svc.subtitle}</span> : null}
+                              {svc.subtitle ? (
+                                <span className="ml-2 text-[#6B7280] font-normal">
+                                  · {svc.subtitle}
+                                </span>
+                              ) : null}
                             </span>
                           </div>
                           <div className="flex items-center gap-3">
                             <span className="text-[14px] text-[#6B7280]">
                               ${(Number(svc.price) || 0).toFixed(2)}
                             </span>
-                            <span className={`w-8 h-8 rounded-full flex items-center justify-center
-                              ${active ? "bg-[#E7D3A3]" : "bg-[#EFEFEF]"}`}>
+                            <span
+                              className={`w-8 h-8 rounded-full flex items-center justify-center
+                              ${active ? "bg-[#E7D3A3]" : "bg-[#EFEFEF]"}`}
+                            >
                               {active ? "✓" : ""}
                             </span>
                           </div>
@@ -954,7 +1114,9 @@ const Booking = () => {
                   >
                     <FiChevronLeft className="text-[18px] text-[#18181B]" />
                   </button>
-                  <h2 className="text-[20px] sm:text-[22px] font-extrabold text-[#18181B]">Add More Services</h2>
+                  <h2 className="text-[20px] sm:text-[22px] font-extrabold text-[#18181B]">
+                    Add More Services
+                  </h2>
                 </div>
 
                 {progress(5)}
@@ -974,24 +1136,37 @@ const Booking = () => {
                           aria-pressed={active}
                           className={`
                             w-full rounded-[16px] px-4 py-3 flex items-center justify-between
-                            ${active ? "bg-[#F8F4EC] shadow" : "bg-white border border-[#E5E7EB]"}
+                            ${
+                              active
+                                ? "bg-[#F8F4EC] shadow"
+                                : "bg-white border border-[#E5E7EB]"
+                            }
                           `}
                         >
                           <div className="flex items-center gap-3">
                             <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#F2F2F2]">
-                              <LuStar className="w-4 h-4" style={{ color: active ? GOLD : "#D5D5D8" }} />
+                              <LuStar
+                                className="w-4 h-4"
+                                style={{ color: active ? GOLD : "#D5D5D8" }}
+                              />
                             </span>
                             <span className="text-[15px] sm:text-[16px] text-[#18181B]">
                               {ad.title}
-                              {ad.subtitle ? <span className="ml-2 text-[#6B7280]">· {ad.subtitle}</span> : null}
+                              {ad.subtitle ? (
+                                <span className="ml-2 text-[#6B7280]">
+                                  · {ad.subtitle}
+                                </span>
+                              ) : null}
                             </span>
                           </div>
                           <div className="flex items-center gap-3">
                             <span className="text-[14px] text-[#6B7280]">
                               ${(Number(ad.price) || 0).toFixed(2)}
                             </span>
-                            <span className={`w-7 h-7 rounded-full flex items-center justify-center
-                              ${active ? "bg-[#E7D3A3]" : "bg-[#EFEFEF]"}`}>
+                            <span
+                              className={`w-7 h-7 rounded-full flex items-center justify-center
+                              ${active ? "bg-[#E7D3A3]" : "bg-[#EFEFEF]"}`}
+                            >
                               {active ? "✓" : ""}
                             </span>
                           </div>
@@ -1027,7 +1202,9 @@ const Booking = () => {
                   >
                     <FiChevronLeft className="text-[18px] text-[#18181B]" />
                   </button>
-                  <h2 className="text-[20px] sm:text-[22px] font-extrabold text-[#18181B]">Your Contact Details</h2>
+                  <h2 className="text-[20px] sm:text-[22px] font-extrabold text-[#18181B]">
+                    Your Contact Details
+                  </h2>
                 </div>
 
                 {progress(6)}
@@ -1072,7 +1249,9 @@ const Booking = () => {
                   onClick={() => setStep(8)}
                   disabled={!canContinueContact}
                   className={`w-full h-[52px] rounded-[88px] font-semibold text-black shadow inline-flex items-center justify-center gap-2
-                    ${!canContinueContact ? "opacity-60 cursor-not-allowed" : ""}`}
+                    ${
+                      !canContinueContact ? "opacity-60 cursor-not-allowed" : ""
+                    }`}
                   style={{
                     background:
                       "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)",
@@ -1097,7 +1276,9 @@ const Booking = () => {
                     >
                       <FiChevronLeft className="text-[18px] text-[#18181B]" />
                     </button>
-                    <h2 className="text-[20px] sm:text-[22px] font-extrabold text-[#18181B]">Checkout</h2>
+                    <h2 className="text-[20px] sm:text-[22px] font-extrabold text-[#18181B]">
+                      Checkout
+                    </h2>
                   </div>
 
                   {/* Toggle receipt-only */}
@@ -1117,13 +1298,35 @@ const Booking = () => {
                 {!receiptOnly && (
                   <>
                     <div className="space-y-2">
-                      <div className="text-sm text-[#6B7280] font-medium">Your personal information</div>
+                      <div className="text-sm text-[#6B7280] font-medium">
+                        Your personal information
+                      </div>
                       <div className="grid gap-2">
-                        <input disabled value={firstName} className="h-[44px] rounded-[12px] bg-[#F4F4F5] px-3" />
-                        <input disabled value={lastName} className="h-[44px] rounded-[12px] bg-[#F4F4F5] px-3" />
-                        <input disabled value={phone} className="h-[44px] rounded-[12px] bg-[#F4F4F5] px-3" />
-                        <input disabled value={birthday} className="h-[44px] rounded-[12px] bg-[#F4F4F5] px-3" />
-                        <input disabled value={email} className="h-[44px] rounded-[12px] bg-[#F4F4F5] px-3" />
+                        <input
+                          disabled
+                          value={firstName}
+                          className="h-[44px] rounded-[12px] bg-[#F4F4F5] px-3"
+                        />
+                        <input
+                          disabled
+                          value={lastName}
+                          className="h-[44px] rounded-[12px] bg-[#F4F4F5] px-3"
+                        />
+                        <input
+                          disabled
+                          value={phone}
+                          className="h-[44px] rounded-[12px] bg-[#F4F4F5] px-3"
+                        />
+                        <input
+                          disabled
+                          value={birthday}
+                          className="h-[44px] rounded-[12px] bg-[#F4F4F5] px-3"
+                        />
+                        <input
+                          disabled
+                          value={email}
+                          className="h-[44px] rounded-[12px] bg-[#F4F4F5] px-3"
+                        />
                       </div>
                       <button
                         onClick={() => setStep(7)}
@@ -1139,11 +1342,25 @@ const Booking = () => {
 
                     {/* CAR INFO */}
                     <div className="space-y-2">
-                      <div className="text-sm text-[#6B7280] font-medium">Your car information</div>
+                      <div className="text-sm text-[#6B7280] font-medium">
+                        Your car information
+                      </div>
                       <div className="grid gap-2">
-                        <input disabled value={`${vehicleYear} year`} className="h-[44px] rounded-[12px] bg-[#F4F4F5] px-3" />
-                        <input disabled value={vehicleMake} className="h-[44px] rounded-[12px] bg-[#F4F4F5] px-3" />
-                        <input disabled value={vehicleModel} className="h-[44px] rounded-[12px] bg-[#F4F4F5] px-3" />
+                        <input
+                          disabled
+                          value={`${vehicleYear} year`}
+                          className="h-[44px] rounded-[12px] bg-[#F4F4F5] px-3"
+                        />
+                        <input
+                          disabled
+                          value={vehicleMake}
+                          className="h-[44px] rounded-[12px] bg-[#F4F4F5] px-3"
+                        />
+                        <input
+                          disabled
+                          value={vehicleModel}
+                          className="h-[44px] rounded-[12px] bg-[#F4F4F5] px-3"
+                        />
                       </div>
                       <button
                         onClick={() => setStep(4)}
@@ -1159,7 +1376,9 @@ const Booking = () => {
 
                     {/* CARD INFO (демо) */}
                     <div className="space-y-2">
-                      <div className="text-sm text-[#6B7280] font-medium">Your card information (demo)</div>
+                      <div className="text-sm text-[#6B7280] font-medium">
+                        Your card information (demo)
+                      </div>
                       <div className="grid gap-2">
                         <input
                           value={cardName}
@@ -1190,14 +1409,18 @@ const Booking = () => {
 
                     {/* TIPS */}
                     <div className="space-y-2">
-                      <div className="text-sm text-[#6B7280] font-medium">Select tip amount (optional)</div>
+                      <div className="text-sm text-[#6B7280] font-medium">
+                        Select tip amount (optional)
+                      </div>
                       <div className="flex flex-wrap gap-2">
                         {TIP_PRESETS.map((v) => (
                           <button
                             key={v}
                             onClick={() => setTip(v)}
                             className={`h-[36px] px-4 rounded-full border ${
-                              tip === v ? "border-transparent" : "border-[#E5E7EB]"
+                              tip === v
+                                ? "border-transparent"
+                                : "border-[#E5E7EB]"
                             }`}
                             style={{
                               background:
@@ -1223,9 +1446,14 @@ const Booking = () => {
                 {/* RECEIPT / CHECK */}
                 <div
                   className="rounded-[16px] border p-4 space-y-3"
-                  style={{ backgroundColor: "rgba(245,218,147,0.2)", borderColor: "#E5E7EB" }}
+                  style={{
+                    backgroundColor: "rgba(245,218,147,0.2)",
+                    borderColor: "#E5E7EB",
+                  }}
                 >
-                  <div className="font-semibold text-[#18181B]">List of services you have selected</div>
+                  <div className="font-semibold text-[#18181B]">
+                    List of services you have selected
+                  </div>
 
                   {/* Main service */}
                   <div className="flex items-center justify-between text-[15px]">
@@ -1236,9 +1464,15 @@ const Booking = () => {
                   {/* Add-ons */}
                   {addonsDb.map((ad) =>
                     selectedAddOns.has(ad.id) ? (
-                      <div key={ad.id} className="flex items-center justify-between text-[15px]">
+                      <div
+                        key={ad.id}
+                        className="flex items-center justify-between text-[15px]"
+                      >
                         <span className="inline-flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full" style={{ background: GOLD }} />
+                          <span
+                            className="w-2 h-2 rounded-full"
+                            style={{ background: GOLD }}
+                          />
                           {ad.title}
                         </span>
                         <span>${(Number(ad.price) || 0).toFixed(2)}</span>
@@ -1280,7 +1514,8 @@ const Booking = () => {
                       onChange={(e) => setIncludeExtraAddress(e.target.checked)}
                     />
                     <label htmlFor="extraAddress">
-                      Your additional address included to the route. Deposit amount will be deducted from total.
+                      Your additional address included to the route. Deposit
+                      amount will be deducted from total.
                     </label>
                   </div>
                 </div>
@@ -1294,7 +1529,9 @@ const Booking = () => {
                       "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)",
                   }}
                 >
-                  {submitting ? "Submitting..." : `Confirm Deposit ($${depositAmount})`}
+                  {submitting
+                    ? "Submitting..."
+                    : `Confirm Deposit ($${depositAmount})`}
                   <span className="text-lg">›</span>
                 </button>
 

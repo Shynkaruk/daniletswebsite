@@ -9,6 +9,7 @@ import fs from 'fs';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import db from './db.js';
+import cardsRouter from './routes/cards.js';
 
 const app = express();
 const PORT = process.env.PORT || 5179;
@@ -527,6 +528,8 @@ app.put('/api/admin/requests/:id', auth, requireAdmin, (req, res) => {
   const row = db.prepare(`select * from requests where id=?`).get(id);
   res.json(row);
 });
+
+app.use('/api/cards', cardsRouter)
 
 // видалити
 app.delete('/api/admin/requests/:id', auth, requireAdmin, (req, res) => {
