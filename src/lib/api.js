@@ -1,4 +1,3 @@
-// src/lib/api.js
 const API = import.meta.env.VITE_API_URL || "http://localhost:5179";
 
 let TOKEN = localStorage.getItem("token") || null;
@@ -34,10 +33,28 @@ async function parseJsonSafe(r) {
     // Кидаємо осмислену помилку замість "Unexpected token '<'"
     throw { error: `HTTP ${r.status} ${r.statusText}. Not JSON.`, details: brief };
   }
+
   if (!r.ok) {
-    // Сервер повернув JSON з повідомленням про помилку
+    // ---- Глобальна обробка невалідного/простроченого токена ----
+    const msg = (data && (data.error || data.message)) || "";
+    const badToken =
+      r.status === 401 ||
+      /invalid token|unauthoriz|jwt|expired/i.test(msg) ||
+      /invalid token|unauthoriz|jwt|expired/i.test(text);
+
+    if (badToken) {
+      try {
+        setToken(null);
+        setUser(null);
+      } catch {}
+      // Повертаємо уніфіковану помилку
+      throw { error: "Your session expired. Please log in again.", code: 401 };
+    }
+
+    // Сервер повернув іншу помилку JSON
     throw (data || { error: `HTTP ${r.status} ${r.statusText}` });
   }
+
   return data;
 }
 async function getJson(url) {
@@ -179,8 +196,9 @@ export const meApi = {
 
 /* ===== Requests (user scope) ===== */
 export const reqApi = {
-  async listMine() {
-    return getJson(`${API}/api/requests`);
+  async listMine(params = {}) {
+    const q = new URLSearchParams(params).toString();
+    return getJson(`${API}/api/requests${q ? `?${q}` : ""}`);
   },
   async getMine(id) {
     return getJson(`${API}/api/requests/${id}`);
@@ -199,7 +217,7 @@ export const reqApi = {
 
 /* ===== Admin: Requests ===== */
 export const adminReqApi = {
-  async list(params={}) {
+  async list(params = {}) {
     const q = new URLSearchParams(params).toString();
     return getJson(`${API}/api/admin/requests?${q}`);
   },

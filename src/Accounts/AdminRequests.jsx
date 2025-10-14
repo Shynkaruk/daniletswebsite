@@ -1,4 +1,3 @@
-// src/pages/AdminRequests.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { adminReqApi, cardsApi } from "../lib/api";
 
@@ -35,7 +34,7 @@ export default function AdminRequests() {
   // ----- services state -----
   const [svcLoading, setSvcLoading] = useState(false);
   const [services, setServices] = useState([]);
-  const [svcEditing, setSvcEditing] = useState(null); // {id?, title, price, published, sort_order, subtitle, body}
+  const [svcEditing, setSvcEditing] = useState(null); // {id?, title, price, sphere, type}
 
   /* -------- Requests: load all 3 -------- */
   const loadAllReq = async () => {
@@ -105,16 +104,38 @@ export default function AdminRequests() {
   }, [activeTab, svcTypeTab, svcCategory]);
 
   const onSaveService = async () => {
-    const payload = {
-      ...svcEditing,
-      type: svcEditing.type || svcTypeTab, // service | addon
-      price: +svcEditing.price || 0,
-      slug: (svcEditing.slug ?? svcCategory) || "", // category key у slug
-    };
-    const saved = await cardsApi.save(payload);
-    setSvcEditing(null);
-    await loadServices();
-    return saved;
+    try {
+      // валідація
+      const title = (svcEditing?.title || "").trim();
+      const sphere = (svcEditing?.sphere || "").trim(); // cleaning/detailing/media/pickleball
+      const price = Number(svcEditing?.price ?? 0);
+      if (!title) return alert("Please enter the service title.");
+      if (!sphere) return alert("Please select the type (sphere).");
+      if (Number.isNaN(price)) return alert("Price must be a number.");
+
+      // визначаємо тип без сюрпризів (враховано add-ons)
+      const type = (svcEditing?.type || svcTypeTab || "service").toString();
+
+      // payload — тільки потрібні поля
+      const payload = {
+        id: svcEditing?.id, // якщо є — оновимо, якщо ні — створимо
+        type,               // "service" | "addon"
+        title,
+        price,
+        slug: sphere,       // категорія зберігається у slug
+      };
+
+      const saved = await cardsApi.save(payload);
+      setSvcEditing(null);
+      await loadServices();
+      return saved;
+    } catch (e) {
+      console.error("Save service failed:", e);
+      const msg =
+        (e && (e.error || e.message)) ||
+        "Failed to save the service. Please try again.";
+      alert(msg);
+    }
   };
 
   const onDeleteService = async (row) => {
@@ -151,12 +172,11 @@ export default function AdminRequests() {
           <button
             onClick={() =>
               setSvcEditing({
+                id: undefined,
                 title: "",
-                subtitle: "",
-                body: "",
                 price: 0,
-                sort_order: 0,
-                published: 1,
+                sphere: svcCategory || "", // підставимо активний фільтр як дефолт
+                type: svcTypeTab,          // враховуємо додаткові послуги (add-ons)
               })
             }
             className="px-5 py-3 rounded-[14px] font-semibold text-black"
@@ -287,14 +307,10 @@ export default function AdminRequests() {
               onClick={() =>
                 setSvcEditing({
                   id: undefined,
-                  type: svcTypeTab,
                   title: "",
-                  subtitle: "",
-                  body: "",
                   price: 0,
-                  sort_order: 0,
-                  published: 1,
-                  slug: svcCategory || "",
+                  sphere: svcCategory || "",
+                  type: svcTypeTab, // уніфіковано
                 })
               }
               className="px-5 py-2 rounded-[12px] font-semibold text-black"
@@ -316,11 +332,8 @@ export default function AdminRequests() {
                     <thead>
                       <tr className="text-[#6B7280] text-sm border-b">
                         <th className="py-3 pr-3">Title</th>
-                        <th className="py-3 pr-3">Subtitle</th>
                         <th className="py-3 pr-3">Category</th>
                         <th className="py-3 pr-3">Price</th>
-                        <th className="py-3 pr-3">Sort</th>
-                        <th className="py-3 pr-3">Published</th>
                         <th className="py-3 pr-3 text-right">Actions</th>
                       </tr>
                     </thead>
@@ -328,33 +341,25 @@ export default function AdminRequests() {
                       {services.map((s) => (
                         <tr key={s.id} className="border-b last:border-b-0">
                           <td className="py-3 pr-3">{s.title}</td>
-                          <td className="py-3 pr-3 text-[#6B7280]">
-                            {s.subtitle || "—"}
-                          </td>
                           <td className="py-3 pr-3">
-                            {CATEGORIES.find((c) => c.key === (s.slug || ""))
-                              ?.label || "—"}
+                            {CATEGORIES.find((c) => c.key === (s.slug || ""))?.label || "—"}
                           </td>
                           <td className="py-3 pr-3">
                             ${(s.price ?? 0).toFixed(2)}
-                          </td>
-                          <td className="py-3 pr-3">{s.sort_order ?? 0}</td>
-                          <td className="py-3 pr-3">
-                            {s.published ? (
-                              <span className="px-2 py-1 rounded-full text-xs bg-[#ECFDF5] text-[#059669]">
-                                published
-                              </span>
-                            ) : (
-                              <span className="px-2 py-1 rounded-full text-xs bg-[#F3F4F6] text-[#6B7280]">
-                                draft
-                              </span>
-                            )}
                           </td>
                           <td className="py-3 pr-3">
                             <div className="flex items-center justify-end gap-2">
                               <button
                                 className="px-3 py-2 rounded-xl border bg-white"
-                                onClick={() => setSvcEditing(s)}
+                                onClick={() =>
+                                  setSvcEditing({
+                                    id: s.id,
+                                    title: s.title || "",
+                                    price: s.price ?? 0,
+                                    sphere: s.slug || "", // «тип(сфера)»
+                                    type: s.type || svcTypeTab, // ✅ зберігаємо тип (service/addon)
+                                  })
+                                }
                               >
                                 Edit
                               </button>
@@ -485,16 +490,12 @@ export default function AdminRequests() {
         </Modal>
       )}
 
-      {/* -------- Service Modal -------- */}
+      {/* -------- Service Modal (мінімальна) -------- */}
       {svcEditing && (
         <Modal onClose={() => setSvcEditing(null)}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold">
-              {svcEditing.id
-                ? `Edit ${
-                    svcEditing.type === "addon" ? "Add-on" : "Service"
-                  } #${svcEditing.id}`
-                : `New ${svcEditing.type === "addon" ? "Add-on" : "Service"}`}
+              {svcEditing.id ? `Edit Service #${svcEditing.id}` : "New Service"}
             </h3>
             <div className="flex gap-2">
               <button
@@ -513,56 +514,25 @@ export default function AdminRequests() {
             </div>
           </div>
 
+          {/* Лише 3 поля: Назва, Тип(сфера), Ціна */}
           <div className="grid md:grid-cols-2 gap-4">
-            {/* NEW: Type */}
-            <Select
-              label="Type"
-              value={svcEditing.type || "service"}
-              options={["service", "addon"]}
-              onChange={(v) => setSvcEditing({ ...svcEditing, type: v })}
-            />
-            {/* NEW: Category (stored in slug) */}
-            <Select
-              label="Category"
-              value={svcEditing.slug || ""}
-              options={["", ...CATEGORIES.map((c) => c.key)]}
-              onChange={(v) => setSvcEditing({ ...svcEditing, slug: v })}
-            />
-
             <Field
-              label="Title"
+              label="Service title"
               value={svcEditing.title || ""}
               onChange={(v) => setSvcEditing({ ...svcEditing, title: v })}
             />
+
+            <Select
+              label="Type (sphere)"
+              value={svcEditing.sphere || ""}
+              options={CATEGORIES.map((c) => c.key)} // cleaning/detailing/media/pickleball
+              onChange={(v) => setSvcEditing({ ...svcEditing, sphere: v })}
+            />
+
             <Field
               label="Price (USD)"
               value={svcEditing.price ?? 0}
               onChange={(v) => setSvcEditing({ ...svcEditing, price: v })}
-            />
-            <Field
-              label="Subtitle"
-              value={svcEditing.subtitle || ""}
-              onChange={(v) => setSvcEditing({ ...svcEditing, subtitle: v })}
-            />
-            <Field
-              label="Sort order"
-              value={svcEditing.sort_order ?? 0}
-              onChange={(v) =>
-                setSvcEditing({ ...svcEditing, sort_order: +v || 0 })
-              }
-            />
-            <Select
-              label="Published"
-              value={svcEditing.published ?? 1 ? "1" : "0"}
-              options={["1", "0"]}
-              onChange={(v) =>
-                setSvcEditing({ ...svcEditing, published: v === "1" ? 1 : 0 })
-              }
-            />
-            <TextArea
-              label="Description"
-              value={svcEditing.body || ""}
-              onChange={(v) => setSvcEditing({ ...svcEditing, body: v })}
             />
           </div>
         </Modal>

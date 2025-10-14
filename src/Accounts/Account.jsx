@@ -249,47 +249,47 @@ function PaymentCard() {
 function OrdersCard() {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const COMPLETED = "done";
 
   useEffect(() => {
     (async () => {
       setLoading(true);
       try {
-        const u = await meApi.profile();
-        const email = u?.email || "";
-        const first = u?.first_name || "";
-        const last = u?.last_name || "";
-
+        // 1) серверна фільтрація (бажано)
         let orders = [];
-        if (typeof reqApi.my === "function") {
-          orders = (await reqApi.my()) || [];
-        } else if (typeof reqApi.listMine === "function") {
-          orders = (await reqApi.listMine()) || [];
-        } else if (typeof reqApi.list === "function") {
-          orders =
-            (await reqApi.list({
-              email,
-              first_name: first,
-              last_name: last,
-              limit: 50,
-            })) || [];
+        if (typeof reqApi.listMine === "function") {
+          orders = (await reqApi.listMine({ status: COMPLETED })) || [];
+        } else {
+          // fallback на інші варіанти, якщо вони колись будуть
+          orders = [];
         }
 
+        // 2) нормалізація
         const normalized = (orders || []).map((o) => {
           const items = safeParseJSON(o.items_json) || [];
-          const main = items[0]?.title || "Service";
           return {
-            id: o.id,
-            title: main,
-            subtotal: Number(o.subtotal || 0),
-            tax: Number(o.tax || 0),
+            id: o.id ?? o._id,
+            title: items[0]?.title || o.service_title || "Service",
             total: Number(o.total || 0),
-            status: o.status || "new",
-            created_at: o.created_at || o.createdAt || o.date || "",
+            status: (o.status || o.state || "").toString().toLowerCase(),
+            created_at: o.created_at || o.createdAt || o.date || null,
+            updated_at: o.updated_at || o.updatedAt || null,
           };
         });
 
-        setList(normalized);
-      } catch {
+        // 3) клієнтський фільтр (на випадок, якщо бек ігнорує параметр)
+        const completedOnly = normalized.filter((o) => o.status === COMPLETED);
+
+        // 4) сортування — останні оновлені зверху
+        completedOnly.sort((a, b) => {
+          const aT = new Date(a.updated_at || a.created_at || 0).getTime();
+          const bT = new Date(b.updated_at || b.created_at || 0).getTime();
+          return bT - aT;
+        });
+
+        setList(completedOnly);
+      } catch (e) {
+        console.error(e);
         setList([]);
       } finally {
         setLoading(false);
@@ -302,7 +302,7 @@ function OrdersCard() {
       {loading ? (
         <div className="text-[#6B7280]">Loading…</div>
       ) : list.length === 0 ? (
-        <div className="text-[#6B7280]">You don’t have any orders yet.</div>
+        <div className="text-[#6B7280]">You don’t have any past orders yet.</div>
       ) : (
         <div className="space-y-3">
           {list.map((o, i) => (
@@ -314,12 +314,11 @@ function OrdersCard() {
               ].join(" ")}
             >
               <div className="min-w-0">
-                <div className="font-semibold text-[#18181B] truncate">
-                  {o.title}
-                </div>
+                <div className="font-semibold text-[#18181B] truncate">{o.title}</div>
                 <div className="text-sm text-[#6B7280]">
-                  {formatDate(o.created_at)}
+                  {formatDate(o.updated_at || o.created_at)}
                 </div>
+                <div className="text-xs text-[#9CA3AF] mt-0.5">Status: done</div>
               </div>
               <div className="shrink-0 text-sm text-[#111] font-semibold">
                 ${o.total.toFixed(2)}

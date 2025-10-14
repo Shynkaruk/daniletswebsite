@@ -19,27 +19,22 @@ const Main = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const handlePrev = () => {
-    setCurrentImageIndex((prev) =>
-      prev === 0 ? images.length - 1 : prev - 1
-    );
+    setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
   };
   const handleNext = () => {
-    setCurrentImageIndex((prev) =>
-      prev === images.length - 1 ? 0 : prev + 1
-    );
+    setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
   };
 
   return (
-    <div className="bg-[rgba(235,235,235,1)] min-h-screen pb-8">
+    <div className="bg-[rgba(235,235,235,1)] min-h-screen pb-8 overflow-x-clip">
       <Head />
 
       <main
-        className="flex min-h-screen bg-cover bg-center relative z-0"
+        className="flex min-h-screen bg-cover bg-center relative z-0 overflow-x-clip"
         style={{ backgroundImage: `url(${images[currentImageIndex]})` }}
       >
-        <div className="w-[95%] max-w-[1792px] mx-auto mt-[180px] px-4 mb-50">
+        <div className="w-[95%] max-w-[1792px] mx-auto mt-[180px] px-4 mb-[50px]">
           <div className="w-full md:w-2/3 lg:w-1/2 space-y-6">
-            {/* Заголовок */}
             <h1
               className="
                 text-[36px]
@@ -55,7 +50,6 @@ const Main = () => {
               DANILETS FAMILY
             </h1>
 
-            {/* Текст */}
             <p
               className="
                 text-[16px]
@@ -75,7 +69,6 @@ const Main = () => {
               exceeds expectations
             </p>
 
-            {/* Кнопка */}
             <button
               className="
                 border border-white
@@ -95,7 +88,7 @@ const Main = () => {
         </div>
 
         {images.length > 1 && (
-          <div className="absolute bottom-35 left-20 flex gap-3 z-10">
+          <div className="absolute bottom-[35px] left-20 flex gap-3 z-10">
             <button
               onClick={handlePrev}
               className="
@@ -109,16 +102,12 @@ const Main = () => {
                 flex items-center justify-center
               "
             >
-              <img
-                src={leftArrowIcon}
-                alt="Arrow Left"
-                className="w-5 h-5 lg:w-6 lg:h-6"
-              />
+              <img src={leftArrowIcon} alt="Arrow Left" className="w-5 h-5 lg:w-6 lg:h-6" />
             </button>
             <button
               onClick={handleNext}
               className="
-                w-[40x] h-[32px]
+                w-[40px] h-[32px]
                 sm:w-[46px] sm:h-[36px]
                 md:w-[50px] md:h-[40px]
                 lg:w-[56px] lg:h-[44px]
@@ -128,19 +117,14 @@ const Main = () => {
                 flex items-center justify-center
               "
             >
-              <img
-                src={rightArrowIcon}
-                alt="Arrow Right"
-                className="w-5 h-5 lg:w-6 lg:h-6"
-              />
+              <img src={rightArrowIcon} alt="Arrow Right" className="w-5 h-5 lg:w-6 lg:h-6" />
             </button>
           </div>
         )}
 
-        {/* Лейбл */}
         <div
           className="
-            absolute bottom-35 right-20
+            absolute bottom-[35px] right-20
             bg-[rgba(235,176,108,0.15)]
             rounded-full
             px-6 py-3
@@ -148,11 +132,7 @@ const Main = () => {
             z-10
           "
         >
-          <img
-            src={diamondicon}
-            alt="Diamond Icon"
-            className="w-6 h-6 lg:w-8 lg:h-8"
-          />
+          <img src={diamondicon} alt="Diamond Icon" className="w-6 h-6 lg:w-8 lg:h-8" />
           <span
             className="
               text-white
@@ -168,6 +148,7 @@ const Main = () => {
       </main>
 
       <Services className="relative z-10 mt-[-100px]" />
+
       <div className="w-[95%] max-w-[1792px] mx-auto mt-8 px-4">
         <img
           src={newPhoto}

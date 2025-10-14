@@ -1,4 +1,3 @@
-// src/components/Head.jsx
 import React, { useEffect, useRef, useState } from "react";
 import {
   FaGoogle,
@@ -14,9 +13,10 @@ import logo from "../assets/logo/logo.svg";
 import ContactForm from "./ContactForm.jsx";
 import AuthModal from "./AuthModal.jsx";
 import AccountMenu from "./AccountMenu.jsx";
+import SocialModal from "./SocialModal.jsx";
 
 /* ==================== MOBILE ==================== */
-const MobileHead = ({ onOpenContact, onOpenAuth }) => {
+const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const toggleMenu = () => setIsMenuOpen((v) => !v);
 
@@ -121,10 +121,19 @@ const MobileHead = ({ onOpenContact, onOpenAuth }) => {
               {/* Social + CTA */}
               <div className="absolute bottom-4 left-0 w-full px-4 flex flex-col items-center">
                 <div className="flex gap-4 justify-center text-[#A1A1A5] text-xl mb-4">
-                  <FaGoogle />
-                  <FaTiktok />
-                  <FaYoutube />
-                  <FaFacebookF />
+                  {[FaGoogle, FaTiktok, FaYoutube, FaFacebookF].map(
+                    (Icon, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={onOpenSocial}
+                        className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:text-black transition"
+                        aria-label="Open social modal"
+                      >
+                        <Icon />
+                      </button>
+                    )
+                  )}
                 </div>
 
                 <Link to="/book-online">
@@ -149,7 +158,7 @@ const MobileHead = ({ onOpenContact, onOpenAuth }) => {
 };
 
 /* ==================== DESKTOP ==================== */
-const DesktopHead = ({ onOpenContact, onOpenAuth }) => {
+const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
   const [open, setOpen] = useState(false);
   const btnRef = useRef(null);
   const menuRef = useRef(null);
@@ -253,16 +262,18 @@ const DesktopHead = ({ onOpenContact, onOpenAuth }) => {
             </Link>
           </nav>
 
-          {/* Socials + CTA + Account (аватарка) */}
+          {/* Socials + CTA + Account */}
           <div className="flex items-center space-x-3">
             {[FaGoogle, FaTiktok, FaYoutube, FaFacebookF].map((Icon, idx) => (
-              <a
+              <button
                 key={idx}
-                href="#"
+                type="button"
+                onClick={onOpenSocial}
                 className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:text-black transition"
+                aria-label="Open social modal"
               >
                 <Icon />
-              </a>
+              </button>
             ))}
 
             <Link to="/book-online">
@@ -279,8 +290,8 @@ const DesktopHead = ({ onOpenContact, onOpenAuth }) => {
 
             {/* Аватар замість двох кнопок */}
             <AccountMenu
-              variant="icon"          // ← тепер і на десктопі лише аватарка
-              onShowAuth={onOpenAuth} // відкриє AuthModal з відповідною вкладкою
+              variant="icon"
+              onShowAuth={onOpenAuth}
             />
           </div>
         </div>
@@ -294,6 +305,7 @@ const Head = () => {
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState("login"); // "login" | "signup"
+  const [isSocialOpen, setIsSocialOpen] = useState(false);
 
   const showAuth = (tab = "login") => {
     setAuthTab(tab);
@@ -305,10 +317,12 @@ const Head = () => {
       <MobileHead
         onOpenContact={() => setIsContactOpen(true)}
         onOpenAuth={showAuth}
+        onOpenSocial={() => setIsSocialOpen(true)}
       />
       <DesktopHead
         onOpenContact={() => setIsContactOpen(true)}
         onOpenAuth={showAuth}
+        onOpenSocial={() => setIsSocialOpen(true)}
       />
 
       {/* Модалки */}
@@ -320,6 +334,11 @@ const Head = () => {
         open={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
         initialTab={authTab}
+      />
+      <SocialModal
+        open={isSocialOpen}
+        onClose={() => setIsSocialOpen(false)}
+        initialTab="Detailing"
       />
     </header>
   );
