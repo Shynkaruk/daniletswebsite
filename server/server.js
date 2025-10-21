@@ -8,18 +8,57 @@ import path from 'path';
 import fs from 'fs';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import { fileURLToPath } from 'url';            // ⬅️ додано
 import db from './db.js';
 import cardsRouter from './routes/cards.js';
 
 const app = express();
-const PORT = process.env.PORT || 5179;
+// ---- базові налаштування для DO ----
+const __filename = fileURLToPath(import.meta.url);               // ⬅️ додано
+const __dirname = path.dirname(__filename);                      // ⬅️ додано
+const HOST = process.env.HOST || '0.0.0.0';                      // ⬅️ додано
+const PORT = process.env.PORT ? Number(process.env.PORT) : 8080; // ⬅️ змінив дефолт з 5179 на 8080
+
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_change_me';
 const TOKEN_EXPIRES = process.env.TOKEN_EXPIRES || '7d';
 
+app.set('trust proxy', true);                                    // ⬅️ корисно за проксі
+
 app.use(cors({ origin: '*', credentials: false }));
 app.use(express.json({ limit: '10mb' }));
-app.use('/uploads', express.static(path.resolve('uploads')));
-if (!fs.existsSync('uploads')) fs.mkdirSync('uploads');
+
+// директорії з урахуванням __dirname (щоб не зламалось у контейнері)
+const UPLOADS_DIR = path.join(__dirname, 'uploads');             // ⬅️ оновлено
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+app.use('/uploads', express.static(UPLOADS_DIR));
+
+
+function auth(req, res, next) {
+  const h = req.headers.authorization || '';
+  const token = h.startsWith('Bearer ') ? h.slice(7) : null;
+  if (!token) return res.status(401).json({ error: 'unauthorized' });
+  try {
+    req.user = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch {
+    return res.status(401).json({ error: 'invalid token' });
+  }
+}
+
+// ---- Health check для App Platform ----
+app.get('/health', (_req, res) => res.status(200).send('ok'));   // ⬅️ додано
+
+// ---- (опціонально) роздаємо фронтенд Vite з dist ----
+const DIST_DIR = path.join(__dirname, '..', 'dist');             // ⬅️ шлях до dist (налаштуй під свій проект)
+if (fs.existsSync(DIST_DIR)) {
+  app.use(express.static(DIST_DIR));
+  app.get('/', (_req, res) => res.sendFile(path.join(DIST_DIR, 'index.html')));
+  // SPA fallback, щоб працювали клієнтські маршрути
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api/')) return next();
+    res.sendFile(path.join(DIST_DIR, 'index.html'));
+  });
+}
 
 // ===== helpers =====
 function signToken(user) {
@@ -30,24 +69,11 @@ function signToken(user) {
   );
 }
 
-function auth(req, res, next) {
-  const h = req.headers.authorization || '';
-  const token = h.startsWith('Bearer ') ? h.slice(7) : null;
-  if (!token) return res.status(401).json({ error: 'unauthorized' });
-  try {
-    req.user = jwt.verify(token, JWT_SECRET);
-    next();
-  } catch (e) {
-    return res.status(401).json({ error: 'invalid token' });
-  }
-}
-
 function requireAdmin(req, res, next) {
   if (!req.user?.is_admin) return res.status(403).json({ error: 'forbidden' });
   next();
 }
 
-// ===== AUTH =====
 
 // register (створює звичайного юзера)
 app.post('/api/auth/register', (req, res) => {
@@ -224,13 +250,14 @@ app.delete('/api/cards/:id', auth, requireAdmin, (req, res) => {
 
 // ===== UPLOADS (тільки admin) =====
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads'),
-  filename: (req, file, cb) => {
+  destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),  // було 'uploads'
+  filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname);
     const name = Date.now() + '_' + Math.random().toString(36).slice(2) + ext;
     cb(null, name);
   }
 });
+
 const upload = multer({ storage });
 
 app.post('/api/upload', auth, requireAdmin, upload.single('file'), (req, res) => {
@@ -538,5 +565,7 @@ app.delete('/api/admin/requests/:id', auth, requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-
-app.listen(PORT, () => console.log(`API on http://localhost:${PORT}`));
+// ---- запуск ----
+app.listen(PORT, HOST, () => {
+  console.log(`API listening on http://${HOST}:${PORT} (NODE_ENV=${process.env.NODE_ENV || 'dev'})`);
+});
