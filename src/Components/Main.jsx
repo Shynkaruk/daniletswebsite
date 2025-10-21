@@ -34,34 +34,34 @@ const Main = () => {
         style={{ backgroundImage: `url(${images[currentImageIndex]})` }}
       >
         <div className="w-[95%] max-w-[1792px] mx-auto mt-[180px] px-4 mb-[50px]">
-          <div className="w-full md:w-2/3 lg:w-1/2 space-y-6">
+          <div className="w-full md:w-2/3 lg:w-1/2 space-y-5">
             <h1
               className="
-                text-[36px]
-                sm:text-[44px]
-                md:text-[56px]
-                lg:text-[72px]
-                xl:text-[90px]
-                font-extrabold
-                leading-tight
-                text-white
-              "
+        text-[32px]
+        sm:text-[40px]
+        md:text-[50px]
+        lg:text-[64px]
+        xl:text-[80px]
+        font-extrabold
+        leading-tight
+        text-white
+      "
             >
               DANILETS FAMILY
             </h1>
 
             <p
               className="
-                text-[16px]
-                sm:text-[18px]
-                md:text-[20px]
-                lg:text-[22px]
-                xl:text-[24px]
-                font-medium
-                leading-snug
-                text-[rgba(161,161,165,1)]
-                max-w-[900px]
-              "
+        text-[14px]
+        sm:text-[16px]
+        md:text-[18px]
+        lg:text-[20px]
+        xl:text-[22px]
+        font-medium
+        leading-snug
+        text-[rgba(161,161,165,1)]
+        max-w-[900px]
+      "
               style={{ fontFamily: "Manrope, sans-serif" }}
             >
               Columbos premier dentistry for bespoke luxury services, tailored
@@ -71,16 +71,16 @@ const Main = () => {
 
             <button
               className="
-                border border-white
-                px-6 py-3
-                rounded-full
-                text-white
-                text-[16px]
-                sm:text-[18px]
-                font-semibold
-                hover:bg-white hover:text-black
-                transition
-              "
+        border border-white
+        px-5 py-2.5
+        rounded-full
+        text-white
+        text-[15px]
+        sm:text-[17px]
+        font-semibold
+        hover:bg-white hover:text-black
+        transition
+      "
             >
               Learn More
             </button>
@@ -88,7 +88,7 @@ const Main = () => {
         </div>
 
         {images.length > 1 && (
-          <div className="absolute bottom-[35px] left-20 flex gap-3 z-10">
+<div className="absolute bottom-6 md:bottom-[120px] left-6 md:left-15 flex gap-3 z-[60] pointer-events-auto">
             <button
               onClick={handlePrev}
               className="
@@ -102,7 +102,11 @@ const Main = () => {
                 flex items-center justify-center
               "
             >
-              <img src={leftArrowIcon} alt="Arrow Left" className="w-5 h-5 lg:w-6 lg:h-6" />
+              <img
+                src={leftArrowIcon}
+                alt="Arrow Left"
+                className="w-5 h-5 lg:w-6 lg:h-6"
+              />
             </button>
             <button
               onClick={handleNext}
@@ -117,14 +121,18 @@ const Main = () => {
                 flex items-center justify-center
               "
             >
-              <img src={rightArrowIcon} alt="Arrow Right" className="w-5 h-5 lg:w-6 lg:h-6" />
+              <img
+                src={rightArrowIcon}
+                alt="Arrow Right"
+                className="w-5 h-5 lg:w-6 lg:h-6"
+              />
             </button>
           </div>
         )}
 
         <div
           className="
-            absolute bottom-[35px] right-20
+            absolute bottom-6 md:bottom-[120px] right-20
             bg-[rgba(235,176,108,0.15)]
             rounded-full
             px-6 py-3
@@ -132,7 +140,11 @@ const Main = () => {
             z-10
           "
         >
-          <img src={diamondicon} alt="Diamond Icon" className="w-6 h-6 lg:w-8 lg:h-8" />
+          <img
+            src={diamondicon}
+            alt="Diamond Icon"
+            className="w-6 h-6 lg:w-8 lg:h-8"
+          />
           <span
             className="
               text-white
