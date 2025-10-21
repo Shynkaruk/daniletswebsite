@@ -1,20 +1,19 @@
 {
+  "name": "danilets-backend",
   "type": "module",
   "engines": { "node": "20.x" },
   "scripts": {
-    "build": "vite build",
-    "start": "node server/server.js"
+    "start": "node server.js",
+    "dev": "node server.js",
+    "init": "node db.js --init"
   },
   "dependencies": {
-    "express": "^4.19.2",
+    "better-sqlite3": "^9.4.0",
     "cors": "^2.8.5",
-    "multer": "^1.4.5-lts.1",
-    "jsonwebtoken": "^9.0.2",
-    "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.5",
-    "better-sqlite3": "^9.4.0"
-  },
-  "devDependencies": {
-    "vite": "latest"
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "bcryptjs": "^2.4.3"
   }
 }
