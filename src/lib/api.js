@@ -1,4 +1,4 @@
-const API = import.meta.env.VITE_API_URL || "http://localhost:5179";
+const API = import.meta.env.VITE_API_URL || "";
 
 let TOKEN = localStorage.getItem("token") || null;
 let USER = null;
