@@ -8,6 +8,7 @@ const router = express.Router();
 
 const {
   GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
   JWT_SECRET = "dev_secret_change_me",
   TOKEN_EXPIRES = "7d",
 } = process.env;
@@ -104,6 +105,42 @@ router.post("/google", async (req, res) => {
     console.error("Google auth error:", e);
     return res.status(401).json({ error: "google auth failed" });
   }
+});
+
+router.post("/google-code", async (req, res) => {
+  try {
+    const { code } = req.body || {};
+    if (!code) return res.status(400).json({ error: "code required" });
+
+    // важливо: redirect_uri "postmessage"
+    const oauth = new OAuth2Client(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, "postmessage");
+    const { tokens } = await oauth.getToken({ code, redirect_uri: "postmessage" });
+
+    if (!tokens?.id_token) return res.status(401).json({ error: "no id_token" });
+
+    // перевіримо id_token і витягнемо payload
+    const ticket = await oauth.verifyIdToken({
+      idToken: tokens.id_token,
+      audience: GOOGLE_CLIENT_ID,
+    });
+    const p = ticket.getPayload(); // { sub, email, name, picture, ... }
+
+    const userRow = upsertGoogleUser({
+      sub: p.sub,
+      email: p.email || null,
+      name: p.name || "",
+      picture: p.picture || null,
+    });
+
+    const user = packUser(userRow);
+    const token = signToken(user);
+
+    return res.json({ user, token });
+  } catch (e) {
+    console.error("Google code flow error:", e?.message || e);
+    return res.status(401).json({ error: "google auth failed" });
+  }
+  
 });
 
 export default router;
