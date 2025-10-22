@@ -2,6 +2,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { FaTimes, FaGoogle, FaApple } from "react-icons/fa";
 import { auth } from "../lib/api"; // ← див. src/lib/api.js з попередніх кроків
+import { GoogleLogin } from "@react-oauth/google";
+
 
 const gradient =
   "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)";
