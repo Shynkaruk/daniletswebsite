@@ -89,6 +89,13 @@ export const auth = {
     return data;
   },
 
+  async google(id_token) {
+    const data = await sendJson(`${API}/api/auth/google`, "POST", { id_token });
+    if (data.token) setToken(data.token);
+    if (data.user) setUser(data.user);
+    return data;
+  },
+
   async me() {
     const data = await getJson(`${API}/api/auth/me`);
     if (data.user) setUser(data.user);
@@ -100,6 +107,7 @@ export const auth = {
     setUser(null);
   },
 };
+
 
 export const contentApi = {
   async getByKey(key, lang = "en") {

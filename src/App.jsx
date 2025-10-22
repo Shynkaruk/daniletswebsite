@@ -16,6 +16,7 @@ import Booking from './Components/Booking/Booking.jsx';
 import DetailingPage from './Components/Services/Detailing/DetailingPage.jsx';
 import AdminRequests from './Accounts/AdminRequests.jsx'
 import Account from './Accounts/Account.jsx'
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const App = () => {
   const [isMobile, setIsMobile] = useState(
@@ -36,6 +37,7 @@ const App = () => {
   }, []);
 
   return (
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
     <Router>
       <Routes>
         <Route path="/" element={isMobile ? <MainMobile /> : <Main />} />
@@ -55,6 +57,7 @@ const App = () => {
         <Route path="/account" element={<Account />} />
       </Routes>
     </Router>
+    </GoogleOAuthProvider>
   );
 };
 

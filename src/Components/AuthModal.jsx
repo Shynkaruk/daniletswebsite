@@ -10,7 +10,7 @@ export default function AuthModal({
   open,
   onClose,
   initialTab = "login", // "login" | "signup"
-  onAuth,               // callback після успіху (опц.)
+  onAuth, // callback після успіху (опц.)
 }) {
   const [tab, setTab] = useState(initialTab);
   const cardRef = useRef(null);
@@ -107,13 +107,31 @@ export default function AuthModal({
             </span>
           </div>
 
-          {/* socials (заглушки) */}
+          {/* socials */}
           <div className="grid grid-cols-2 gap-3">
-            <button className="h-11 rounded-[12px] bg-[#F4F4F5] font-semibold flex items-center justify-center gap-2">
-              <FaGoogle />
-              Google
-            </button>
-            <button className="h-11 rounded-[12px] bg-[#F4F4F5] font-semibold flex items-center justify-center gap-2">
+            <div className="h-11 rounded-[12px] bg-[#F4F4F5] font-semibold flex items-center justify-center">
+              <GoogleLogin
+                onSuccess={async ({ credential }) => {
+                  try {
+                    const { user } = await auth.google(credential); // див. п.2 нижче
+                    onAuth?.(user);
+                    onClose?.();
+                    if (!onAuth) window.location.reload();
+                  } catch (e) {
+                    alert(e?.error || "Google auth failed");
+                  }
+                }}
+                onError={() => alert("Google auth error")}
+                // компонент сам рендерить свою кнопку; контейнер залишено для стилю
+              />
+            </div>
+
+            {/* поки Apple — як заглушка */}
+            <button
+              className="h-11 rounded-[12px] bg-[#F4F4F5] font-semibold flex items-center justify-center gap-2"
+              disabled
+              title="Soon"
+            >
               <FaApple />
               Apple
             </button>
