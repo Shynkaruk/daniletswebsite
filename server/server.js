@@ -11,7 +11,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { fileURLToPath } from 'url';            // ⬅️ додано
 import db from './db.js';
-import googleAuthRouter from './routes/authGoogle.js';
+import googleCodeRouter from "./routes/authGoogleCode.js";
 import cardsRouter from './routes/cards.js';
 
 const app = express();
@@ -35,7 +35,7 @@ if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 app.use('/uploads', express.static(UPLOADS_DIR));
 
 
-app.use('/api/auth', googleAuthRouter);
+app.use('/api/auth', googleCodeRouter);
 
 function auth(req, res, next) {
   const h = req.headers.authorization || '';

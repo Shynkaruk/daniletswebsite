@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { FaTimes, FaGoogle, FaApple } from "react-icons/fa";
 import { auth } from "../lib/api"; // ← див. src/lib/api.js з попередніх кроків
 import { GoogleLogin } from "@react-oauth/google";
-
+import GoogleCustomButton from "./GoogleCustomButton";
 
 const gradient =
   "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)";
@@ -112,19 +112,12 @@ export default function AuthModal({
           {/* socials */}
           <div className="grid grid-cols-2 gap-3">
             <div className="h-11 rounded-[12px] bg-[#F4F4F5] font-semibold flex items-center justify-center">
-              <GoogleLogin
-                onSuccess={async ({ credential }) => {
-                  try {
-                    const { user } = await auth.google(credential); // див. п.2 нижче
-                    onAuth?.(user);
-                    onClose?.();
-                    if (!onAuth) window.location.reload();
-                  } catch (e) {
-                    alert(e?.error || "Google auth failed");
-                  }
+              <GoogleCustomButton
+                onDone={(user) => {
+                  onAuth?.(user);
+                  onClose?.();
+                  if (!onAuth) window.location.reload();
                 }}
-                onError={() => alert("Google auth error")}
-                // компонент сам рендерить свою кнопку; контейнер залишено для стилю
               />
             </div>
 

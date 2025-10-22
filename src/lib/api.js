@@ -69,6 +69,26 @@ async function sendJson(url, method, body) {
   });
   return parseJsonSafe(r);
 }
+
+async function sendJsonNoAutoLogout(url, method, body) {
+  const r = await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(body),
+  });
+
+  // без глобального auto-logout на 401 (корисно для /api/auth/*)
+  const text = await r.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch {}
+
+  if (!r.ok) {
+    // тут НЕ чистимо токен і НЕ показуємо "session expired"
+    throw (data || { error: `HTTP ${r.status} ${r.statusText}` });
+  }
+  return data;
+}
+
 /** ===================================================== **/
 
 export const auth = {
@@ -88,6 +108,14 @@ export const auth = {
     if (data.user) setUser(data.user);
     return data;
   },
+
+    async googleCode(code) {
+    const data = await sendJsonNoAutoLogout(`${API}/api/auth/google-code`, "POST", { code });
+    if (data.token) setToken(data.token);
+    if (data.user) setUser(data.user);
+    return data;
+  },
+
 
   async google(id_token) {
     const data = await sendJson(`${API}/api/auth/google`, "POST", { id_token });
