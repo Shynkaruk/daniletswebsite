@@ -11,7 +11,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { fileURLToPath } from 'url';            // ⬅️ додано
 import db from './db.js';
-import googleCodeRouter from "./routes/authGoogleCode.js";
+import googleCodeRouter from "./routes/authGoogle.js";
 import cardsRouter from './routes/cards.js';
 
 const app = express();
