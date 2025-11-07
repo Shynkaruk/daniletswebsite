@@ -7,9 +7,15 @@ const coreValues = [
   { title: "Integrity Matters", description: "Even in the small things" },
   { title: "Family First", description: "We treat everyone like family" },
   { title: "GOAT Mentality", description: "We strive for greatness" },
-  { title: "Clear Communication", description: "No room for assumption ONLY clear communication" },
+  {
+    title: "Clear Communication",
+    description: "No room for assumption ONLY clear communication",
+  },
   { title: "3 A.M. Mindset", description: "We’ll get it done no matter what" },
-  { title: "Every. Single. Time.", description: "Our promise: customer care and excellent service" },
+  {
+    title: "Every. Single. Time.",
+    description: "Our promise: customer care and excellent service",
+  },
 ];
 
 const OurCoreValues = () => {
@@ -22,8 +28,10 @@ const OurCoreValues = () => {
             Our Core Values
           </h2>
           <p className="text-[18px] md:text-[18px] text-[#52525B] max-w-[1300px] mt-3 md:mt-4 leading-[26px] md:leading-[30px] font-normal">
-            These values flow from our deepest story – leaving everything behind to rebuilding with nothing but hope and faith. These heartfelt
-            commitments ensure every detail, every moment, and every connection reflects the same love and excellence we pray our own family
+            These values flow from our deepest story – leaving everything behind
+            to rebuilding with nothing but hope and faith. These heartfelt
+            commitments ensure every detail, every moment, and every connection
+            reflects the same love and excellence we pray our own family
             receives in this country we call home.
           </p>
         </div>
@@ -35,7 +43,11 @@ const OurCoreValues = () => {
             style={{ fontFamily: "Manrope, sans-serif" }}
           >
             About
-            <img src={ArrowUpRightIcon} alt="Arrow Up Right" className="w-5 h-5 md:w-6 md:h-6" />
+            <img
+              src={ArrowUpRightIcon}
+              alt="Arrow Up Right"
+              className="w-5 h-5 md:w-6 md:h-6"
+            />
           </button>
         </div>
       </div>
@@ -51,17 +63,22 @@ const OurCoreValues = () => {
                 key={idx}
                 className={`flex items-start gap-5 bg-[#F2F2F2] rounded-[24px] p-5 md:p-7 h-[130px] md:h-[160px] ${span}`}
               >
-                <img src={IconGuard} alt="IconGuard" className="w-10 h-10 md:w-12 md:h-12 shrink-0" />
+                <img
+                  src={IconGuard}
+                  alt="IconGuard"
+                  className="w-10 h-10 md:w-12 md:h-12 shrink-0"
+                />
                 <div className="min-w-0">
+                  {/* 🔽 Зменшено розміри тексту */}
                   <h3
-                    className="text-[24px] md:text-[30px] font-bold text-[#18181B] leading-tight pt-1 md:pt-2 truncate"
+                    className="text-[20px] md:text-[24px] font-bold text-[#18181B] leading-snug pt-1 md:pt-2 truncate"
                     style={{ fontFamily: "Manrope, sans-serif" }}
                     title={item.title}
                   >
                     {item.title}
                   </h3>
                   <p
-                    className="text-[16px] md:text-[18px] text-[#52525B] leading-[22px] md:leading-[26px] mt-2 line-clamp-2"
+                    className="text-[14px] md:text-[16px] text-[#52525B] leading-[20px] md:leading-[24px] mt-2 line-clamp-2"
                     style={{ fontFamily: "Manrope, sans-serif" }}
                   >
                     {item.description}
@@ -80,7 +97,11 @@ const OurCoreValues = () => {
           style={{ fontFamily: "Manrope, sans-serif" }}
         >
           About Us
-          <img src={ArrowUpRightIcon} alt="Arrow Up Right" className="w-5 h-5" />
+          <img
+            src={ArrowUpRightIcon}
+            alt="Arrow Up Right"
+            className="w-5 h-5"
+          />
         </button>
       </div>
     </section>

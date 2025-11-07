@@ -5,7 +5,7 @@ import iconFull from '../../../assets/icons/icon_full-auto-detailing.svg'
 import iconPaint from '../../../assets/icons/icon_paint-protection.svg'
 import iconPrecision from '../../../assets/icons/icon_precision-work.svg'
 import iconFlexible from '../../../assets/icons/icon_flexible-scheduling.svg'
-import iconDrops from '../../../assets/icons/icon_drops.svg'
+import iconDrops from '../../../assets/icons/iconDropsRed.svg'
 
 const WhyDanilets = () => {
   const items = useMemo(() => [
@@ -19,7 +19,7 @@ const WhyDanilets = () => {
     <section className="w-full px-4 pb-8">
       {/* ------- MOBILE (як було) ------- */}
       <div className="md:hidden">
-        <div className="inline-flex items-center gap-2 px-3 h-9 rounded-full bg-[rgba(235,176,108,0.15)] mb-4">
+        <div className="inline-flex items-center gap-2 px-3 h-9 rounded-full bg-[#FF525226] mb-4">
           <span className="w-5 h-5 grid place-items-center rounded-full">
             <img src={iconDrops} alt="drops icon" className="w-6 h-6" />
           </span>
@@ -81,7 +81,7 @@ const WhyDanilets = () => {
 
         {/* RIGHT: бейдж + заголовок + опис */}
         <div className="md:col-span-5 flex flex-col justify-center">
-          <div className="inline-flex items-center gap-2 px-4 h-10 rounded-full bg-[rgba(235,176,108,0.15)] mb-5 self-start">
+          <div className="inline-flex items-center gap-2 px-4 h-10 rounded-full bg-[#FF525226] mb-5 self-start">
             <span className="w-6 h-6 grid place-items-center rounded-full">
               <img src={iconDrops} alt="" className="w-6 h-6" />
             </span>

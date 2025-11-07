@@ -228,8 +228,6 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                   {[
                     { label: "Detailing", to: "/services/detailing" },
                     { label: "Cleaning", to: "/cleaning" },
-                    { label: "Pickleball", to: "/pickleball" },
-                    { label: "Media", to: "/media" },
                   ].map(({ label, to }, idx) => (
                     <Link
                       key={label}

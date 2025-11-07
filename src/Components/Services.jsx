@@ -1,18 +1,10 @@
 import React from "react";
 import cleaningIcon from "../assets/icons/services/cleaning.svg";
 import detailingIcon from "../assets/icons/services/detailing.svg";
-import mediaIcon from "../assets/icons/services/media.svg";
-import pickleballIcon from "../assets/icons/services/pickleball.svg";
 import arrowRightIcon from "../assets/icons/arrows/arrow_right_black.svg";
 
 const Services = ({ className }) => {
   const services = [
-    {
-      title: "Danilets Cleaning",
-      description:
-        "Expert cleaning services for commercial and residential spaces, delivering results that exceed expectations",
-      icon: cleaningIcon,
-    },
     {
       title: "Danilets Detailing",
       description:
@@ -20,17 +12,11 @@ const Services = ({ className }) => {
       icon: detailingIcon,
     },
     {
-      title: "Danilets Media",
+      title: "Danilets Cleaning",
       description:
-        "Authentic visual storytelling that captures your moments with professional excellence",
-      icon: mediaIcon,
-    },
-    {
-      title: "Danilets Pickleball",
-      description:
-        "Top-tier pickleball programming and coaching tailored for both fun and performance",
-      icon: pickleballIcon,
-    },
+        "Expert cleaning services for commercial and residential spaces, delivering results that exceed expectations",
+      icon: cleaningIcon,
+    }
   ];
 
   return (
@@ -52,24 +38,23 @@ const Services = ({ className }) => {
       </div>
 
       {/* Картки сервісів */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 group">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {services.map((service, idx) => {
           const [danilets, serviceName] = service.title.split(" ");
 
           return (
             <div
               key={idx}
-              className="flex flex-col bg-[rgba(242,242,242,1)] rounded-[24px] md:rounded-[32px] p-3 md:p-6 w-full min-h-[300px] md:min-h-[340px] transform transition-all duration-300 ease-in-out group-hover:scale-90 md:group-hover:scale-100 md:hover:scale-110 md:hover:z-10 md:hover:shadow-lg"
+              className="flex flex-col bg-[rgba(242,242,242,1)] rounded-[24px] md:rounded-[32px] p-3 md:p-6 w-full min-h-[300px] md:min-h-[340px] transform transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg"
             >
-{/* Іконка */}
-<div className="mb-4">
-  <img
-    src={service.icon}
-    alt={`${serviceName} icon`}
-    className="w-[48px] h-[48px] md:w-[64px] md:h-[64px] object-contain"
-  />
-</div>
-
+              {/* Іконка */}
+              <div className="mb-4">
+                <img
+                  src={service.icon}
+                  alt={`${serviceName} icon`}
+                  className="w-[48px] h-[48px] md:w-[64px] md:h-[64px] object-contain"
+                />
+              </div>
 
               {/* Назва */}
               <h3

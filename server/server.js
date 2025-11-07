@@ -13,6 +13,7 @@ import { fileURLToPath } from 'url';            // ⬅️ додано
 import db from './db.js';
 import googleCodeRouter from "./routes/authGoogle.js";
 import cardsRouter from './routes/cards.js';
+import reviewsRouter from './routes/reviews.js';
 
 const app = express();
 // ---- базові налаштування для DO ----
@@ -561,6 +562,8 @@ app.put('/api/admin/requests/:id', auth, requireAdmin, (req, res) => {
 });
 
 app.use('/api/cards', cardsRouter)
+
+app.use('/api', reviewsRouter);
 
 // видалити
 app.delete('/api/admin/requests/:id', auth, requireAdmin, (req, res) => {

@@ -2,8 +2,9 @@ import React from "react";
 import Head from "../../Head";
 import bgImageMobile from "../../../assets/photo/bg2_mobile_detailing.png";
 import bgImagePC from "../../../assets/photo/bg_detailing_pc.png";
-import iconBuble from "../../../assets/icons/icon_detailing_buble.svg";
+import iconBuble from "../../../assets/icons/buble_red.svg";
 import ServicesProvide from "./ServicesProvide";
+import LogoRed from "../../../assets/icons/logo_red.svg";
 
 const Detailing = () => {
   return (
@@ -38,10 +39,18 @@ const Detailing = () => {
       <div className="relative z-20 px-6 pt-6 md:pt-[10vh] md:ml-15">
         <Head />
         <div className="mt-20 md:mt-20">
-          <h1 className="text-5xl md:text-7xl font-bold leading-tight break-words">
+          {/* LogoRed */}
+          <img
+            src={LogoRed}
+            alt="Danilets Logo"
+            className="w-68 md:w-124 mb-6 object-contain"
+          />
+
+          <h1 className="text-5xl md:text-6xl font-bold leading-tight break-words">
             Premium Auto Detailing
             <br className="hidden md:block" /> for Lasting Shine
           </h1>
+
           <p
             className="mt-2 text-xl md:hidden max-w-md"
             style={{ color: "#A1A1A5" }}
@@ -50,7 +59,7 @@ const Detailing = () => {
             that looks its best, every time
           </p>
           <p
-            className="mt-2 text-2xl hidden md:block max-w-screen-md"
+            className="mt-2 text-1xl hidden md:block max-w-screen-md"
             style={{ color: "#A1A1A5" }}
           >
             We go beyond the basics — restoring your car’s beauty with deep
@@ -59,6 +68,7 @@ const Detailing = () => {
             make your vehicle look its absolute best — with attention to every
             detail
           </p>
+
           <button className="text-base md:text-xl mt-6 px-12 py-4 border border-white rounded-full hover:bg-white hover:text-black transition">
             Book
           </button>
@@ -67,7 +77,7 @@ const Detailing = () => {
 
       {/* Бульбашка */}
       <div className="absolute bottom-25 right-5 md:bottom-35 md:right-21 z-10">
-        <div className="flex items-center space-x-3 bg-[rgba(235,176,108,0.15)] backdrop-blur-md rounded-full px-4 py-3">
+        <div className="flex items-center space-x-3 bg-[#FF525226] backdrop-blur-md rounded-full px-4 py-3">
           <img
             src={iconBuble}
             alt="Bubble icon"

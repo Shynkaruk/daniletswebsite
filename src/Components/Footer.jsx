@@ -110,10 +110,11 @@ const Footer = () => {
           </div>
 
           {/* Кнопка Book Online — Десктоп (підняв вище, вирівняв зверху) */}
-          <div className="hidden lg:flex lg:items-start lg:ml-auto">
+          <div className="hidden lg:flex lg:items-start lg:ml-auto lg:self-start lg:flex-shrink-0">
+
             <Link
               to="/book-online"
-              className="min-w-[220px] h-[56px] rounded-[88px] flex items-center justify-between px-5"
+              className="min-w-[200px] h-[56px] rounded-[88px] flex items-center justify-between px-5"
               style={{
                 background:
                   "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)",
