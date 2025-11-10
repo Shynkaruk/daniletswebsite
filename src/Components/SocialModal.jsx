@@ -1,5 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import { FaGoogle, FaTiktok, FaYoutube, FaFacebookF } from "react-icons/fa";
+import {
+  FaGoogle,
+  FaTiktok,
+  FaYoutube,
+  FaFacebookF,
+  FaInstagram,
+} from "react-icons/fa";
 
 const TABs = ["Detailing", "Cleaning"];
 
@@ -7,13 +13,15 @@ const TABs = ["Detailing", "Cleaning"];
 const SOCIALS = {
   Detailing: [
     { label: "Google", icon: FaGoogle, href: "#" },
-    { label: "Tik Tok", icon: FaTiktok, href: "#" },
+    { label: "Instagram", icon: FaInstagram, href: "https://www.instagram.com/daniletsdetailing?igsh=MWphOGk5MGc2bHBvNg==" },
+    { label: "TikTok", icon: FaTiktok, href: "#" },
     { label: "YouTube", icon: FaYoutube, href: "#" },
     { label: "Facebook", icon: FaFacebookF, href: "#" },
   ],
   Cleaning: [
     { label: "Google", icon: FaGoogle, href: "#" },
-    { label: "Tik Tok", icon: FaTiktok, href: "#" },
+    { label: "Instagram", icon: FaInstagram, href: "https://www.instagram.com/daniletscleaning?igsh=ajcwdW9uZGxkb2M5" },
+    { label: "TikTok", icon: FaTiktok, href: "#" },
     { label: "YouTube", icon: FaYoutube, href: "#" },
     { label: "Facebook", icon: FaFacebookF, href: "#" },
   ],
@@ -40,7 +48,10 @@ export default function SocialModal({ open, onClose, initialTab = "Detailing" })
 
   return (
     <>
-      <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
       <div
         className="fixed z-[101] inset-0 flex items-center justify-center px-4"
         aria-modal="true"
@@ -53,7 +64,7 @@ export default function SocialModal({ open, onClose, initialTab = "Detailing" })
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold">Our Social Media</h3>
+            <h3 className="text-lg font-bold">Social Media</h3>
             <button
               onClick={onClose}
               className="w-8 h-8 flex items-center justify-center rounded-full border border-[#A1A1A5] text-[#A1A1A5] hover:bg-gray-50"
@@ -63,7 +74,7 @@ export default function SocialModal({ open, onClose, initialTab = "Detailing" })
             </button>
           </div>
 
-          {/* Segmented tabs */}
+          {/* Tabs */}
           <div className="flex gap-2 bg-[#F5F6F8] p-1 rounded-full w-fit mb-5">
             {TABs.map((t) => {
               const active = t === tab;
