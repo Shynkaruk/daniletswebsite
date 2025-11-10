@@ -1,22 +1,27 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import cleaningIcon from "../assets/icons/services/cleaning.svg";
 import detailingIcon from "../assets/icons/services/detailing.svg";
 import arrowRightIcon from "../assets/icons/arrows/arrow_right_black.svg";
 
 const Services = ({ className }) => {
+  const navigate = useNavigate();
+
   const services = [
     {
       title: "Danilets Detailing",
       description:
-        "High-end automotive detailing designed to enhance, protect, and perfect every detail of your vehicle",
+        "Premium automotive detailing that enhances, protects, and perfects every detail of your vehicle. From dealerships to individual clients, we deliver excellence with precision.",
       icon: detailingIcon,
+      link: "/services/detailing",
     },
     {
       title: "Danilets Cleaning",
       description:
-        "Expert cleaning services for commercial and residential spaces, delivering results that exceed expectations",
+        "Professional cleaning services specializing in commercial spaces, offices, Airbnb properties, and deep cleans. We deliver meticulous results that transform your environment.",
       icon: cleaningIcon,
-    }
+      link: "/comingsoon",
+    },
   ];
 
   return (
@@ -68,7 +73,7 @@ const Services = ({ className }) => {
 
               {/* Опис */}
               <p
-                className="text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px] font-normal leading-snug text-gray-600 mb-4"
+                className="text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px] font-normal leading-snug text-gray-600 mb-10"
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
                 {service.description}
@@ -76,7 +81,8 @@ const Services = ({ className }) => {
 
               {/* Кнопка */}
               <button
-                className="flex items-center justify-between w-full h-[40px] md:h-[52px] rounded-[88px] text-[16px] sm:text-[18px] md:text-[20px] px-3 md:px-5 mt-auto"
+                onClick={() => navigate(service.link)}
+                className="flex items-center justify-between w-full h-[40px] md:h-[52px] rounded-[88px] text-[16px] sm:text-[18px] md:text-[20px] px-3 md:px-5 mt-auto transition-transform hover:scale-[1.02]"
                 style={{
                   background:
                     "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)",
@@ -84,7 +90,7 @@ const Services = ({ className }) => {
                   fontWeight: 600,
                 }}
               >
-                Book Now
+                Learn More
                 <img
                   src={arrowRightIcon}
                   alt="Arrow Right"

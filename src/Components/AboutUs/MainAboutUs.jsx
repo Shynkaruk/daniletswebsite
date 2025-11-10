@@ -1,11 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import Head from "./../Head.jsx";
 import familyPhoto from "../../assets/photo/family-photo.png";
 import diamondicon from "../../assets/icons/diamond-icon.svg";
 
 const MainAboutUs = () => {
+  const [showPopup, setShowPopup] = useState(false);
+
+  const openPopup = () => setShowPopup(true);
+  const closePopup = () => setShowPopup(false);
+
   return (
-    <div className="bg-[rgba(235,235,235,1)] min-h-screen pb-8">
+    <div className="bg-[rgba(235,235,235,1)] min-h-screen pb-8 relative">
       <Head />
 
       <main
@@ -41,14 +46,15 @@ const MainAboutUs = () => {
                 text-[rgba(161,161,165,1)]
                 max-w-[900px]
               "
-              style={{ fontFamily: "Manrope, sans-serif" }}
+              style={{ fontFamily: 'Manrope, sans-serif' }}
             >
-              Columbus’ premier destination for bespoke luxury services, tailored
-              with precision and delivered with excellence — where every detail
-              exceeds expectations
+              Our journey from survival to service has shaped everything we do.
+              We're honored to serve you with the same care and dedication that
+              built our family business from the ground up.
             </p>
 
             <button
+              onClick={openPopup}
               className="
                 border border-white
                 px-6 py-3
@@ -95,6 +101,85 @@ const MainAboutUs = () => {
           </span>
         </div>
       </main>
+
+      {/* Pop-up вікно */}
+      {showPopup && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="relative bg-white rounded-2xl max-w-[900px] max-h-[90vh] overflow-y-auto p-8 text-black shadow-2xl">
+            <button
+              onClick={closePopup}
+              className="absolute top-3 right-3 text-2xl font-semibold text-gray-600 hover:text-black"
+            >
+              ✕
+            </button>
+
+            <h2 className="text-3xl font-bold mb-4 text-center">
+              A Journey of Faith and Resilience
+            </h2>
+
+            <p className="mb-3">
+              Our story begins in 2009 when our family moved to the United States, leaving everything
+              behind. We lost our home and business, and arrived in upstate New York with nothing but hope
+              and faith in God's plan.
+            </p>
+
+            <p className="mb-3">
+              From 2010 to 2012, Nataly wasn't physically present in the US—stuck in Europe, separated
+              from her children, fighting to reunite our family. After two years of perseverance and prayer,
+              she was finally able to return. In 2013, we moved to Columbus, Ohio, where our American dream
+              truly began.
+            </p>
+
+            <h3 className="text-2xl font-semibold mt-6 mb-3">
+              Building from the Ground Up
+            </h3>
+            <p className="mb-3">
+              When we first arrived in Columbus, Nataly started working at a hotel, making just $3.75 per
+              room. During those difficult days, she made a promise: "When I have my own company, I will
+              never treat my team members like this."
+            </p>
+
+            <p className="mb-3">
+              From 2013 to 2016, she worked for others while building her skills and reputation. She then
+              started working independently as a sole proprietor, serving clients with the same dedication
+              and care that would become our family trademark.
+            </p>
+
+            <p className="mb-3">
+              In 2020, everything changed. Nataly began hiring team members, growing from a one-person
+              operation to a full cleaning company. That same year, Timothy came across a YouTube channel
+              called "Detailed Geek," ordered some equipment, and detailed his mom's car. Elijah joined him
+              in partnership, and Danilets Detailing was born.
+            </p>
+
+            <h3 className="text-2xl font-semibold mt-6 mb-3">
+              Milestones of Perseverance
+            </h3>
+            <ul className="list-disc pl-6 mb-3 space-y-1">
+              <li>2016: Started cleaning for private clients</li>
+              <li>2020: Started hiring team members for cleaning services</li>
+              <li>2020: Founded Danilets Detailing</li>
+              <li>2021: Granted asylum in the United States</li>
+              <li>2024: Received green card in the United States</li>
+              <li>2024: Purchased first home in the United States</li>
+              <li>2025: Rebranded to combine detailing and cleaning</li>
+            </ul>
+
+            <h3 className="text-2xl font-semibold mt-6 mb-3">Our Promise to You</h3>
+            <p className="mb-3">
+              We know what it's like to start with nothing. We know the value of hard work, integrity, and
+              treating people with dignity. Every customer we serve receives the same care and excellence
+              we wished for during our hardest days.
+            </p>
+
+            <p>
+              When you choose Danilets, you're not just hiring a service—you're supporting a family that
+              believes in the American dream, honors God in everything we do, and treats every client like
+              family.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

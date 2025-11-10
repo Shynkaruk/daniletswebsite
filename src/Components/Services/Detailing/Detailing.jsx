@@ -59,14 +59,12 @@ const Detailing = () => {
             that looks its best, every time
           </p>
           <p
-            className="mt-2 text-1xl hidden md:block max-w-screen-md"
+            className="mt-2 text-2xl hidden md:block max-w-screen-md"
             style={{ color: "#A1A1A5" }}
           >
-            We go beyond the basics — restoring your car’s beauty with deep
-            interior cleaning, paint-safe exterior care, and protective
-            treatments. Whether it's for daily driving or special occasions, we
-            make your vehicle look its absolute best — with attention to every
-            detail
+            Precision detailing for dealerships, fleets, and vehicle owners who
+            demand excellence. From commercial work to ceramic coatings—we
+            deliver perfection in every detail.
           </p>
 
           <button className="text-base md:text-xl mt-6 px-12 py-4 border border-white rounded-full hover:bg-white hover:text-black transition">
@@ -83,8 +81,8 @@ const Detailing = () => {
             alt="Bubble icon"
             className="w-6 h-6 object-contain"
           />
-          <span className="text-base font-medium md:text-lg whitespace-nowrap">
-            Care That Goes Beyond Clean
+          <span className="text-base font-bold md:text-lg whitespace-nowrap">
+            Lets Detail
           </span>
         </div>
       </div>

@@ -2,10 +2,9 @@ import React, { useState, useEffect } from "react";
 import Head from "./Head.jsx";
 import Services from "./Services.jsx";
 
-import bg_detaling from "../assets/photo/bg_detailing_pc.png"
-import bg_cleaining from '../assets/photo/cleaningn_bg.png'
+import bg_detaling from "../assets/photo/bg_detailing_pc.png";
+import bg_cleaining from "../assets/photo/cleaningn_bg.png";
 
-import newPhoto from "../assets/photo/InfoPhoto.png";
 import diamondicon from "../assets/icons/diamond-icon.svg";
 import OurPortfolio from "./OurPortfolio.jsx";
 import OurCoreValues from "./OurCoreValues.jsx";
@@ -13,6 +12,7 @@ import OurReviews from "./OurReviews.jsx";
 import ActionMini from "./ActionMini.jsx";
 import FAQ from "./FAQ.jsx";
 import Footer from "./Footer.jsx";
+import StatsBlock from "./StatsBlock.jsx";
 
 const Main = () => {
   // 👉 Сюди потім підставиш Detailing / Cleaning
@@ -35,7 +35,6 @@ const Main = () => {
 
       {/* Головний блок hero */}
       <main className="relative min-h-screen overflow-x-clip">
-
         {/* 🔥 Фонова карусель */}
         <div className="absolute inset-0">
           {images.map((img, index) => (
@@ -73,7 +72,7 @@ const Main = () => {
                   text-white
                 "
               >
-                DANILETS FAMILY
+                WELCOME TO DANILETS
               </h1>
 
               <p
@@ -90,9 +89,8 @@ const Main = () => {
                 "
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
-                Columbos premier dentistry for bespoke luxury services, tailored
-                with precision and delivered with excellence – where every detail
-                exceeds expectations
+                Columbus' Trusted Provider of Premium Services Tailored with
+                precision and delivered with excellence
               </p>
 
               <button
@@ -108,7 +106,7 @@ const Main = () => {
                   transition
                 "
               >
-                Learn More
+                Lets is More
               </button>
             </div>
           </div>
@@ -145,15 +143,7 @@ const Main = () => {
       </main>
 
       <Services className="relative z-10 mt-[-100px]" />
-
-      <div className="w-[95%] max-w-[1792px] mx-auto mt-8 px-4">
-        <img
-          src={newPhoto}
-          alt="Additional Photo"
-          className="w-full h-auto object-cover rounded-lg"
-        />
-      </div>
-
+      <StatsBlock></StatsBlock>
       <OurPortfolio />
       <OurCoreValues />
       <OurReviews />

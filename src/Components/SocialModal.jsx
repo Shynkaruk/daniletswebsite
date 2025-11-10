@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { FaGoogle, FaTiktok, FaYoutube, FaFacebookF } from "react-icons/fa";
 
-const TABs = ["Detailing", "Cleaning", "Media", "Pickleball"];
+const TABs = ["Detailing", "Cleaning"];
 
 // === Замінити посилання на ваші реальні ===
 const SOCIALS = {
@@ -12,18 +12,6 @@ const SOCIALS = {
     { label: "Facebook", icon: FaFacebookF, href: "#" },
   ],
   Cleaning: [
-    { label: "Google", icon: FaGoogle, href: "#" },
-    { label: "Tik Tok", icon: FaTiktok, href: "#" },
-    { label: "YouTube", icon: FaYoutube, href: "#" },
-    { label: "Facebook", icon: FaFacebookF, href: "#" },
-  ],
-  Media: [
-    { label: "Google", icon: FaGoogle, href: "#" },
-    { label: "Tik Tok", icon: FaTiktok, href: "#" },
-    { label: "YouTube", icon: FaYoutube, href: "#" },
-    { label: "Facebook", icon: FaFacebookF, href: "#" },
-  ],
-  Pickleball: [
     { label: "Google", icon: FaGoogle, href: "#" },
     { label: "Tik Tok", icon: FaTiktok, href: "#" },
     { label: "YouTube", icon: FaYoutube, href: "#" },

@@ -5,6 +5,7 @@ const ContactForm = ({ open, onClose }) => {
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
     service: "Danilets Cleaning",
     description: "",
   });
@@ -86,6 +87,14 @@ const ContactForm = ({ open, onClose }) => {
             onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
           />
 
+          <input
+            type="tel"
+            placeholder="Enter your phone number"
+            className="w-full rounded-2xl bg-black/5 px-4 py-3 outline-none placeholder-[rgba(122,122,122,1)] text-black"
+            value={form.phone}
+            onChange={(e) => setForm((s) => ({ ...s, phone: e.target.value }))}
+          />
+
           <select
             className="w-full rounded-2xl bg-black/5 px-4 py-3 outline-none text-[rgba(28,28,28,1)]"
             value={form.service}
@@ -94,11 +103,7 @@ const ContactForm = ({ open, onClose }) => {
             }
           >
             {services.map((s) => (
-              <option
-                key={s}
-                value={s}
-                className="text-[rgba(28,28,28,1)]"
-              >
+              <option key={s} value={s} className="text-[rgba(28,28,28,1)]">
                 {s}
               </option>
             ))}
@@ -116,7 +121,9 @@ const ContactForm = ({ open, onClose }) => {
 
           <div className="flex items-start gap-3 rounded-xl bg-[#F7F5F0] px-3 py-3 text-[13px]">
             <span>⚠️</span>
-            <p className="text-black">We’ll send all updates and information to this email address</p>
+            <p className="text-black">
+              We’ll send all updates and information to this email address
+            </p>
           </div>
 
           <button

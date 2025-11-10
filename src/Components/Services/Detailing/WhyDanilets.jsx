@@ -9,10 +9,10 @@ import iconDrops from '../../../assets/icons/iconDropsRed.svg'
 
 const WhyDanilets = () => {
   const items = useMemo(() => [
-    { id: 1, title: 'Full Auto Detailing',   subtitle: 'Deep clean inside & out',                            icon: iconFull },
-    { id: 2, title: 'Paint Protection',      subtitle: 'Glossy finishes that stay spotless longer',          icon: iconPaint },
-    { id: 3, title: 'Precision Work',        subtitle: 'Every crevice cleaned with care',                    icon: iconPrecision },
-    { id: 4, title: 'Flexible Scheduling',   subtitle: 'Mobile service for 3+ vehicles',                     icon: iconFlexible },
+    { id: 1, title: '+1,500 Vehicles Detailed',   subtitle: 'Since 2020, weve transformed over 1,500 vehicles',                            icon: iconFull },
+    { id: 2, title: 'Attention to Detail',      subtitle: 'We dont cut corners',          icon: iconPaint },
+    { id: 3, title: 'Dealership & Fleet Services',        subtitle: 'Consistent quality for businesses',                    icon: iconPrecision },
+    { id: 4, title: 'Family-Owned',   subtitle: 'Youre not just a transaction—youre family',                     icon: iconFlexible },
   ], [])
 
   return (

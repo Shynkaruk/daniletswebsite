@@ -25,24 +25,25 @@ const OurCoreValues = () => {
       <div className="flex flex-col md:flex-row justify-between items-start mb-8 md:mb-12 gap-4 md:gap-6">
         <div className="md:pl-8 lg:pl-12">
           <h2 className="text-[28px] md:text-[56px] font-bold leading-[32px] md:leading-[64px] text-[#18181B]">
-            Our Core Values
+            Core Values
           </h2>
           <p className="text-[18px] md:text-[18px] text-[#52525B] max-w-[1300px] mt-3 md:mt-4 leading-[26px] md:leading-[30px] font-normal">
             These values flow from our deepest story – leaving everything behind
-            to rebuilding with nothing but hope and faith. These heartfelt
-            commitments ensure every detail, every moment, and every connection
-            reflects the same love and excellence we pray our own family
-            receives in this country we call home.
+            and rebuilding with nothing but hope and faith. These aren't just
+            words on a page; they're the backbone of why we do what we do. Every
+            detail, every moment, and every connection reflects the same love
+            and excellence we pray our own family receives in this country we
+            call home.
           </p>
         </div>
 
         {/* Кнопка тільки для ПК */}
-        <div className="hidden md:block md:pr-8 lg:pr-12">
+        <div className="hidden md:block md:pr-8 md:px-18 lg:pr-12">
           <button
             className="bg-[rgba(242,242,242,1)] text-black rounded-[32px] font-medium transition text-[18px] md:text-[20px] flex items-center justify-center gap-2 py-4 px-10"
             style={{ fontFamily: "Manrope, sans-serif" }}
           >
-            About
+            Learn More
             <img
               src={ArrowUpRightIcon}
               alt="Arrow Up Right"

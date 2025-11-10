@@ -85,9 +85,7 @@ const OurReviews = () => {
     if (filteredReviews.length <= safeVisibleCards) return;
 
     setStartIndex((prevIndex) =>
-      prevIndex + safeVisibleCards >= filteredReviews.length
-        ? 0
-        : prevIndex + 1
+      prevIndex + safeVisibleCards >= filteredReviews.length ? 0 : prevIndex + 1
     );
   };
 
@@ -114,7 +112,7 @@ const OurReviews = () => {
     return (
       <div className="w-[100%] max-w-[2100px] mx-auto py-12 px-4 md:px-16">
         <h2 className="text-4xl md:text-5xl font-bold text-black mb-4">
-          Our Reviews
+          Reviews
         </h2>
         <p className="text-lg text-[#52525B]">Loading Google Reviews...</p>
       </div>
@@ -126,20 +124,23 @@ const OurReviews = () => {
       {/* Заголовок + (умовно) перемикачі */}
       <div className="flex flex-col md:flex-row md:justify-between items-start gap-4 mb-8 px-4 md:px-16">
         <h2 className="text-4xl md:text-5xl font-bold text-black ml-2">
-          Our Reviews
+          Reviews
         </h2>
 
         {/* Перемикач показуємо тільки якщо ми НЕ на /services/detailing */}
         {!isDetailingPage && (
-          <div className="relative w-full md:w-[660px] h-[76px] bg-white rounded-[174px] p-2 overflow-x-auto md:overflow-x-hidden overflow-y-hidden scrollbar-hide">
+          <div className="relative inline-flex items-center bg-white rounded-full px-1 py-1">
+            {/* Підсвітка активного табу */}
             <div
-              className="absolute h-[60px] bg-[rgba(242,242,242,1)] rounded-[88px] transition-all duration-300 ease-in-out z-0"
+              className="absolute top-1 bottom-1 bg-[rgba(242,242,242,1)] rounded-full transition-all duration-300 ease-in-out z-0"
               style={{
                 left: `${activePosition.left}px`,
                 width: `${activePosition.width}px`,
               }}
             />
-            <div className="flex space-x-[10px] z-10 min-w-max">
+
+            {/* Таби */}
+            <div className="relative flex z-10 space-x-1">
               {["Detailing", "Cleaning"].map((service) => (
                 <button
                   key={service}
@@ -148,7 +149,7 @@ const OurReviews = () => {
                     setSelectedService(service);
                     setStartIndex(0);
                   }}
-                  className="text-[18px] font-bold leading-[38px] tracking-[0%] text-[#18181B] py-[14px] px-10 rounded-[88px] transition z-10"
+                  className="text-[14px] md:text-[24px] font-semibold text-[#18181B] py-4 px-9 rounded-full leading-none transition"
                   style={{ fontFamily: "Manrope, sans-serif" }}
                 >
                   {service}

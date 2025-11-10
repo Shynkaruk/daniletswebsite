@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import Head from './Head.jsx';
-import Services from './Services.jsx';
+import React, { useState, useEffect } from "react";
+import Head from "./Head.jsx";
+import Services from "./Services.jsx";
 
-import bg_detaling from "../assets/photo/bg2_mobile_detailing.png"
-import bg_cleaining from '../assets/photo/cleaningn_bg.png'
+import bg_detaling from "../assets/photo/bg2_mobile_detailing.png";
+import bg_cleaining from "../assets/photo/cleaningn_bg.png";
 
-import diamondicon from '../assets/icons/diamond-icon.png';
-import OurPortfolio from './OurPortfolio.jsx';
-import OurCoreValues from './OurCoreValues.jsx';
-import OurReviews from './OurReviews.jsx';
-import ActionMini from './ActionMini.jsx';
-import FAQ from './FAQ.jsx';
-import Footer from './Footer.jsx';
-import StatsBlock from './StatsBlock.jsx';
+import diamondicon from "../assets/icons/diamond-icon.png";
+import OurPortfolio from "./OurPortfolio.jsx";
+import OurCoreValues from "./OurCoreValues.jsx";
+import OurReviews from "./OurReviews.jsx";
+import ActionMini from "./ActionMini.jsx";
+import FAQ from "./FAQ.jsx";
+import Footer from "./Footer.jsx";
+import StatsBlock from "./StatsBlock.jsx";
 
 const MainMobile = () => {
   // 👉 Сюди потім підставиш свої мобільні фото (Detailing / Cleaning)
@@ -35,7 +35,6 @@ const MainMobile = () => {
 
       {/* hero-блок з фоновою каруселлю */}
       <main className="relative min-h-[calc(100vh-80px)] overflow-x-clip">
-
         {/* 🔥 Фонова карусель (fade між зображеннями) */}
         <div className="absolute inset-0">
           {images.map((img, index) => (
@@ -48,7 +47,7 @@ const MainMobile = () => {
                 object-cover
                 absolute inset-0
                 transition-opacity duration-700
-                ${index === currentImageIndex ? 'opacity-100' : 'opacity-0'}
+                ${index === currentImageIndex ? "opacity-100" : "opacity-0"}
               `}
             />
           ))}
@@ -63,19 +62,19 @@ const MainMobile = () => {
             <div className="space-y-4">
               <h1
                 className="text-[40px] font-extrabold leading-[100%] tracking-[0%] text-white"
-                style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800 }}
+                style={{ fontFamily: "Manrope, sans-serif", fontWeight: 800 }}
               >
-                DANILETS FAMILY
+                WELCOME TO DANILETS
               </h1>
               <p
                 className="text-[15px] font-normal leading-[140%] tracking-[0%] text-[rgba(161,161,165,1)]"
-                style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 400 }}
+                style={{ fontFamily: "Manrope, sans-serif", fontWeight: 400 }}
               >
-                Columbos premier dentistry for bespoke luxury services, tailored with precision
-                and delivered with excellence - where every detail exceeds expectations
+                Columbus' Trusted Provider of Premium Services Tailored with
+                precision and delivered with excellence
               </p>
               <button className="border border-white px-4 py-2 rounded-full text-white text-[14px] font-semibold hover:bg-white hover:text-black transition">
-                Learn More
+                Lets is More
               </button>
             </div>
           </div>
@@ -93,7 +92,9 @@ const MainMobile = () => {
             "
           >
             <img src={diamondicon} alt="Diamond Icon" className="w-4 h-4" />
-            <span className="text-white text-[14px] font-semibold">Less is more</span>
+            <span className="text-white text-[14px] font-semibold">
+              Less is more
+            </span>
           </div>
         </div>
       </main>

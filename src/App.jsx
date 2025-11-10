@@ -17,6 +17,8 @@ import DetailingPage from './Components/Services/Detailing/DetailingPage.jsx';
 import AdminRequests from './Accounts/AdminRequests.jsx'
 import Account from './Accounts/Account.jsx'
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import ContactPage from './Components/ContactPage.jsx';
+import ScrollToTop from './ScrollToTop.jsx';
 
 const App = () => {
   const [isMobile, setIsMobile] = useState(
@@ -39,6 +41,7 @@ const App = () => {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
     <Router>
+      <ScrollToTop></ScrollToTop>
       <Routes>
         <Route path="/" element={isMobile ? <MainMobile /> : <Main />} />
         <Route path="/home" element={isMobile ? <MainMobile /> : <Main />} />
@@ -55,6 +58,7 @@ const App = () => {
         <Route path="/book-online" element={<Booking />} />
         <Route path="/admin" element={<AdminRequests />} />
         <Route path="/account" element={<Account />} />
+        <Route path='/comingsoon' element={<ContactPage></ContactPage>}></Route>
       </Routes>
     </Router>
     </GoogleOAuthProvider>
