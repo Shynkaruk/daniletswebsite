@@ -97,7 +97,7 @@ const MainAboutUs = () => {
               font-semibold
             "
           >
-            Clarity is power
+            Lets is More
           </span>
         </div>
       </main>

@@ -47,7 +47,7 @@ const Detailing = () => {
           />
 
           <h1 className="text-5xl md:text-6xl font-bold leading-tight break-words">
-            Premium Auto Detailing
+            "Danilets Detailing
           </h1>
 
           <p

@@ -27,7 +27,7 @@ const WhyDanilets = () => {
         </div>
 
         <h2 className="text-black text-3xl leading-[1.2] font-bold mb-3">
-          More than clean — we deliver perfection <br />
+          Excellence in Every Detail<br />
           <span className="text-black">Loop with Danilets</span>
         </h2>
 
@@ -89,7 +89,7 @@ const WhyDanilets = () => {
           </div>
 
           <h2 className="text-black text-[44px] lg:text-[52px] leading-[1.1] font-bold mb-4">
-            More than clean — we deliver perfection
+            Excellence in Every Detail
           </h2>
 
           <p className="text-neutral-700 text-lg leading-7 max-w-[560px]">

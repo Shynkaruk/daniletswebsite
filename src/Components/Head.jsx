@@ -55,7 +55,7 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                   color: "rgba(62, 38, 12, 1)",
                 }}
               >
-                Book Online
+                Book now
               </button>
             </Link>
             <AccountMenu variant="icon" onShowAuth={onOpenAuth} />
@@ -181,7 +181,7 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                       color: "rgba(62, 38, 12, 1)",
                     }}
                   >
-                    Book Online
+                    Book now
                   </button>
                 </Link>
               </div>
