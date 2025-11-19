@@ -13,10 +13,11 @@ import ActionMini from "./ActionMini.jsx";
 import FAQ from "./FAQ.jsx";
 import Footer from "./Footer.jsx";
 import StatsBlock from "./StatsBlock.jsx";
+import familyphoto from './../assets/photo/family-photo.png'
 
 const MainMobile = () => {
   // 👉 Сюди потім підставиш свої мобільні фото (Detailing / Cleaning)
-  const images = [bg_detaling, bg_cleaining];
+  const images = [familyphoto, bg_detaling, bg_cleaining];
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -67,7 +68,7 @@ const MainMobile = () => {
                 WELCOME TO DANILETS
               </h1>
               <p
-                className="text-[15px] font-normal leading-[140%] tracking-[0%] text-[rgba(161,161,165,1)]"
+                className="text-[15px] font-normal leading-[140%] tracking-[0%] text-[rgba(230,230,235,1)]"
                 style={{ fontFamily: "Manrope, sans-serif", fontWeight: 400 }}
               >
                 Columbus' Trusted Provider of Premium Services Tailored with
@@ -93,7 +94,7 @@ const MainMobile = () => {
           >
             <img src={diamondicon} alt="Diamond Icon" className="w-4 h-4" />
             <span className="text-white text-[14px] font-semibold">
-              Less is more
+              Lets is More
             </span>
           </div>
         </div>

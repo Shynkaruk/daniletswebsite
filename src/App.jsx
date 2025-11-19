@@ -6,12 +6,7 @@ import AboutUs from './Components/AboutUs.jsx';
 import ContactForm from './Components/ContactForm.jsx';
 import Newsletter from './Components/Newsletter.jsx';
 import PrivacyPolicy from './Components/PrivacyPolicy.jsx';
-import TermsConditions from './Components/TermsConditions.jsx';
-import FAQ from './Components/FAQ.jsx';
-import Cleaning from './Components/Services/Cleaning.jsx';
-import Detailing from './Components/Services/Detailing/Detailing.jsx';
-import Media from './Components/Services/Media.jsx';
-import Pickleball from './Components/Services/Pickleball.jsx';
+import Cleaning from './Components/Services/Cleaning/CleaningPage.jsx';
 import Booking from './Components/Booking/Booking.jsx';
 import DetailingPage from './Components/Services/Detailing/DetailingPage.jsx';
 import AdminRequests from './Accounts/AdminRequests.jsx'
@@ -53,8 +48,6 @@ const App = () => {
         <Route path="/legal/faq" element={<PrivacyPolicy />} />
         <Route path="/services/cleaning" element={<Cleaning />} />
         <Route path="/services/detailing" element={<DetailingPage />} />
-        <Route path="/services/media" element={<Media />} />
-        <Route path="/services/pickleball" element={<Pickleball />} />
         <Route path="/book-online" element={<Booking />} />
         <Route path="/admin" element={<AdminRequests />} />
         <Route path="/account" element={<Account />} />

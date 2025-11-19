@@ -18,3 +18,12 @@ body, html, #root {
 }
 
 
+/* Безпечна ширина: не більше 1800px і не ширше за (вікно - 32px відступу) */
+.safe-container {
+  width: min(1800px, calc(100vw - 32px));
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+
+/* про всяк випадок — прибираємо горизонтальний скрол сайту */
+html, body { overflow-x: hidden; }

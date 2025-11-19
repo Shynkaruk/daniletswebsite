@@ -6,24 +6,43 @@ import iconArrow from "../assets/icons/icon_arrow.svg";
 import iconWarning from "../assets/icons/icon_warning.svg";
 import iconWarningRed from "../assets/icons/warning_red_icon.svg";
 import iconSayRed from "../assets/icons/information_red_icon.svg";
+import iconWarningGreen from '../assets/icons/iconWarningGreen.svg'
+import iconSayGreen from '../assets/icons/iconSayGreen.svg'
 import arrow from "../assets/icons/arrow_right_button_sumbit_icon.svg";
 
 const ContactSection = () => {
   const location = useLocation();
+
   const isDetailingPage = location.pathname.startsWith("/services/detailing");
+  const isCleaningPage = location.pathname.startsWith("/services/cleaning");
 
   // 🎨 Кольори та іконки для різних сторінок
   const theme = isDetailingPage
     ? {
+        // Detailing (червона тема)
         badgeBg: "#FF525226",
+        infoBg: "#FF525226",
         focus: "#FF9E9E",
         submitGradient:
           "linear-gradient(107.27deg, #8B3434 -27.97%, #A84E4E -12.13%, #F29292 22.69%, #FF9E9E 45.99%, #E17B7B 77.51%)",
         iconSay: iconSayRed,
         iconWarning: iconWarningRed,
       }
+    : isCleaningPage
+    ? {
+        // Cleaning (зелена тема)
+        badgeBg: "#9AD81E26", // бейдж "Lets Connect"
+        infoBg: "#9AD81E26", // попередження над кнопкою
+        focus: "#9AD81E", // зелений outline на інпутах
+        submitGradient:
+          "linear-gradient(107.27deg, #3D8B34 -27.97%, #6CA84E -12.13%, #9FF292 22.69%, #A8FF9E 45.99%, #98E17B 77.51%)",
+        iconSay: iconSayGreen,
+        iconWarning: iconWarningGreen,
+      }
     : {
+        // Базова (золота) тема для інших сторінок
         badgeBg: "rgba(235,176,108,0.25)",
+        infoBg: "rgba(235,176,108,0.25)",
         focus: "#EBAE6C",
         submitGradient:
           "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)",
@@ -150,7 +169,7 @@ const ContactSection = () => {
                 {/* Info badge */}
                 <div
                   className="lg:col-span-2 flex items-center gap-3 px-4 py-3 rounded-[16px]"
-                  style={{ background: theme.badgeBg }}
+                  style={{ background: theme.infoBg }}
                 >
                   <img src={theme.iconWarning} alt="" className="w-7 h-7" />
                   <span className="text-[14px] text-[#333]">

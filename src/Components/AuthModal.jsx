@@ -163,7 +163,7 @@ function LoginForm({ onSuccess }) {
       <input
         type="email"
         autoComplete="email"
-        placeholder="Enter your email"
+        placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         className="w-full h-11 rounded-[12px] bg-[#F4F4F5] px-3 outline-none"
@@ -171,7 +171,7 @@ function LoginForm({ onSuccess }) {
       <input
         type="password"
         autoComplete="current-password"
-        placeholder="Enter your password"
+        placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         className="w-full h-11 rounded-[12px] bg-[#F4F4F5] px-3 outline-none"
@@ -224,19 +224,19 @@ function SignupForm({ onSuccess }) {
       <input
         type="email"
         autoComplete="email"
-        placeholder="Enter your email"
+        placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         className="w-full h-11 rounded-[12px] bg-[#F4F4F5] px-3 outline-none"
       />
       <input
-        placeholder="Enter your first name"
+        placeholder="First name"
         value={first}
         onChange={(e) => setFirst(e.target.value)}
         className="w-full h-11 rounded-[12px] bg-[#F4F4F5] px-3 outline-none"
       />
       <input
-        placeholder="Enter your last name"
+        placeholder="Last name"
         value={last}
         onChange={(e) => setLast(e.target.value)}
         className="w-full h-11 rounded-[12px] bg-[#F4F4F5] px-3 outline-none"
@@ -252,7 +252,7 @@ function SignupForm({ onSuccess }) {
       <input
         type="password"
         autoComplete="new-password"
-        placeholder="Enter your password"
+        placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         className="w-full h-11 rounded-[12px] bg-[#F4F4F5] px-3 outline-none"

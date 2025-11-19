@@ -143,12 +143,8 @@ const ServicesProvide = () => {
       {/* Заголовок */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
         <h2 className="text-[28px] sm:text-[36px] md:text-[48px] font-bold text-black">
-          Services We Provide
+          Services We<br></br> Provide
         </h2>
-        <p className="text-sm md:text-base text-[#4B4B4F] max-w-xl">
-          From dealerships and fleets to ceramic coating and PPF — Danilets
-          Detailing delivers tailored solutions for every vehicle and business need.
-        </p>
       </div>
 
       {/* Картки */}

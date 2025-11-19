@@ -29,9 +29,7 @@ const ContactForm = ({ open, onClose }) => {
 
   const services = [
     "Danilets Detailing",
-    "Danilets Pickleball",
     "Danilets Cleaning",
-    "Danilets Media",
   ];
 
   const submit = (e) => {
@@ -62,7 +60,7 @@ const ContactForm = ({ open, onClose }) => {
         <form onSubmit={submit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input
-              placeholder="Enter your first name"
+              placeholder="First name"
               className="w-full rounded-2xl bg-black/5 px-4 py-3 outline-none placeholder-[rgba(122,122,122,1)] text-black"
               value={form.firstName}
               onChange={(e) =>
@@ -70,7 +68,7 @@ const ContactForm = ({ open, onClose }) => {
               }
             />
             <input
-              placeholder="Enter your last name"
+              placeholder="Last name"
               className="w-full rounded-2xl bg-black/5 px-4 py-3 outline-none placeholder-[rgba(122,122,122,1)] text-black"
               value={form.lastName}
               onChange={(e) =>
@@ -81,7 +79,7 @@ const ContactForm = ({ open, onClose }) => {
 
           <input
             type="email"
-            placeholder="Enter your email"
+            placeholder="Email"
             className="w-full rounded-2xl bg-black/5 px-4 py-3 outline-none placeholder-[rgba(122,122,122,1)] text-black"
             value={form.email}
             onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
@@ -89,7 +87,7 @@ const ContactForm = ({ open, onClose }) => {
 
           <input
             type="tel"
-            placeholder="Enter your phone number"
+            placeholder="Phone number"
             className="w-full rounded-2xl bg-black/5 px-4 py-3 outline-none placeholder-[rgba(122,122,122,1)] text-black"
             value={form.phone}
             onChange={(e) => setForm((s) => ({ ...s, phone: e.target.value }))}
@@ -111,7 +109,7 @@ const ContactForm = ({ open, onClose }) => {
 
           <textarea
             rows={4}
-            placeholder="Description"
+            placeholder="Message"
             className="w-full rounded-2xl bg-black/5 px-4 py-3 outline-none resize-none placeholder-[rgba(122,122,122,1)] text-black"
             value={form.description}
             onChange={(e) =>

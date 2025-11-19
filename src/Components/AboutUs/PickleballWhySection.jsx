@@ -207,7 +207,7 @@ const PickleballWhySection = ({
                 {cards.map((card) => (
                   <article
                     key={card.id}
-                    className="snap-start shrink-0 w-[86%] sm:w-[420px] md:w-[460px] bg-white rounded-[24px] md:rounded-[32px] p-4 md:p-6 shadow-[0_6px_18px_rgba(0,0,0,0.06)]"
+                    className="snap-start shrink-0 w-[86%] sm:w-[420px] md:w-[460px] bg-white rounded-[24px] md:rounded-[32px] p-4 md:p-6 shadow-[0_6px_18px_rgba(0,0,0,0.06)] flex flex-col"
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <img

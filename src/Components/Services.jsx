@@ -31,7 +31,7 @@ const Services = ({ className }) => {
       {/* Заголовок і кнопка */}
       <div className="flex flex-row flex-wrap justify-between items-center gap-4 mb-6 px-2 md:px-4">
         <h2 className="text-[28px] sm:text-[36px] md:text-[48px] lg:text-[60px] font-bold text-black">
-          Our Services
+          Services
         </h2>
         <button className="w-[48px] h-[48px] md:w-[80px] md:h-[64px] rounded-full border border-black flex items-center justify-center">
           <img

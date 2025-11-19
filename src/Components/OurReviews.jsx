@@ -7,7 +7,11 @@ import { reqApi } from "../lib/api"; // перевір, щоб шлях спів
 
 const OurReviews = () => {
   const location = useLocation();
-  const isDetailingPage = location.pathname.includes("/services/detailing");
+ const isDetailingPage = location.pathname.includes("/services/detailing");
+const isCleaningPage = location.pathname.includes("/services/cleaning");
+
+// Якщо на одній зі сторінок — перемикач ховаємо
+const hideTabs = isDetailingPage || isCleaningPage;
 
   const [reviewsByService, setReviewsByService] = useState({
     Detailing: [],
@@ -128,7 +132,7 @@ const OurReviews = () => {
         </h2>
 
         {/* Перемикач показуємо тільки якщо ми НЕ на /services/detailing */}
-        {!isDetailingPage && (
+        {!hideTabs && (
           <div className="relative inline-flex items-center bg-white rounded-full px-1 py-1">
             {/* Підсвітка активного табу */}
             <div
@@ -164,7 +168,7 @@ const OurReviews = () => {
       <div className="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4 px-4 md:px-12">
         {visibleItems.length === 0 && (
           <p className="text-lg text-[#52525B]">
-            Ще немає відгуків для цього сервісу.
+            Reviews coming soon
           </p>
         )}
 

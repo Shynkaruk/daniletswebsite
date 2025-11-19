@@ -13,10 +13,11 @@ import ActionMini from "./ActionMini.jsx";
 import FAQ from "./FAQ.jsx";
 import Footer from "./Footer.jsx";
 import StatsBlock from "./StatsBlock.jsx";
+import familyphoto from './../assets/photo/family-photo.png'
 
 const Main = () => {
   // 👉 Сюди потім підставиш Detailing / Cleaning
-  const images = [bg_detaling, bg_cleaining];
+  const images = [familyphoto, bg_detaling, bg_cleaining];
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -77,16 +78,16 @@ const Main = () => {
 
               <p
                 className="
-                  text-[14px]
-                  sm:text-[16px]
-                  md:text-[18px]
-                  lg:text-[20px]
-                  xl:text-[22px]
-                  font-medium
-                  leading-snug
-                  text-[rgba(161,161,165,1)]
-                  max-w-[900px]
-                "
+    text-[14px]
+    sm:text-[16px]
+    md:text-[18px]
+    lg:text-[20px]
+    xl:text-[22px]
+    font-semibold
+    leading-snug
+    text-[rgba(230,230,235,1)]   /* яскравіше */
+    max-w-[900px]
+  "
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
                 Columbus' Trusted Provider of Premium Services Tailored with
@@ -136,7 +137,7 @@ const Main = () => {
                 font-semibold
               "
             >
-              Less is more
+              Lets is More
             </span>
           </div>
         </div>

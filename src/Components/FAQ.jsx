@@ -7,7 +7,7 @@ const FAQ = () => {
 
   const faqItems = [
     {
-      question: 'What areas do you serve?',
+      question: 'What areas do you serve? ',
       answer: 'We serve the Greater Columbus area and surrounding communities. Contact us to confirm we service your specific location.',
     },
     {

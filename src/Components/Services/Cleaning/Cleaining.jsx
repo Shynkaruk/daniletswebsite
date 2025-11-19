@@ -1,12 +1,12 @@
 import React from "react";
 import Head from "../../Head";
-import bgImageMobile from "../../../assets/photo/bg2_mobile_detailing.png";
-import bgImagePC from "../../../assets/photo/bg_detailing_pc.png";
-import iconBuble from "../../../assets/icons/buble_red.svg";
-import ServicesProvide from "./ServicesProvide";
-import LogoRed from "../../../assets/icons/logo_red.svg";
+import bgImageMobile from "../../../assets/photo/cleaningn_bg.png";
+import bgImagePC from "../../../assets/photo/cleaningn_bg.png";
+import iconBuble from "../../../assets/icons/cleaning_bage.svg";
+import ServicesProvide from "./ServicesProvideCleaning";
+import LogoRed from "../../../assets/icons/cleaning_logo.svg";
 
-const Detailing = () => {
+const Cleaning = () => {
   return (
     <section
       className="relative w-full min-h-[100dvh] overflow-hidden text-white flex flex-col justify-between"
@@ -47,7 +47,7 @@ const Detailing = () => {
           />
 
           <h1 className="text-5xl md:text-6xl font-bold leading-tight break-words">
-            Premium Auto Detailing
+            Danilets Cleaning
           </h1>
 
           <p
@@ -61,20 +61,21 @@ const Detailing = () => {
             className="mt-2 text-2xl hidden md:block max-w-screen-md"
             style={{ color: "rgba(255,255,255,0.92)" }}
           >
-            Precision detailing for dealerships, fleets, and vehicle owners who
-            demand excellence. From commercial work to ceramic coatings — we
-            deliver perfection in every detail.
+            Professional cleaning services that transform your space.
+            Specializing in commercial environments, offices, Airbnb properties,
+            and deep cleans—we deliver meticulous results with every service.
+            Flexible scheduling, trusted excellence.
           </p>
 
           <button className="text-base md:text-xl mt-6 px-12 py-4 border border-white rounded-full hover:bg-white hover:text-black transition">
-            Book
+            Book now
           </button>
         </div>
       </div>
 
       {/* Бульбашка */}
       <div className="absolute bottom-25 right-5 md:bottom-35 md:right-21 z-10">
-        <div className="flex items-center space-x-3 bg-[#FF525226] backdrop-blur-md rounded-full px-4 py-3">
+        <div className="flex items-center space-x-3 bg-[#9AD81E26] backdrop-blur-md rounded-full px-4 py-3">
           <img
             src={iconBuble}
             alt="Bubble icon"
@@ -89,4 +90,4 @@ const Detailing = () => {
   );
 };
 
-export default Detailing;
+export default Cleaning;

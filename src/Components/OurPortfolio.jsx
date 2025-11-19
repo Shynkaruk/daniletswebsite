@@ -53,7 +53,7 @@ const OurPortfolio = () => {
         {/* Заголовок + таби */}
         <div className="flex items-center justify-between mb-8 gap-4 flex-wrap">
           <h2 className="text-[28px] sm:text-[36px] md:text-[48px] lg:text-[60px] font-bold text-black">
-            Our Portfolio
+            Portfolio
           </h2>
 
           <div className="inline-flex items-center rounded-full bg-white px-2 py-1 md:px-3 md:py-1.5 gap-2">
