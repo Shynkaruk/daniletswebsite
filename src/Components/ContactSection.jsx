@@ -6,8 +6,8 @@ import iconArrow from "../assets/icons/icon_arrow.svg";
 import iconWarning from "../assets/icons/icon_warning.svg";
 import iconWarningRed from "../assets/icons/warning_red_icon.svg";
 import iconSayRed from "../assets/icons/information_red_icon.svg";
-import iconWarningGreen from '../assets/icons/iconWarningGreen.svg'
-import iconSayGreen from '../assets/icons/iconSayGreen.svg'
+import iconWarningGreen from "../assets/icons/iconWarningGreen.svg";
+import iconSayGreen from "../assets/icons/iconSayGreen.svg";
 import arrow from "../assets/icons/arrow_right_button_sumbit_icon.svg";
 
 const ContactSection = () => {
@@ -30,14 +30,14 @@ const ContactSection = () => {
       }
     : isCleaningPage
     ? {
-        // Cleaning (зелена тема)
-        badgeBg: "#9AD81E26", // бейдж "Lets Connect"
-        infoBg: "#9AD81E26", // попередження над кнопкою
-        focus: "#9AD81E", // зелений outline на інпутах
+        // Cleaning (тепер червона тема як Detailing)
+        badgeBg: "#FF525226",
+        infoBg: "#FF525226",
+        focus: "#FF9E9E",
         submitGradient:
-          "linear-gradient(107.27deg, #3D8B34 -27.97%, #6CA84E -12.13%, #9FF292 22.69%, #A8FF9E 45.99%, #98E17B 77.51%)",
-        iconSay: iconSayGreen,
-        iconWarning: iconWarningGreen,
+          "linear-gradient(107.27deg, #8B3434 -27.97%, #A84E4E -12.13%, #F29292 22.69%, #FF9E9E 45.99%, #E17B7B 77.51%)",
+        iconSay: iconSayRed,
+        iconWarning: iconWarningRed,
       }
     : {
         // Базова (золота) тема для інших сторінок

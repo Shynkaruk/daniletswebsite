@@ -122,7 +122,7 @@ const ServicesProvideCleaning = () => {
                 key={service.id}
                 className="bg-[#F3F4F6] rounded-[32px] p-6 flex flex-col gap-5"
               >
-                <div className="w-10 h-10 rounded-full bg-[#B7E56A] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-[#FF5252CC] flex items-center justify-center">
                   <span className="text-lg">✓</span>
                 </div>
 
@@ -135,7 +135,7 @@ const ServicesProvideCleaning = () => {
 
                 <button
                   onClick={() => openModal(service)}
-                  className="mt-auto w-full flex items-center justify-between px-6 py-3 rounded-full bg-white text-[14px] font-semibold text-[#166534] hover:bg-[#E5E7EB] transition"
+                  className="mt-auto w-full flex items-center justify-between px-6 py-3 rounded-full bg-white text-[14px] font-semibold text-[#3E0C0C] hover:bg-[#3E0C0C] transition"
                 >
                   <span>Learn More</span>
                   <span className="text-base ml-2">›</span>

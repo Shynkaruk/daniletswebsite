@@ -3,7 +3,6 @@ import Head from "../../Head";
 import bgImageMobile from "../../../assets/photo/cleaningn_bg.png";
 import bgImagePC from "../../../assets/photo/cleaningn_bg.png";
 import iconBuble from "../../../assets/icons/cleaning_bage.svg";
-import ServicesProvide from "./ServicesProvideCleaning";
 import LogoRed from "../../../assets/icons/cleaning_logo.svg";
 
 const Cleaning = () => {
@@ -75,7 +74,7 @@ const Cleaning = () => {
 
       {/* Бульбашка */}
       <div className="absolute bottom-25 right-5 md:bottom-35 md:right-21 z-10">
-        <div className="flex items-center space-x-3 bg-[#9AD81E26] backdrop-blur-md rounded-full px-4 py-3">
+        <div className="flex items-center space-x-3 bg-[#FF525226] backdrop-blur-md rounded-full px-4 py-3">
           <img
             src={iconBuble}
             alt="Bubble icon"

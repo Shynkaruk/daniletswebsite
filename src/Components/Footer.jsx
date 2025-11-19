@@ -24,7 +24,7 @@ const Footer = () => {
   const logoSrc = isDetailingPage
     ? logoRed
     : isCleaningPage
-    ? logoCleaning
+    ? logoRed
     : logo;
 
   // Динамічний email
@@ -38,7 +38,7 @@ const Footer = () => {
   const buttonGradient = isDetailingPage
     ? "linear-gradient(107.27deg, #8B3434 -27.97%, #A84E4E -12.13%, #F29292 22.69%, #FF9E9E 45.99%, #E17B7B 77.51%)"
     : isCleaningPage
-    ? "linear-gradient(107.27deg, #3D8B34 -27.97%, #6CA84E -12.13%, #9FF292 22.69%, #A8FF9E 45.99%, #98E17B 77.51%)"
+    ? "linear-gradient(107.27deg, #8B3434 -27.97%, #A84E4E -12.13%, #F29292 22.69%, #FF9E9E 45.99%, #E17B7B 77.51%)"
     : "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)";
 
   // 🔹 Стан модалки соцмереж
