@@ -3,31 +3,34 @@ import IconGuard from "../assets/icons/icon-guard.png";
 import ArrowUpRightIcon from "../assets/icons/arrows/arrow-up-right.svg";
 
 const coreValues = [
-  { title: "Matthew 6:33", description: "God First - Christ Led" },
-  { title: "Integrity Matters", description: "Even in the small things" },
-  { title: "Family First", description: "We treat everyone like family" },
-  { title: "GOAT Mentality", description: "We strive for greatness" },
+  { title: "Matthew 6:33", subtitle: "God First - Christ Led" },
+  { title: "Integrity Matters", subtitle: "Even in the small things" },
+  { title: "Family First", subtitle: "We treat everyone like family" },
+  { title: "GOAT Mentality", subtitle: "We strive for greatness" },
   {
     title: "Clear Communication",
-    description: "No room for assumption ONLY clear communication",
+    subtitle: "No room for assumption ONLY clear communication",
   },
-  { title: "3 A.M. Mindset", description: "We’ll get it done no matter what" },
+  { title: "3 A.M. Mindset", subtitle: "We’ll get it done no matter what" },
   {
     title: "Every. Single. Time.",
-    description: "Our promise: customer care and excellent service",
+    subtitle: "Our promise: customer care and excellent service",
   },
 ];
 
 const OurCoreValues = () => {
+  const firstRow = coreValues.slice(0, 4);
+  const secondRow = coreValues.slice(4);
+
   return (
-    <section className="bg-white mx-4 md:mx-8 rounded-[32px] px-4 md:px-10 py-8 md:py-14 shadow-sm">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start mb-8 md:mb-12 gap-4 md:gap-6">
-        <div className="md:pl-8 lg:pl-12">
-          <h2 className="text-[28px] md:text-[56px] font-bold leading-[32px] md:leading-[64px] text-[#18181B]">
+    <section className="bg-white mx-4 md:mx-8 xl:mx-16 rounded-[32px] py-10 md:py-14 px-4 md:px-8 xl:px-10">
+      {/* Верхній блок */}
+      <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-6">
+        <div className="max-w-[880px]">
+          <h2 className="text-[40px] md:text-[56px] xl:text-[64px] font-semibold leading-[1.05] text-black">
             Core Values
           </h2>
-          <p className="text-[18px] text-[#52525B] max-w-[1300px] mt-3 md:mt-4 leading-[26px] md:leading-[30px] font-normal">
+          <p className="mt-4 text-[15px] md:text-[17px] xl:text-[18px] text-[#555] leading-relaxed">
             These values flow from our deepest story – leaving everything behind
             and rebuilding with nothing but hope and faith. These aren't just
             words on a page; they're the backbone of why we do what we do. Every
@@ -36,89 +39,86 @@ const OurCoreValues = () => {
             call home.
           </p>
         </div>
-
-        {/* Кнопка тільки для ПК */}
-        <div className="hidden md:block md:pr-8 lg:pr-12">
-          <button
-            className="bg-[rgba(242,242,242,1)] text-black rounded-[32px] font-medium transition text-[18px] md:text-[20px] flex items-center justify-center gap-2 py-4 px-10"
-            style={{ fontFamily: "Manrope, sans-serif" }}
-          >
-            Learn More
-            <img
-              src={ArrowUpRightIcon}
-              alt="Arrow Up Right"
-              className="w-5 h-5 md:w-6 md:h-6"
-            />
-          </button>
-        </div>
       </div>
 
-      {/* Контейнер */}
-      <div className="w-[95%] max-w-[1760px] mx-auto">
-        {/* Мобілка: горизонтальна стрічка з снапом; ПК: грід 3/4 у ряд */}
-        <div
-          className="
-          md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-5
-          overflow-x-auto md:overflow-visible
-          flex md:block gap-3 snap-x snap-mandatory pb-2 -mx-2 md:mx-0 px-2 md:px-0
-        "
-        >
-          {coreValues.map((item, idx) => (
-            <div
-              key={idx}
-              className="
-                bg-[#F2F2F2] rounded-[24px]
-                p-5 md:p-6
-                flex items-start gap-4
-                min-h-[140px] md:min-h-[160px]
-                snap-start
-                w-[280px] flex-shrink-0 md:w-auto
-              "
-            >
-              <img
-                src={IconGuard}
-                alt="IconGuard"
-                className="w-10 h-10 md:w-12 md:h-12 shrink-0"
-              />
-              <div className="min-w-0">
-                <h3
-                  className="
-                    text-[18px] md:text-[22px] font-extrabold text-[#18181B]
-                    leading-snug pt-1 md:pt-2
-                    break-words whitespace-normal
-                  "
-                  style={{ fontFamily: 'Manrope, sans-serif' }}
-                >
-                  {item.title}
-                </h3>
-                <p
-                  className="
-                    text-[14px] md:text-[16px] text-[#52525B]
-                    leading-[20px] md:leading-[24px] mt-2
-                    break-words whitespace-normal
-                  "
-                  style={{ fontFamily: 'Manrope, sans-serif' }}
-                >
-                  {item.description}
-                </p>
-              </div>
-            </div>
+      {/* ==== ЕКРАНИ ДО 2XL (адаптивний grid, без розвалу) ==== */}
+      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 2xl:hidden">
+        {coreValues.map((item) => (
+          <Card
+            key={item.title}
+            title={item.title}
+            subtitle={item.subtitle}
+            variant="auto"
+          />
+        ))}
+      </div>
+
+      {/* ==== ВЕЛИКІ ЕКРАНИ 2XL+ (точна сітка 4 + 3 як у макеті) ==== */}
+      <div className="hidden 2xl:grid mt-10 gap-5">
+        {/* 1-й ряд — 4 карточки */}
+        <div className="grid grid-cols-4 gap-5">
+          {firstRow.map((item) => (
+            <Card
+              key={item.title}
+              title={item.title}
+              subtitle={item.subtitle}
+              variant="small"
+            />
+          ))}
+        </div>
+
+        {/* 2-й ряд — 3 карточки */}
+        <div className="grid grid-cols-3 gap-5 mt-5">
+          {secondRow.map((item) => (
+            <Card
+              key={item.title}
+              title={item.title}
+              subtitle={item.subtitle}
+              variant="wide"
+            />
           ))}
         </div>
       </div>
-
-      {/* Кнопка для мобільних */}
-      <div className="mt-8 md:hidden flex justify-center">
-        <button
-          className="w-full sm:w-[303px] bg-[rgba(242,242,242,1)] text-black rounded-[20px] font-medium transition text-[18px] flex items-center justify-center gap-2 py-4"
-          style={{ fontFamily: "Manrope, sans-serif" }}
-        >
-          About Us
-          <img src={ArrowUpRightIcon} alt="Arrow Up Right" className="w-5 h-5" />
-        </button>
-      </div>
     </section>
   );
+};
+
+const Card = ({ title, subtitle, variant }) => {
+  let sizeClasses = "w-full h-auto";
+
+  // Розміри з макету тільки на дуже великих екранах
+  if (variant === "small") {
+    sizeClasses += " 2xl:h-[153px] 2xl:max-w-[420px]";
+  } else if (variant === "wide") {
+    sizeClasses += " 2xl:h-[153px] 2xl:max-w-[565.33px]";
+  }
+
+return (
+  <div
+    className={[
+      "bg-[#F7F7F7] rounded-[28px] border border-[#E6E6E6] shadow-sm",
+      "p-5 md:p-6 flex flex-col justify-between",
+      sizeClasses,
+    ].join(" ")}
+  >
+    {/* Іконка + Заголовок в одному рядку */}
+    <div className="flex items-center gap-1">
+      <div className="w-14 h-14 flex items-center justify-center">
+        <img src={IconGuard} alt="icon" className="w-9 h-9" />
+      </div>
+
+      <h3 className="font-[Manrope] font-bold text-[22px] md:text-[24px] xl:text-[28px] leading-[32px] text-black">
+        {title}
+      </h3>
+    </div>
+
+    {/* Опис */}
+    <p className="mt-3 font-[Manrope] font-normal text-[15px] md:text-[16px] xl:text-[18px] leading-[100%] text-[#555]">
+      {subtitle}
+    </p>
+  </div>
+);
+
 };
 
 export default OurCoreValues;

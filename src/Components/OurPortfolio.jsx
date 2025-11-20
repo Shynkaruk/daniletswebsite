@@ -49,7 +49,7 @@ const OurPortfolio = () => {
   return (
     <section className="bg-[#EDEDED] py-10 md:py-14">
       {/* Контейнер з такою ж шириною, як у верхньому блоці */}
-      <div className="w-[95%] max-w-[1792px] mx-auto px-4 md:px-6 rounded-3xl">
+      <div className="w-[95%] max-w-[1792px] mx-auto px-4 md:px-6 md:-mt-10 rounded-3xl">
         {/* Заголовок + таби */}
         <div className="flex items-center justify-between mb-8 gap-4 flex-wrap">
           <h2 className="text-[28px] sm:text-[36px] md:text-[48px] lg:text-[60px] font-bold text-black">
