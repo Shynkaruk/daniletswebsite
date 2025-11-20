@@ -55,7 +55,7 @@ const WhyDanilets = () => {
       </div>
 
       {/* ------- DESKTOP ------- */}
-      <div className="hidden md:grid md:grid-cols-12 md:gap-8 lg:gap-12 max-w-[1400px] mx-auto">
+      <div className="hidden md:grid md:grid-cols-12 md:gap-8 md:-mt-10 lg:gap-12 max-w-[1400px] mx-auto">
         {/* LEFT: 2×2 картки */}
         <div className="md:col-span-7">
           <div className="grid grid-cols-2 gap-x-6 gap-y-6">

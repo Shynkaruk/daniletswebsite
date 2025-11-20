@@ -82,7 +82,7 @@ const OurPortfolioDetailing = () => {
   );
 
   return (
-    <section className="bg-[#EDEDED] py-10 md:py-14">
+    <section className="bg-[#EDEDED] py-10 md:py-14 md:-mt-10">
       <div className="w-[95%] max-w-[1792px] mx-auto px-4 md:px-6">
         {/* Заголовок */}
         <h2 className="text-[28px] sm:text-[36px] md:text-[48px] lg:text-[60px] font-bold mb-8">

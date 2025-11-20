@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
 
 import iconSay from "../assets/icons/icon_say.svg";
@@ -30,7 +30,7 @@ const ContactSection = () => {
       }
     : isCleaningPage
     ? {
-        // Cleaning (тепер червона тема як Detailing)
+        // Cleaning (червона тема як Detailing)
         badgeBg: "#FF525226",
         infoBg: "#FF525226",
         focus: "#FF9E9E",
@@ -50,8 +50,78 @@ const ContactSection = () => {
         iconWarning: iconWarning,
       };
 
+  // 🧾 Стейт форми
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    email: "",
+    message: "",
+  });
+
+  // 🧯 Стейт помилок
+  const [errors, setErrors] = useState({
+    contact: "", // помилка по звʼязку (phone/email)
+  });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  // Оновлення полів
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // очищаємо помилку, якщо юзер щось ввів
+    setErrors((prev) => ({
+      ...prev,
+      contact: "",
+    }));
+    setSent(false);
+  };
+
+  // Сабміт форми
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setSent(false);
+
+    const newErrors = {};
+
+    // Валідація: має бути хоча б телефон АБО email
+    if (!formData.phone.trim() && !formData.email.trim()) {
+      newErrors.contact = "Please provide at least a phone number or email.";
+    }
+
+    // Якщо є помилки — показуємо й не відправляємо форму
+    if (Object.keys(newErrors).length > 0) {
+      setErrors((prev) => ({ ...prev, ...newErrors }));
+      return;
+    }
+
+    // Якщо помилок немає — тут можна відправити на бекенд
+    setIsSubmitting(true);
+
+    // Імітація відправки
+    setTimeout(() => {
+      console.log("Form submitted:", formData);
+      setIsSubmitting(false);
+      setSent(true);
+
+      // за бажанням можна очистити форму
+      // setFormData({ firstName: "", lastName: "", phone: "", email: "", message: "" });
+    }, 500);
+  };
+
+  // Базові класи для інпутів
+  const inputBase =
+    "h-12 px-4 rounded-[20px] bg-[#efefef] text-[15px] placeholder:text-[#a0a0a0] focus:outline-none";
+
   return (
-    <section className="px-5 md:px-10 lg:px-20 py-10 lg:py-16">
+    <section className="px-5 md:px-10 lg:px-20 py-10 lg:py-16 md:-mt-15">
       <div className="mx-auto max-w-[1440px]">
         <div className="lg:grid lg:grid-cols-12 lg:gap-12 items-center">
           {/* Ліва частина */}
@@ -100,23 +170,19 @@ const ContactSection = () => {
                 Interest Form
               </h3>
 
-              <form className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4">
+              <form
+                noValidate
+                onSubmit={handleSubmit}
+                className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4"
+              >
+                {/* First Name */}
                 <input
                   type="text"
+                  name="firstName"
                   placeholder="First Name"
-                  className="h-12 px-4 rounded-[20px] bg-[#efefef] text-[15px] placeholder:text-[#a0a0a0] focus:outline-none"
-                  style={{ transition: "0.2s" }}
-                  onFocus={(e) =>
-                    (e.target.style.boxShadow = `0 0 0 2px ${theme.focus}`)
-                  }
-                  onBlur={(e) =>
-                    (e.target.style.boxShadow = "0 0 0 2px transparent")
-                  }
-                />
-                <input
-                  type="text"
-                  placeholder="Last Name"
-                  className="h-12 px-4 rounded-[20px] bg-[#efefef] text-[15px] placeholder:text-[#a0a0a0] focus:outline-none"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  className={inputBase}
                   style={{ transition: "0.2s" }}
                   onFocus={(e) =>
                     (e.target.style.boxShadow = `0 0 0 2px ${theme.focus}`)
@@ -126,12 +192,33 @@ const ContactSection = () => {
                   }
                 />
 
-                {/* Phone Number (REQUIRED) */}
+                {/* Last Name */}
+                <input
+                  type="text"
+                  name="lastName"
+                  placeholder="Last Name"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  className={inputBase}
+                  style={{ transition: "0.2s" }}
+                  onFocus={(e) =>
+                    (e.target.style.boxShadow = `0 0 0 2px ${theme.focus}`)
+                  }
+                  onBlur={(e) =>
+                    (e.target.style.boxShadow = "0 0 0 2px transparent")
+                  }
+                />
+
+                {/* Phone Number */}
                 <input
                   type="tel"
+                  name="phone"
                   placeholder="Phone Number"
-                  required
-                  className="lg:col-span-2 h-12 px-4 rounded-[20px] bg-[#efefef] text-[15px] placeholder:text-[#a0a0a0] focus:outline-none"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className={`${inputBase} lg:col-span-2 ${
+                    errors.contact ? "border border-red-500" : ""
+                  }`}
                   style={{ transition: "0.2s" }}
                   onFocus={(e) =>
                     (e.target.style.boxShadow = `0 0 0 2px ${theme.focus}`)
@@ -141,10 +228,16 @@ const ContactSection = () => {
                   }
                 />
 
+                {/* Email */}
                 <input
                   type="email"
+                  name="email"
                   placeholder="Email"
-                  className="lg:col-span-2 h-12 px-4 rounded-[20px] bg-[#efefef] text-[15px] placeholder:text-[#a0a0a0] focus:outline-none"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={`${inputBase} lg:col-span-2 ${
+                    errors.contact ? "border border-red-500" : ""
+                  }`}
                   style={{ transition: "0.2s" }}
                   onFocus={(e) =>
                     (e.target.style.boxShadow = `0 0 0 2px ${theme.focus}`)
@@ -154,8 +247,21 @@ const ContactSection = () => {
                   }
                 />
 
+                {/* Повідомлення про помилку під phone/email */}
+                {errors.contact && (
+                  <div className="lg:col-span-2">
+                    <p className="text-sm text-red-600">
+                      {errors.contact}
+                    </p>
+                  </div>
+                )}
+
+                {/* Message */}
                 <textarea
+                  name="message"
                   placeholder="Message"
+                  value={formData.message}
+                  onChange={handleChange}
                   className="lg:col-span-2 min-h-[96px] px-4 py-3 rounded-[20px] bg-[#efefef] text-[15px] placeholder:text-[#a0a0a0] focus:outline-none resize-none"
                   style={{ transition: "0.2s" }}
                   onFocus={(e) =>
@@ -178,13 +284,24 @@ const ContactSection = () => {
                   </span>
                 </div>
 
+                {/* Success message (опційно) */}
+                {sent && (
+                  <div className="lg:col-span-2 flex items-center gap-3 px-4 py-3 rounded-[16px] bg-[#ecfdf3]">
+                    <img src={iconWarningGreen} alt="" className="w-6 h-6" />
+                    <span className="text-[14px] text-[#166534]">
+                      Thank you! Your message has been sent.
+                    </span>
+                  </div>
+                )}
+
                 {/* Submit */}
                 <button
                   type="submit"
-                  className="lg:col-span-2 h-12 rounded-[24px] font-semibold text-[#1c1c1c] flex items-center justify-between px-6 transition"
+                  disabled={isSubmitting}
+                  className="lg:col-span-2 h-12 rounded-[24px] font-semibold text-[#1c1c1c] flex items-center justify-between px-6 transition disabled:opacity-70 disabled:cursor-not-allowed"
                   style={{ background: theme.submitGradient }}
                 >
-                  <span>Submit</span>
+                  <span>{isSubmitting ? "Sending..." : "Submit"}</span>
                   <img src={arrow} alt="arrow" className="w-4 h-4" />
                 </button>
               </form>

@@ -106,29 +106,38 @@ Consultation available to determine the best solution for your needs.
     title: "Other Services",
     shortDescription:
       "Additional detailing services: Glass Coating, Wheel Coating, Headlight Restoration, Trim Restoration, Decal and Sticker Removal, Window Tinting.",
-    detailedDescription: `
-We offer a comprehensive range of additional detailing services to meet all your vehicle care needs:
-
-Glass Coating:
-Ultra-hydrophobic barrier applied to glass that causes rainwater to bead and roll off instantly. Dramatically improves visibility during storms and makes glass easier to clean.
-
-Wheel Coating:
-Durable protection specifically formulated for wheels that repels brake dust and road grime. Creates a heat-resistant barrier that prevents corrosion and makes wheels significantly easier to maintain.
-
-Headlight Restoration:
-Removes yellowing, oxidation, and haziness from headlight lenses. Restores clarity, improves nighttime visibility, and enhances vehicle appearance. Includes protective coating.
-
-Trim Restoration:
-Revives faded and discolored exterior plastic and rubber trim to a rich, like-new appearance. Penetrates surfaces to restore color depth while providing UV protection against future fading.
-
-Decal and Sticker Removal:
-Professional removal of unwanted decals, stickers, and adhesive residue from vehicle surfaces. Safe techniques that protect your paint while completely eliminating stubborn graphics and markings.
-
-Window Tinting:
-Professional tint installation for UV protection, heat reduction, privacy, and enhanced appearance. Multiple shade options available.
-
-Contact us for specific needs—if it involves your vehicle, we can help.
-    `,
+    items: [
+      {
+        title: "Glass Coating",
+        description:
+          "Ultra-hydrophobic barrier applied to glass that causes rainwater to bead and roll off instantly. Dramatically improves visibility during storms and makes glass easier to clean.",
+      },
+      {
+        title: "Wheel Coating",
+        description:
+          "Durable protection specifically formulated for wheels that repels brake dust and road grime. Creates a heat-resistant barrier that prevents corrosion and makes wheels significantly easier to maintain.",
+      },
+      {
+        title: "Headlight Restoration",
+        description:
+          "Removes yellowing, oxidation, and haziness from headlight lenses. Restores clarity, improves nighttime visibility, and enhances vehicle appearance. Includes protective coating.",
+      },
+      {
+        title: "Trim Restoration",
+        description:
+          "Revives faded and discolored exterior plastic and rubber trim to a rich, like-new appearance. Penetrates surfaces to restore color depth while providing UV protection against future fading.",
+      },
+      {
+        title: "Decal and Sticker Removal",
+        description:
+          "Professional removal of unwanted decals, stickers, and adhesive residue from vehicle surfaces. Safe techniques that protect your paint while completely eliminating stubborn graphics and markings.",
+      },
+      {
+        title: "Window Tinting",
+        description:
+          "Professional tint installation for UV protection, heat reduction, privacy, and enhanced appearance. Multiple shade options available.",
+      },
+    ],
   },
 ];
 
@@ -143,7 +152,7 @@ const ServicesProvide = () => {
       {/* Заголовок */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
         <h2 className="text-[28px] sm:text-[36px] md:text-[48px] font-bold text-black">
-          Services We<br></br> Provide
+          Services We<br /> Provide
         </h2>
       </div>
 
@@ -207,12 +216,36 @@ const ServicesProvide = () => {
               {activeService.title}
             </h3>
 
-            <p
-              className="text-[14px] md:text-[15px] text-[#3F3F46] whitespace-pre-line leading-relaxed"
-              style={{ fontFamily: "Manrope, sans-serif" }}
-            >
-              {activeService.detailedDescription}
-            </p>
+            {/* Контент модалки */}
+            {activeService.id === 6 && activeService.items ? (
+              // Other Services: кожна послуга з нового абзацу, заголовок жирний
+              <div className="space-y-5">
+                {activeService.items.map((item) => (
+                  <div key={item.title}>
+                    <p
+                      className="font-bold text-[15px] md:text-[16px] mb-1"
+                      style={{ fontFamily: "Manrope, sans-serif" }}
+                    >
+                      {item.title}:
+                    </p>
+                    <p
+                      className="text-[14px] md:text-[15px] text-[#3F3F46]"
+                      style={{ fontFamily: "Manrope, sans-serif" }}
+                    >
+                      {item.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              // Інші сервіси: звичайний текст з переносами
+              <p
+                className="text-[14px] md:text-[15px] text-[#3F3F46] whitespace-pre-line leading-relaxed"
+                style={{ fontFamily: "Manrope, sans-serif" }}
+              >
+                {activeService.detailedDescription}
+              </p>
+            )}
 
             <div className="mt-6 flex justify-end">
               <button

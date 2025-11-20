@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Head from "./Head.jsx";
 import Services from "./Services.jsx";
+import { Link } from "react-router-dom";
 
 import bg_detaling from "../assets/photo/bg_detailing_pc.png";
 import bg_cleaining from "../assets/photo/cleaningn_bg.png";
@@ -13,7 +14,7 @@ import ActionMini from "./ActionMini.jsx";
 import FAQ from "./FAQ.jsx";
 import Footer from "./Footer.jsx";
 import StatsBlock from "./StatsBlock.jsx";
-import familyphoto from './../assets/photo/family-photo.png'
+import familyphoto from "./../assets/photo/family-photo.png";
 
 const Main = () => {
   // 👉 Сюди потім підставиш Detailing / Cleaning
@@ -94,21 +95,22 @@ const Main = () => {
                 precision and delivered with excellence
               </p>
 
-              <button
+              <Link
+                to="/about-us"
                 className="
-                  border border-white
-                  px-5 py-2.5
-                  rounded-full
-                  text-white
-                  text-[15px]
-                  sm:text-[17px]
-                  font-semibold
-                  hover:bg-white hover:text-black
-                  transition
-                "
+    border border-white
+    px-5 py-2.5
+    rounded-full
+    text-white
+    text-[15px]
+    sm:text-[17px]
+    font-semibold
+    hover:bg-white hover:text-black
+    transition
+  "
               >
-                Lets is More
-              </button>
+                Learn More
+              </Link>
             </div>
           </div>
 
