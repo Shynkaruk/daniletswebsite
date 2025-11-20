@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useLocation, Link } from "react-router-dom";
 import Head from "./Head";
 import Footer from "../Components/Footer";
-import FAQ from "./FAQ"; // ✅ Підключили FAQ.jsx (лежить в тій самій папці)
+import FAQ from "./FAQ";
 
 const PrivacyPolicy = () => {
   const [selectedService, setSelectedService] = useState("Terms & Conditions");
@@ -22,6 +22,7 @@ const PrivacyPolicy = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Визначаємо активну вкладку за маршрутом
   useEffect(() => {
     const path = location.pathname;
     if (path === "/legal/privacy-policy") setSelectedService("Privacy Policy");
@@ -29,6 +30,7 @@ const PrivacyPolicy = () => {
     else setSelectedService("Terms & Conditions");
   }, [location]);
 
+  // Рух активного бейджа під кнопками
   useEffect(() => {
     const button = buttonRefs.current[selectedService];
     if (button) {
@@ -84,12 +86,12 @@ const PrivacyPolicy = () => {
         </div>
 
         {/* Content */}
-        <div className="text-[#18181B] space-y-6 max-w-full sm:max-w-[850px] lg:max-w-full">
+        <div className="text-[#18181B] space-y-6 max-w-full sm:max-w-[850px] lg:max-w-full pb-10">
           {selectedService === "FAQ" ? (
-            // ✅ Якщо вибрана вкладка FAQ — показуємо файл FAQ.jsx
+            // ✅ Legal FAQ: рендеримо компонент FAQ
             <FAQ />
-          ) : (
-            // ❗ Для Privacy Policy і Terms & Conditions поки показуємо твій текст Terms
+          ) : selectedService === "Terms & Conditions" ? (
+            // ✅ ТУТ ТІЛЬКИ TERMS & CONDITIONS
             <>
               <h2 className="font-bold text-2xl sm:text-3xl lg:text-[48px]">
                 Terms and Conditions
@@ -103,10 +105,10 @@ const PrivacyPolicy = () => {
               </h3>
               <p>
                 By booking or using any services provided by Danilets Detailing
-                LLC and Timils Cleaning LLC (collectively "Danilets," "we," "us,"
-                or "our"), you ("Customer," "you," or "your") agree to be bound
-                by these Terms and Conditions. If you do not agree to these
-                terms, please do not use our services.
+                LLC and Timils Cleaning LLC (collectively "Danilets," "we,"
+                "us," or "our"), you ("Customer," "you," or "your") agree to be
+                bound by these Terms and Conditions. If you do not agree to
+                these terms, please do not use our services.
               </p>
 
               <h3 className="font-semibold text-xl mt-4">
@@ -153,7 +155,7 @@ const PrivacyPolicy = () => {
               <h3 className="font-semibold text-xl mt-4">
                 4. Pricing & Payment
               </h3>
-              <ul className="list-disc pl-5">
+              <ul className="list-disc pl-5 space-y-2">
                 <li>
                   Prices are estimates and may vary based on condition and
                   scope.
@@ -172,7 +174,8 @@ const PrivacyPolicy = () => {
               </h3>
               <ul className="list-disc pl-5 space-y-2">
                 <li>
-                  Provide property or vehicle access; remove personal belongings.
+                  Provide property or vehicle access; remove personal
+                  belongings.
                 </li>
                 <li>Provide accurate information about condition and needs.</li>
                 <li>Disclose hazards, damages, or special conditions.</li>
@@ -184,7 +187,7 @@ const PrivacyPolicy = () => {
               <p>
                 Contact us within 48 hours if not satisfied. If our review
                 confirms an issue, we will re-service at no charge. Guarantee
-                excludes pre-existing damage, misuse, or wear and tear.
+                excludes pre-existing damage, misuse, or normal wear and tear.
               </p>
 
               <h3 className="font-semibold text-xl mt-4">
@@ -218,7 +221,7 @@ const PrivacyPolicy = () => {
               <p>
                 Customer data is collected only to provide and improve our
                 services and is never sold. You may opt out of marketing
-                anytime.
+                communications anytime.
               </p>
 
               <h3 className="font-semibold text-xl mt-4">11. Force Majeure</h3>
@@ -253,6 +256,159 @@ const PrivacyPolicy = () => {
               </p>
 
               <p className="text-sm text-gray-600">
+                © 2025 Danilets Detailing LLC & Timils Cleaning LLC. All rights
+                reserved.
+              </p>
+            </>
+          ) : (
+            // ✅ PRIVACY POLICY (ТУТ МАЄ БУТИ ТЕКСТ, ЯКИЙ РОБИЛА РУСЛАНА)
+            <>
+              <h2 className="font-bold text-2xl sm:text-3xl lg:text-[48px]">
+                Privacy Policy
+              </h2>
+
+              <p className="text-sm">
+                Effective date: <strong>28.05.2025</strong>
+              </p>
+
+              <p className="mt-4">
+                This Privacy Policy explains how Danilets (“we”, “our”, or “the
+                service”) collects, uses, stores, and protects your personal
+                information when you visit our website or interact with any of
+                our services — including but not limited to car detailing,
+                interior cleaning, residential and commercial cleaning services.
+              </p>
+
+              <p className="mt-4">
+                By using our website, you agree to the terms of this Privacy
+                Policy.
+              </p>
+
+              {/* SECTION: Information We Collect */}
+              <h3 className="font-semibold text-xl mt-6">
+                What Information We Collect
+              </h3>
+
+              <p className="mt-2">We may collect two categories of data:</p>
+
+              <ul className="list-disc pl-5 space-y-2 mt-2">
+                <li>
+                  <strong>Personal identification information</strong> (e.g.,
+                  your name, email address, phone number, company name)
+                </li>
+                <li>
+                  <strong>Project information</strong> (description, budget,
+                  goals, deadlines)
+                </li>
+                <li>
+                  <strong>Technical data</strong> (IP address, browser type,
+                  device type, time zone, referring URLs)
+                </li>
+                <li>
+                  <strong>Usage data</strong> (pages visited, time spent on
+                  pages, click behavior)
+                </li>
+              </ul>
+
+              <p className="mt-2">
+                We collect this data directly from you (via forms), or
+                automatically (via cookies and analytics tools).
+              </p>
+
+              {/* SECTION: How We Use Your Information */}
+              <h3 className="font-semibold text-xl mt-6">
+                How We Use Your Information
+              </h3>
+
+              <p className="mt-2">We use the collected data exclusively for:</p>
+
+              <ul className="list-disc pl-5 space-y-2 mt-2">
+                <li>
+                  Responding to service requests and providing our services
+                </li>
+                <li>Coordinating on-site visits or appointments</li>
+                <li>Communicating important updates or confirmations</li>
+                <li>Sending operational notifications</li>
+                <li>Analyzing demand and improving user experience</li>
+                <li>
+                  Maintaining internal records and meeting legal obligations
+                </li>
+              </ul>
+
+              <p className="mt-2">
+                We do not sell or share your personal information with third
+                parties without your explicit consent or a legal requirement.
+              </p>
+
+              {/* SECTION: Data Sharing */}
+              <h3 className="font-semibold text-xl mt-6">Data Sharing</h3>
+
+              <p className="mt-2">
+                We may share your information only under these conditions:
+              </p>
+
+              <ul className="list-disc pl-5 space-y-2 mt-2">
+                <li>
+                  With trusted **third-party service providers** (CRM tools,
+                  email delivery systems, payment processors) strictly for
+                  operational needs.
+                </li>
+                <li>With authorities if required by law.</li>
+                <li>
+                  With **IT specialists** for site maintenance — under
+                  confidentiality agreements.
+                </li>
+              </ul>
+
+              {/* SECTION: Cookies */}
+              <h3 className="font-semibold text-xl mt-6">
+                Cookies and Analytics
+              </h3>
+
+              <p className="mt-2">
+                We use cookies and analytics tools (e.g., Google Analytics,
+                Facebook Pixel) to:
+              </p>
+
+              <ul className="list-disc pl-5 space-y-2 mt-2">
+                <li>Understand user behavior and website performance</li>
+                <li>Improve navigation and content</li>
+                <li>Analyze marketing campaign efficiency</li>
+                <li>Personalize user experience</li>
+              </ul>
+
+              <p className="mt-2">
+                You can disable cookies in your browser settings. We do not use
+                cookies to sell or disclose your personal data.
+              </p>
+
+              {/* SECTION: Updates */}
+              <h3 className="font-semibold text-xl mt-6">
+                Changes to This Policy
+              </h3>
+
+              <p className="mt-2">
+                We reserve the right to modify this Privacy Policy at any time.
+                Any changes will be posted on this page with an updated
+                effective date. We recommend reviewing this page regularly to
+                stay informed.
+              </p>
+
+              {/* Contact */}
+              <h3 className="font-semibold text-xl mt-6">
+                Contact Information
+              </h3>
+
+              <p className="mt-2">
+                If you have questions about this Privacy Policy, contact us:
+              </p>
+
+              <p className="mt-2">
+                <strong>Email:</strong> info@danilets.com <br />
+                <strong>Phone:</strong> (614) 980-7380
+              </p>
+
+              <p className="text-sm text-gray-600 mt-6">
                 © 2025 Danilets Detailing LLC & Timils Cleaning LLC. All rights
                 reserved.
               </p>

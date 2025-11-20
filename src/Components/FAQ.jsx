@@ -9,8 +9,9 @@ const FAQ = () => {
 
   const isDetailingPage = location.pathname.startsWith("/services/detailing");
   const isCleaningPage = location.pathname.startsWith("/services/cleaning");
+  const isLegalFaqPage = location.pathname.startsWith("/legal/faq");
 
-  // ⭐ Default FAQ (використовується на головних сторінках)
+  // ⭐ Default FAQ (Home / загальні сторінки)
   const defaultFaqItems = [
     {
       question: "What areas do you serve? ",
@@ -39,7 +40,7 @@ const FAQ = () => {
     },
   ];
 
-  // ⭐ FAQ — Detailing Page
+  // ⭐ Detailing FAQ
   const detailingFaqItems = [
     {
       question: "What detailing services do you provide?",
@@ -73,7 +74,7 @@ Contact us at (614) 980-7380 or detailing@danilets.com to discuss your commercia
     },
   ];
 
-  // ⭐ FAQ — Cleaning Page
+  // ⭐ Cleaning FAQ
   const cleaningFaqItems = [
     {
       question: "What types of commercial spaces do you clean?",
@@ -101,12 +102,23 @@ Consistent service, reliable results, every single time.`,
     },
   ];
 
-  // ⭐ Вибираємо потрібний набір FAQ залежно від маршруту
-  const faqItems = isDetailingPage
-    ? detailingFaqItems
-    : isCleaningPage
-    ? cleaningFaqItems
-    : defaultFaqItems;
+  // ⭐ Вибір набору питань
+  let faqItems;
+
+  if (isLegalFaqPage) {
+    // На /legal/faq показуємо ВСІ питання разом
+    faqItems = [
+      ...defaultFaqItems,
+      ...detailingFaqItems,
+      ...cleaningFaqItems,
+    ];
+  } else if (isDetailingPage) {
+    faqItems = detailingFaqItems;
+  } else if (isCleaningPage) {
+    faqItems = cleaningFaqItems;
+  } else {
+    faqItems = defaultFaqItems;
+  }
 
   const toggleAccordion = (index) => {
     setOpenIndex(openIndex === index ? null : index);
@@ -115,7 +127,6 @@ Consistent service, reliable results, every single time.`,
   return (
     <div className="relative w-full max-w-[1850px] mx-auto mt-4 sm:mt-8 px-4 sm:px-6 lg:px-8">
       <div className="w-full bg-white rounded-[24px] sm:rounded-[32px] flex flex-col lg:flex-row px-4 sm:px-8 lg:px-12 pt-6 sm:pt-10 pb-4">
-        
         {/* Ліва частина */}
         <div className="w-full lg:w-[40%] flex flex-col gap-4 sm:gap-6 mb-6 lg:mb-0">
           <img
@@ -133,7 +144,9 @@ Consistent service, reliable results, every single time.`,
             className="text-[14px] sm:text-[16px] lg:text-[18px] font-normal leading-[140%] text-[#52525B]"
             style={{ fontFamily: "Manrope, sans-serif" }}
           >
-            {isDetailingPage
+            {isLegalFaqPage
+              ? "All of our most common questions in one place — from general inquiries to detailing and commercial cleaning."
+              : isDetailingPage
               ? "Clear answers about our detailing services, timing, and booking."
               : isCleaningPage
               ? "Find answers to the most common questions about our commercial cleaning services."
@@ -145,7 +158,7 @@ Consistent service, reliable results, every single time.`,
         <div className="w-full lg:flex-1 flex flex-col gap-3 sm:gap-4 lg:ml-12">
           {faqItems.map((item, index) => (
             <div
-              key={index}
+              key={`${item.question}-${index}`}
               className="w-full bg-[#F2F2F2] rounded-[16px] sm:rounded-[24px] transition-all duration-300"
             >
               <div
@@ -178,7 +191,6 @@ Consistent service, reliable results, every single time.`,
             </div>
           ))}
         </div>
-
       </div>
     </div>
   );
