@@ -1,65 +1,75 @@
 // email.js
 import { Resend } from "resend";
 
-const {
-  RESEND_API_KEY,
-  RESEND_FROM_EMAIL = "Danilets Auth daniletswebsite@gmail.com",
-} = process.env;
+const apiKey = process.env.RESEND_API_KEY || "";
 
-if (!RESEND_API_KEY) {
-  console.error("[email] RESEND_API_KEY is not set!");
+if (!apiKey) {
+  console.warn(
+    "[email] RESEND_API_KEY is not set. Emails will NOT be sent, only logged."
+  );
 }
 
-const resend = new Resend(RESEND_API_KEY);
+const resend = apiKey ? new Resend(apiKey) : null;
 
 /**
- * Відправка OTP-коду на email
- * purpose: "signup" | "reset"
+ * Надіслати OTP-код на email.
+ * @param {Object} params
+ * @param {string} params.to       - email отримувача
+ * @param {string} params.code     - 6-значний код
+ * @param {string} params.purpose  - "signup" | "reset"
  */
-export async function sendOtpEmail({ to, code, purpose }) {
-  if (!RESEND_API_KEY) {
-    console.warn("[email] RESEND_API_KEY missing, skip sending email");
+export async function sendOtpEmail({ to, code, purpose = "signup" }) {
+  const normalizedPurpose = purpose === "reset" ? "reset" : "signup";
+
+  const subject =
+    normalizedPurpose === "reset"
+      ? "Reset your password – verification code"
+      : "Confirm your email – verification code";
+
+  const title =
+    normalizedPurpose === "reset"
+      ? "Password reset"
+      : "Email verification";
+
+  const html = `
+    <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px;">
+      <h1 style="font-size: 20px; margin-bottom: 12px;">${title}</h1>
+      <p style="font-size: 14px; margin-bottom: 8px;">
+        Your one-time code:
+      </p>
+      <p style="font-size: 26px; letter-spacing: 6px; font-weight: 700; margin: 12px 0;">
+        ${code}
+      </p>
+      <p style="font-size: 13px; color: #4B5563;">
+        The code is valid for 10 minutes. If you did not request it, just ignore this email.
+      </p>
+    </div>
+  `;
+
+  if (!resend) {
+    // dev-режим: просто логнемо код, щоб можна було протестувати без пошти
+    console.log(
+      `[email] OTP for ${to}: ${code} (purpose=${normalizedPurpose})`
+    );
     return;
   }
 
-  const subject =
-    purpose === "reset"
-      ? "Password reset code"
-      : "Email verification code";
-
-  const text = `
-Your one-time code: ${code}
-
-This code is valid for 10 minutes.
-If you did not request this, you can ignore this email.
-`;
-
-  const html = `
-  <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#111; line-height:1.5;">
-    <h2 style="margin-bottom:12px;">
-      ${purpose === "reset" ? "Password reset" : "Email verification"}
-    </h2>
-    <p>Your one-time code:</p>
-    <div style="font-size:24px; font-weight:700; letter-spacing:4px; margin:16px 0;">
-      ${code}
-    </div>
-    <p style="font-size:14px; color:#555;">
-      The code is valid for 10 minutes.<br />
-      If you did not request this, you can ignore this email.
-    </p>
-  </div>
-  `;
+  const from =
+    process.env.RESEND_FROM ||
+    "Danilets Website <onboarding@resend.dev>"; // можна змінити на свій домен, якщо верифікований
 
   try {
     const result = await resend.emails.send({
-      from: RESEND_FROM_EMAIL,
+      from,
       to,
       subject,
-      text,
       html,
     });
-    console.log("[email] OTP sent:", result?.id || result);
-  } catch (e) {
-    console.error("[email] Failed to send OTP:", e?.message || e);
+
+    console.log("[email] OTP email sent:", result?.id || result);
+  } catch (err) {
+    console.error("[email] Failed to send OTP email:", err);
+    // пробросимо далі, щоб /api/auth/otp/send повернув 500
+    throw err;
   }
 }
