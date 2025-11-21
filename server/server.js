@@ -20,7 +20,6 @@ import {
   RequestModel,
 } from './db.js';
 import googleCodeRouter from './routes/authGoogle.js';
-import cardsRouter from './routes/cards.js';
 import reviewsRouter from './routes/reviews.js';
 
 const app = express();
@@ -942,7 +941,6 @@ app.delete('/api/admin/requests/:id', auth, requireAdmin, async (req, res) => {
 });
 
 // додаткові роутери
-app.use('/api/cards', cardsRouter);
 app.use('/api', reviewsRouter);
 
 // ---- запуск ----
