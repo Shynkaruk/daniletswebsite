@@ -3,7 +3,7 @@ import { Resend } from "resend";
 
 const {
   RESEND_API_KEY,
-  RESEND_FROM_EMAIL = "DIVa Auth <auth@yourdomain.com>",
+  RESEND_FROM_EMAIL = "Danilets Auth daniletswebsite@gmail.com",
 } = process.env;
 
 if (!RESEND_API_KEY) {
