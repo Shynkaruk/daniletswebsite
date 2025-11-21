@@ -1,9 +1,9 @@
 // src/components/AuthModal.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { FaTimes, FaGoogle, FaApple } from "react-icons/fa";
-import { auth } from "../lib/api"; // ← див. src/lib/api.js з попередніх кроків
-import { GoogleLogin } from "@react-oauth/google";
+import { auth } from "../lib/api"; // див. src/lib/api.js
 import GoogleCustomButton from "./GoogleCustomButton";
+import OtpModal from "./OtpModal";
 
 const gradient =
   "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)";
@@ -12,17 +12,22 @@ export default function AuthModal({
   open,
   onClose,
   initialTab = "login", // "login" | "signup"
-  onAuth, // callback після успіху (опц.)
+  onAuth, // callback після успішної авторизації (опц.)
 }) {
   const [tab, setTab] = useState(initialTab);
   const cardRef = useRef(null);
 
-  // Синхронізація вкладки, коли модалка відкривається
+  // OTP для підтвердження email після реєстрації
+  const [otpOpen, setOtpOpen] = useState(false);
+  const [otpEmail, setOtpEmail] = useState("");
+  const [pendingUser, setPendingUser] = useState(null);
+
+  // синхронізація вкладки при відкритті
   useEffect(() => {
     if (open) setTab(initialTab);
   }, [initialTab, open]);
 
-  // Закриття по Escape / кліку поза карткою
+  // закриття по Escape / кліку поза карткою
   useEffect(() => {
     if (!open) return;
     const onEsc = (e) => e.key === "Escape" && onClose?.();
@@ -93,10 +98,11 @@ export default function AuthModal({
             />
           ) : (
             <SignupForm
-              onSuccess={(u) => {
-                onAuth?.(u);
-                onClose?.();
-                if (!onAuth) window.location.reload();
+              onSuccess={(u, email) => {
+                // користувач створений — запустили OTP
+                setPendingUser(u);
+                setOtpEmail(email);
+                setOtpOpen(true);
               }}
             />
           )}
@@ -133,6 +139,25 @@ export default function AuthModal({
           </div>
         </div>
       </div>
+
+      {/* OTP модалка — окремо від сітки, поверх усього */}
+      <OtpModal
+        open={otpOpen}
+        email={otpEmail}
+        mode="verify" // режим підтвердження email після реєстрації
+        onClose={() => setOtpOpen(false)}
+        onVerified={() => {
+          // після успішної верифікації логінимо юзера
+          if (pendingUser) {
+            onAuth?.(pendingUser);
+          }
+          setPendingUser(null);
+          setOtpEmail("");
+          setOtpOpen(false);
+          onClose?.();
+          if (!onAuth) window.location.reload();
+        }}
+      />
     </div>
   );
 }
@@ -203,7 +228,9 @@ function SignupForm({ onSuccess }) {
     e?.preventDefault();
     setErr(null);
     setLoading(true);
+
     try {
+      // 1) створюємо користувача
       const { user } = await auth.register({
         email,
         password,
@@ -211,7 +238,12 @@ function SignupForm({ onSuccess }) {
         last_name: last,
         phone,
       });
-      onSuccess?.(user);
+
+      // 2) запитуємо OTP на email (режим verify)
+      await auth.requestOtp(email, "verify");
+
+      // 3) передаємо наверх юзера + email для відкриття OTP-модалки
+      onSuccess?.(user, email);
     } catch (e) {
       setErr(e?.error || "Sign up failed");
     } finally {

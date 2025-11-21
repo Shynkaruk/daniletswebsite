@@ -2,6 +2,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+
 const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) {
   throw new Error('MONGODB_URI is not set');
@@ -119,6 +120,17 @@ async function seedAdmin() {
 
   console.log(`[db] Seeded admin: ${email} / ${pass}`);
 }
+
+const otpCodeSchema = new mongoose.Schema({
+  email: { type: String, required: true, index: true },
+  code: { type: String, required: true },        // 6-значний код
+  purpose: { type: String, enum: ['signup', 'reset'], required: true },
+  expires_at: { type: Date, required: true },    // коли закінчиться
+  used: { type: Boolean, default: false },       // щоб не перевикористовували
+}, { timestamps: true });
+
+export const OtpCode = mongoose.model('OtpCode', otpCodeSchema);
+
 
 export async function initDb() {
   const uri = process.env.MONGODB_URI;

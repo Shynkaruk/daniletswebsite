@@ -136,6 +136,22 @@ export const auth = {
   },
 };
 
+export const otpApi = {
+  requestReset(email) {
+    return sendJson(`${API}/api/auth/request-reset-otp`, 'POST', { email });
+  },
+  resetPassword(email, code, new_password) {
+    return sendJson(`${API}/api/auth/reset-password`, 'POST', {
+      email,
+      code,
+      new_password,
+    });
+  },
+  verifyEmail(email, code) {
+    return sendJson(`${API}/api/auth/verify-email-otp`, 'POST', { email, code });
+  },
+};
+
 
 export const contentApi = {
   async getByKey(key, lang = "en") {
@@ -270,4 +286,22 @@ export const adminReqApi = {
     const r = await fetch(`${API}/api/admin/requests/${id}`, { method:'DELETE', headers: { ...authHeaders() } });
     return parseJsonSafe(r);
   },
+};
+
+/* ===== OTP (email one-time code) ===== */
+
+auth.requestOtp = async function requestOtp(email, purpose = "verify") {
+  // purpose: "verify" | "reset"
+  return sendJsonNoAutoLogout(`${API}/api/auth/otp/send`, "POST", {
+    email,
+    purpose,
+  });
+};
+
+auth.verifyOtp = async function verifyOtp({ email, code, purpose = "verify" }) {
+  return sendJsonNoAutoLogout(`${API}/api/auth/otp/verify`, "POST", {
+    email,
+    code,
+    purpose,
+  });
 };
