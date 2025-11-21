@@ -88,6 +88,124 @@ function generateOtpCode() {
   return String(Math.floor(100000 + Math.random() * 900000)); // 6 цифр
 }
 
+// Уніфікований ендпоінт для відправки OTP
+// body: { email, purpose: "verify" | "reset" }
+app.post("/api/auth/otp/send", async (req, res) => {
+  const { email, purpose = "verify" } = req.body || {};
+  if (!email) {
+    return res.status(400).json({ error: "email required" });
+  }
+
+  try {
+    // нормалізуємо purpose до того, що зберігаємо в БД
+    const normalizedPurpose = purpose === "reset" ? "reset" : "signup";
+
+    // для reset перевіряємо, що юзер існує (щоб не палити, просто ok)
+    if (normalizedPurpose === "reset") {
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.json({ ok: true });
+      }
+    }
+
+    const code = generateOtpCode();
+    const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 хв
+
+    await OtpCode.create({
+      email,
+      code,
+      purpose: normalizedPurpose,
+      expires_at: expires,
+    });
+
+    await sendOtpEmail({ to: email, code, purpose: normalizedPurpose });
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("otp/send error", e);
+    res.status(500).json({ error: "failed to send OTP" });
+  }
+});
+
+// Уніфікований ендпоінт для перевірки OTP
+// body: { email, code, purpose: "verify" | "reset" }
+app.post("/api/auth/otp/verify", async (req, res) => {
+  const { email, code, purpose = "verify" } = req.body || {};
+  if (!email || !code) {
+    return res.status(400).json({ error: "email and code required" });
+  }
+
+  try {
+    const normalizedPurpose = purpose === "reset" ? "reset" : "signup";
+
+    if (normalizedPurpose === "signup") {
+      // це по суті те саме, що /api/auth/verify-email-otp
+      const otp = await OtpCode.findOne({
+        email,
+        code,
+        purpose: "signup",
+        used: false,
+        expires_at: { $gt: new Date() },
+      });
+
+      if (!otp) {
+        return res.status(400).json({ error: "Invalid or expired code" });
+      }
+
+      otp.used = true;
+      await otp.save();
+
+      const userDoc = await User.findOneAndUpdate(
+        { email },
+        { $set: { email_verified: true } },
+        { new: true }
+      ).lean();
+
+      if (!userDoc) {
+        return res.status(404).json({ error: "user not found" });
+      }
+
+      const user = {
+        id: userDoc._id.toString(),
+        email: userDoc.email,
+        first_name: userDoc.first_name,
+        last_name: userDoc.last_name,
+        phone: userDoc.phone,
+        is_admin: userDoc.is_admin,
+        email_verified: userDoc.email_verified,
+      };
+
+      const token = signToken(user);
+      return res.json({ user, token });
+    }
+
+    if (normalizedPurpose === "reset") {
+      // тут тільки перевіряємо код, НЕ відмічаємо used,
+      // щоб потім /api/auth/reset-password ще зміг його використати
+      const otp = await OtpCode.findOne({
+        email,
+        code,
+        purpose: "reset",
+        used: false,
+        expires_at: { $gt: new Date() },
+      });
+
+      if (!otp) {
+        return res.status(400).json({ error: "Invalid or expired code" });
+      }
+
+      // просто кажемо фронту "окей, код правильний"
+      return res.json({ ok: true });
+    }
+
+    return res.status(400).json({ error: "Unknown purpose" });
+  } catch (e) {
+    console.error("otp/verify error", e);
+    res.status(500).json({ error: "failed to verify OTP" });
+  }
+});
+
+
 function requireAdmin(req, res, next) {
   if (!req.user?.is_admin) return res.status(403).json({ error: "forbidden" });
   next();
