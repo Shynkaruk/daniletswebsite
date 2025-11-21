@@ -7,7 +7,7 @@ import ContactForm from './Components/ContactForm.jsx';
 import Newsletter from './Components/Newsletter.jsx';
 import PrivacyPolicy from './Components/PrivacyPolicy.jsx';
 import Cleaning from './Components/Services/Cleaning/CleaningPage.jsx';
-import Booking from './Components/Booking/Booking.jsx';
+import Booking from './Components/Booking.jsx';
 import DetailingPage from './Components/Services/Detailing/DetailingPage.jsx';
 import AdminRequests from './Accounts/AdminRequests.jsx'
 import Account from './Accounts/Account.jsx'
