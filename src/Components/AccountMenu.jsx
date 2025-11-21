@@ -8,7 +8,11 @@ import { auth } from "../lib/api"; // з попереднього api.js
  *  - "buttons" (дві кнопки Sign Up / Log In)
  *  - "icon"    (лише аватар з дропдауном, для мобільної шапки)
  */
-export default function AccountMenu({ variant = "buttons", onShowAuth, className = "" }) {
+export default function AccountMenu({
+  variant = "buttons",
+  onShowAuth,
+  className = "",
+}) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
   const btnRef = useRef(null);
@@ -90,11 +94,27 @@ export default function AccountMenu({ variant = "buttons", onShowAuth, className
           ref={menuRef}
           className="absolute right-0 mt-2 w-56 z-50 rounded-2xl border border-[#E6E6EA] bg-white shadow-lg overflow-hidden"
         >
-          <div className="px-4 py-3 text-sm text-[#111]">
+          {/* Привітання */}
+          <div className="px-4 py-3 text-sm font-semibold text-[#111]">
             {user.first_name ? `Hi, ${user.first_name}!` : user.email}
           </div>
+
           <div className="h-px bg-[#F2F2F5]" />
 
+          {/* My Account */}
+          <button
+            onClick={() => {
+              setOpen(false);
+              window.location.href = "/account"; // або navigate("/account")
+            }}
+            className="w-full text-left px-4 py-3 text-sm font-semibold text-black hover:bg-[rgba(245,218,147,0.25)]"
+          >
+            My Account
+          </button>
+
+          <div className="h-px bg-[#F2F2F5]" />
+
+          {/* Admin only */}
           {isAdmin && (
             <Link
               to="/admin"
@@ -105,11 +125,11 @@ export default function AccountMenu({ variant = "buttons", onShowAuth, className
             </Link>
           )}
 
+          {/* Log out */}
           <button
             onClick={() => {
               auth.logout();
               setOpen(false);
-              // перезавантажимо, щоб шапка перемалювалась
               window.location.reload();
             }}
             className="w-full text-left px-4 py-3 text-sm font-semibold text-black hover:bg-[rgba(245,218,147,0.25)] inline-flex items-center gap-2"
