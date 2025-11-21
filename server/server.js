@@ -9,35 +9,44 @@ import path from 'path';
 import fs from 'fs';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { fileURLToPath } from 'url';            // ⬅️ додано
-import db from './db.js';
-import googleCodeRouter from "./routes/authGoogle.js";
+import { fileURLToPath } from 'url';
+import {
+  initDb,
+  User,
+  ContentBlock,
+  Card,
+  UserPaymentMethod,
+  Vehicle,
+  RequestModel,
+} from './db.js';
+import googleCodeRouter from './routes/authGoogle.js';
 import cardsRouter from './routes/cards.js';
 import reviewsRouter from './routes/reviews.js';
 
 const app = express();
+
 // ---- базові налаштування для DO ----
-const __filename = fileURLToPath(import.meta.url);               // ⬅️ додано
-const __dirname = path.dirname(__filename);                      // ⬅️ додано
-const HOST = process.env.HOST || '0.0.0.0';                      // ⬅️ додано
-const PORT = process.env.PORT ? Number(process.env.PORT) : 8080; // ⬅️ змінив дефолт з 5179 на 8080
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const HOST = process.env.HOST || '0.0.0.0';
+const PORT = process.env.PORT ? Number(process.env.PORT) : 8080;
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_change_me';
 const TOKEN_EXPIRES = process.env.TOKEN_EXPIRES || '7d';
 
-app.set('trust proxy', true);                                    // ⬅️ корисно за проксі
+app.set('trust proxy', true);
 
 app.use(cors({ origin: '*', credentials: false }));
 app.use(express.json({ limit: '10mb' }));
 
 // директорії з урахуванням __dirname (щоб не зламалось у контейнері)
-const UPLOADS_DIR = path.join(__dirname, 'uploads');             // ⬅️ оновлено
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 app.use('/uploads', express.static(UPLOADS_DIR));
 
-
 app.use('/api/auth', googleCodeRouter);
 
+// ===== AUTH MIDDLEWARE =====
 function auth(req, res, next) {
   const h = req.headers.authorization || '';
   const token = h.startsWith('Bearer ') ? h.slice(7) : null;
@@ -51,14 +60,14 @@ function auth(req, res, next) {
 }
 
 // ---- Health check для App Platform ----
-app.get('/health', (_req, res) => res.status(200).send('ok'));   // ⬅️ додано
+app.get('/health', (_req, res) => res.status(200).send('ok'));
 
-// ---- (опціонально) роздаємо фронтенд Vite з dist ----
-const DIST_DIR = path.join(__dirname, '..', 'dist');             // ⬅️ шлях до dist (налаштуй під свій проект)
+// ---- роздаємо фронтенд Vite з dist ----
+const DIST_DIR = path.join(__dirname, '..', 'dist');
 if (fs.existsSync(DIST_DIR)) {
   app.use(express.static(DIST_DIR));
   app.get('/', (_req, res) => res.sendFile(path.join(DIST_DIR, 'index.html')));
-  // SPA fallback, щоб працювали клієнтські маршрути
+  // SPA fallback
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api/')) return next();
     res.sendFile(path.join(DIST_DIR, 'index.html'));
@@ -79,188 +88,336 @@ function requireAdmin(req, res, next) {
   next();
 }
 
+// ====== SEED ADMIN USER (one-time) ======
+async function seedAdmin() {
+  try {
+    const exists = await User.findOne({ is_admin: true }).lean();
+    if (exists) {
+      console.log('[seedAdmin] Admin already exists:', exists.email);
+      return;
+    }
+
+    const email = process.env.SEED_ADMIN_EMAIL || 'admin@example.com';
+    const pass = process.env.SEED_ADMIN_PASSWORD || 'admin123';
+
+    const hash = bcrypt.hashSync(pass, 10);
+
+    const doc = await User.create({
+      email,
+      password: hash,
+      first_name: 'Admin',
+      last_name: 'User',
+      phone: '',
+      is_admin: true,
+    });
+
+    console.log(`[seedAdmin] Created admin: ${email} / ${pass} (id=${doc._id})`);
+  } catch (err) {
+    console.error('[seedAdmin] Failed to create admin:', err);
+  }
+}
+
+
+// ====================== AUTH ======================
 
 // register (створює звичайного юзера)
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   const { email, password, first_name, last_name, phone } = req.body || {};
-  if (!email || !password) return res.status(400).json({ error: 'email & password required' });
+  if (!email || !password) {
+    return res.status(400).json({ error: 'email & password required' });
+  }
 
   try {
+    const existing = await User.findOne({ email });
+    if (existing) {
+      return res.status(409).json({ error: 'email already exists' });
+    }
+
     const hash = bcrypt.hashSync(password, 10);
-    const stmt = db.prepare(`insert into users (email,password,first_name,last_name,phone,is_admin)
-                             values (?,?,?,?,?,0)`);
-    const info = stmt.run(email, hash, first_name || '', last_name || '', phone || '');
-    const user = db.prepare(`select id,email,first_name,last_name,phone,is_admin from users where id=?`)
-                   .get(info.lastInsertRowid);
+
+    const userDoc = await User.create({
+      email,
+      password: hash,
+      first_name: first_name || '',
+      last_name: last_name || '',
+      phone: phone || '',
+      is_admin: false,
+    });
+
+    const user = {
+      id: userDoc._id.toString(),
+      email: userDoc.email,
+      first_name: userDoc.first_name,
+      last_name: userDoc.last_name,
+      phone: userDoc.phone,
+      is_admin: userDoc.is_admin,
+    };
+
     const token = signToken(user);
     res.json({ user, token });
   } catch (e) {
-    if (String(e).includes('UNIQUE')) {
-      return res.status(409).json({ error: 'email already exists' });
-    }
     console.error(e);
     res.status(500).json({ error: 'failed to register' });
   }
 });
 
 // login (повертає user + JWT)
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body || {};
-  const row = db.prepare(`select id,email,first_name,last_name,phone,is_admin,password from users where email=?`).get(email);
-  if (!row) return res.status(401).json({ error: 'invalid credentials' });
-  const ok = bcrypt.compareSync(password, row.password);
-  if (!ok) return res.status(401).json({ error: 'invalid credentials' });
+  try {
+    const userDoc = await User.findOne({ email });
+    if (!userDoc) return res.status(401).json({ error: 'invalid credentials' });
 
-  const { password: _, ...user } = row;
-  const token = signToken(user);
-  res.json({ user, token });
+    const ok = bcrypt.compareSync(password, userDoc.password);
+    if (!ok) return res.status(401).json({ error: 'invalid credentials' });
+
+    const user = {
+      id: userDoc._id.toString(),
+      email: userDoc.email,
+      first_name: userDoc.first_name,
+      last_name: userDoc.last_name,
+      phone: userDoc.phone,
+      is_admin: userDoc.is_admin,
+    };
+
+    const token = signToken(user);
+    res.json({ user, token });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'login failed' });
+  }
 });
 
-// поточний юзер за токеном (опційно для фронту)
-app.get('/api/auth/me', auth, (req, res) => {
-  const user = db.prepare(`select id,email,first_name,last_name,phone,is_admin from users where id=?`).get(req.user.uid);
+app.get('/api/auth/me', auth, async (req, res) => {
+  const userDoc = await User.findById(req.user.uid).lean();
+  if (!userDoc) return res.status(404).json({ error: 'not found' });
+
+  const { password, ...user } = userDoc;
+  user.id = user._id.toString();
+  delete user._id;
+
   res.json({ user });
 });
 
-// ===== CONTENT BLOCKS =====
+// ====================== CONTENT BLOCKS ======================
 
 // GET відкриті
-app.get('/api/content', (req, res) => {
+app.get('/api/content', async (req, res) => {
   const { page, lang = 'en' } = req.query;
-  let rows;
-  if (page) {
-    rows = db.prepare(`select * from content_blocks where page=? and lang=? order by sort_order asc, id asc`).all(page, lang);
-  } else {
-    rows = db.prepare(`select * from content_blocks where lang=? order by page, sort_order asc`).all(lang);
+
+  try {
+    let rows;
+    if (page) {
+      rows = await ContentBlock.find({ page, lang })
+        .sort({ sort_order: 1, _id: 1 })
+        .lean();
+    } else {
+      rows = await ContentBlock.find({ lang })
+        .sort({ page: 1, sort_order: 1 })
+        .lean();
+    }
+
+    const normalized = rows.map((r) => ({
+      ...r,
+      id: r._id.toString(),
+      _id: undefined,
+    }));
+    res.json(normalized);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'failed to load content' });
   }
-  res.json(rows);
 });
 
-app.get('/api/content/by-key/:key', (req, res) => {
+app.get('/api/content/by-key/:key', async (req, res) => {
   const { key } = req.params;
   const { lang = 'en' } = req.query;
-  const row = db.prepare(`select * from content_blocks where key=? and lang=?`).get(key, lang);
-  res.json(row || null);
+  try {
+    const row = await ContentBlock.findOne({ key, lang }).lean();
+    if (!row) return res.json(null);
+    row.id = row._id.toString();
+    delete row._id;
+    res.json(row);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'failed to load content' });
+  }
 });
 
 // Записні — лише admin
-app.post('/api/content', auth, requireAdmin, (req, res) => {
+app.post('/api/content', auth, requireAdmin, async (req, res) => {
   const { key, page, lang = 'en', value, published = 1, sort_order = 0 } = req.body || {};
   if (!key || value == null) return res.status(400).json({ error: 'key and value required' });
 
-  const stmt = db.prepare(`insert into content_blocks (key,page,lang,value,published,sort_order,updated_by,updated_at)
-                           values (?,?,?,?,?,?,?,datetime('now'))`);
-  const info = stmt.run(key, page || null, lang, typeof value === 'string' ? value : JSON.stringify(value),
-                        published ? 1 : 0, sort_order, req.user.uid);
-  const row = db.prepare(`select * from content_blocks where id=?`).get(info.lastInsertRowid);
-  res.json(row);
+  try {
+    const doc = await ContentBlock.create({
+      key,
+      page: page || null,
+      lang,
+      value: typeof value === 'string' ? value : JSON.stringify(value),
+      published: !!published,
+      sort_order,
+      updated_by: req.user.uid,
+      updated_at: new Date(),
+    });
+
+    const row = doc.toObject();
+    row.id = row._id.toString();
+    delete row._id;
+    res.json(row);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'failed to create content' });
+  }
 });
 
-app.put('/api/content/:id', auth, requireAdmin, (req, res) => {
-  const id = +req.params.id;
+app.put('/api/content/:id', auth, requireAdmin, async (req, res) => {
+  const id = req.params.id;
   const { key, page, lang, value, published, sort_order } = req.body || {};
-  const prev = db.prepare(`select * from content_blocks where id=?`).get(id);
-  if (!prev) return res.status(404).json({ error: 'not found' });
 
-  const stmt = db.prepare(`update content_blocks set
-    key = coalesce(?, key),
-    page = coalesce(?, page),
-    lang = coalesce(?, lang),
-    value = coalesce(?, value),
-    published = coalesce(?, published),
-    sort_order = coalesce(?, sort_order),
-    updated_by = ?,
-    updated_at = datetime('now')
-  where id=?`);
+  try {
+    const prev = await ContentBlock.findById(id);
+    if (!prev) return res.status(404).json({ error: 'not found' });
 
-  stmt.run(
-    key ?? null,
-    page ?? null,
-    lang ?? null,
-    value == null ? null : (typeof value === 'string' ? value : JSON.stringify(value)),
-    published == null ? null : (published ? 1 : 0),
-    sort_order ?? null,
-    req.user.uid,
-    id
-  );
-  const row = db.prepare(`select * from content_blocks where id=?`).get(id);
-  res.json(row);
+    const update = {
+      updated_by: req.user.uid,
+      updated_at: new Date(),
+    };
+    if (key !== undefined) update.key = key || null;
+    if (page !== undefined) update.page = page || null;
+    if (lang !== undefined) update.lang = lang || 'en';
+    if (value !== undefined)
+      update.value =
+        value == null ? null : typeof value === 'string' ? value : JSON.stringify(value);
+    if (published !== undefined) update.published = !!published;
+    if (sort_order !== undefined) update.sort_order = sort_order;
+
+    const doc = await ContentBlock.findByIdAndUpdate(id, { $set: update }, { new: true }).lean();
+    const row = { ...doc, id: doc._id.toString() };
+    delete row._id;
+    res.json(row);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'failed to update content' });
+  }
 });
 
-app.delete('/api/content/:id', auth, requireAdmin, (req, res) => {
-  const id = +req.params.id;
-  db.prepare(`delete from content_blocks where id=?`).run(id);
-  res.json({ ok: true });
+app.delete('/api/content/:id', auth, requireAdmin, async (req, res) => {
+  const id = req.params.id;
+  try {
+    await ContentBlock.findByIdAndDelete(id);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'failed to delete content' });
+  }
 });
 
-// ===== CARDS =====
+// ====================== CARDS ======================
 
 // GET відкриті
-app.get('/api/cards', (req, res) => {
+app.get('/api/cards', async (req, res) => {
   const { type, published } = req.query;
-  let q = `select * from cards`;
-  const cond = [];
-  const params = [];
-  if (type) { cond.push(`type=?`); params.push(type); }
-  if (published != null) { cond.push(`published=?`); params.push(+published ? 1 : 0); }
-  if (cond.length) q += ` where ` + cond.join(' and ');
-  q += ` order by sort_order asc, id desc`;
-  const rows = db.prepare(q).all(...params);
-  res.json(rows);
+
+  try {
+    const filter = {};
+    if (type) filter.type = type;
+    if (published != null) filter.published = !!Number(published);
+
+    const rows = await Card.find(filter).sort({ sort_order: 1, _id: -1 }).lean();
+    const normalized = rows.map((r) => ({
+      ...r,
+      id: r._id.toString(),
+      _id: undefined,
+    }));
+    res.json(normalized);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'failed to load cards' });
+  }
 });
 
 // Запис/оновлення/видалення — лише admin
-app.post('/api/cards', auth, requireAdmin, (req, res) => {
-  const { type, title, subtitle, body, image_url, price, slug, sort_order = 0, published = 1 } = req.body || {};
+app.post('/api/cards', auth, requireAdmin, async (req, res) => {
+  const { type, title, subtitle, body, image_url, price, slug, sort_order = 0, published = 1 } =
+    req.body || {};
   if (!type || !title) return res.status(400).json({ error: 'type & title required' });
 
-  const info = db.prepare(`insert into cards (type,title,subtitle,body,image_url,price,slug,sort_order,published,created_by,created_at,updated_at)
-                           values (?,?,?,?,?,?,?,?,?,?,datetime('now'),datetime('now'))`)
-    .run(type, title, subtitle || null, body || null, image_url || null, price ?? null, slug || null,
-         sort_order, published ? 1 : 0, req.user.uid);
-  const row = db.prepare(`select * from cards where id=?`).get(info.lastInsertRowid);
-  res.json(row);
+  try {
+    const doc = await Card.create({
+      type,
+      title,
+      subtitle: subtitle || null,
+      body: body || null,
+      image_url: image_url || null,
+      price: price ?? null,
+      slug: slug || null,
+      sort_order,
+      published: !!published,
+      created_by: req.user.uid,
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
+
+    const row = doc.toObject();
+    row.id = row._id.toString();
+    delete row._id;
+    res.json(row);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'failed to create card' });
+  }
 });
 
-app.put('/api/cards/:id', auth, requireAdmin, (req, res) => {
-  const id = +req.params.id;
-  const { type, title, subtitle, body, image_url, price, slug, sort_order, published } = req.body || {};
-  const prev = db.prepare(`select * from cards where id=?`).get(id);
-  if (!prev) return res.status(404).json({ error: 'not found' });
+app.put('/api/cards/:id', auth, requireAdmin, async (req, res) => {
+  const id = req.params.id;
+  const { type, title, subtitle, body, image_url, price, slug, sort_order, published } =
+    req.body || {};
 
-  db.prepare(`update cards set
-      type=coalesce(?,type),
-      title=coalesce(?,title),
-      subtitle=coalesce(?,subtitle),
-      body=coalesce(?,body),
-      image_url=coalesce(?,image_url),
-      price=coalesce(?,price),
-      slug=coalesce(?,slug),
-      sort_order=coalesce(?,sort_order),
-      published=coalesce(?,published),
-      updated_at=datetime('now')
-    where id=?`)
-    .run(type ?? null, title ?? null, subtitle ?? null, body ?? null, image_url ?? null, price ?? null,
-         slug ?? null, sort_order ?? null, (published == null ? null : (published ? 1 : 0)), id);
+  try {
+    const prev = await Card.findById(id);
+    if (!prev) return res.status(404).json({ error: 'not found' });
 
-  const row = db.prepare(`select * from cards where id=?`).get(id);
-  res.json(row);
+    const update = { updated_at: new Date() };
+    if (type !== undefined) update.type = type;
+    if (title !== undefined) update.title = title;
+    if (subtitle !== undefined) update.subtitle = subtitle;
+    if (body !== undefined) update.body = body;
+    if (image_url !== undefined) update.image_url = image_url;
+    if (price !== undefined) update.price = price;
+    if (slug !== undefined) update.slug = slug;
+    if (sort_order !== undefined) update.sort_order = sort_order;
+    if (published !== undefined) update.published = !!published;
+
+    const doc = await Card.findByIdAndUpdate(id, { $set: update }, { new: true }).lean();
+    const row = { ...doc, id: doc._id.toString() };
+    delete row._id;
+    res.json(row);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'failed to update card' });
+  }
 });
 
-app.delete('/api/cards/:id', auth, requireAdmin, (req, res) => {
-  const id = +req.params.id;
-  db.prepare(`delete from cards where id=?`).run(id);
-  res.json({ ok: true });
+app.delete('/api/cards/:id', auth, requireAdmin, async (req, res) => {
+  const id = req.params.id;
+  try {
+    await Card.findByIdAndDelete(id);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'failed to delete card' });
+  }
 });
 
-// ===== UPLOADS (тільки admin) =====
+// ====================== UPLOADS (тільки admin) ======================
 const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),  // було 'uploads'
+  destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
   filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname);
     const name = Date.now() + '_' + Math.random().toString(36).slice(2) + ext;
     cb(null, name);
-  }
+  },
 });
 
 const upload = multer({ storage });
@@ -270,309 +427,536 @@ app.post('/api/upload', auth, requireAdmin, upload.single('file'), (req, res) =>
   res.json({ url });
 });
 
-/* ====== PROFILE (поточний користувач) ====== */
-// GET /api/me/profile
-app.get('/api/me/profile', auth, (req, res) => {
-  const u = db.prepare(`select id,email,first_name,last_name,phone,is_admin from users where id=?`).get(req.user.uid);
+// ====================== PROFILE ======================
+app.get('/api/me/profile', auth, async (req, res) => {
+  const userDoc = await User.findById(req.user.uid).lean();
+  if (!userDoc) return res.status(404).json({ error: 'not found' });
+
+  const { password, ...u } = userDoc;
+  u.id = u._id.toString();
+  delete u._id;
+
   res.json(u);
 });
 
-// PUT /api/me/profile
-app.put('/api/me/profile', auth, (req, res) => {
+app.put('/api/me/profile', auth, async (req, res) => {
   const { first_name, last_name, phone } = req.body || {};
-  db.prepare(`update users set
-    first_name = coalesce(?, first_name),
-    last_name  = coalesce(?, last_name),
-    phone      = coalesce(?, phone)
-  where id=?`).run(first_name ?? null, last_name ?? null, phone ?? null, req.user.uid);
-  const u = db.prepare(`select id,email,first_name,last_name,phone,is_admin from users where id=?`).get(req.user.uid);
+
+  await User.findByIdAndUpdate(
+    req.user.uid,
+    { $set: { first_name, last_name, phone } },
+    { new: false }
+  );
+
+  const userDoc = await User.findById(req.user.uid).lean();
+  if (!userDoc) return res.status(404).json({ error: 'not found' });
+
+  const { password, ...u } = userDoc;
+  u.id = u._id.toString();
+  delete u._id;
+
   res.json(u);
 });
 
-/* ====== VEHICLES (тільки свої) ====== */
-// GET /api/me/vehicles
-app.get('/api/me/vehicles', auth, (req, res) => {
-  const rows = db.prepare(`select * from vehicles where user_id=? order by id desc`).all(req.user.uid);
-  res.json(rows);
+// ====================== VEHICLES (тільки свої) ======================
+app.get('/api/me/vehicles', auth, async (req, res) => {
+  const rows = await Vehicle.find({ user_id: req.user.uid }).sort({ _id: -1 }).lean();
+  const normalized = rows.map((v) => ({
+    ...v,
+    id: v._id.toString(),
+    _id: undefined,
+  }));
+  res.json(normalized);
 });
 
-// POST /api/me/vehicles
-app.post('/api/me/vehicles', auth, (req, res) => {
+app.post('/api/me/vehicles', auth, async (req, res) => {
   const { make, model, year, color, plate, vin, notes } = req.body || {};
-  const info = db.prepare(`insert into vehicles (user_id, make, model, year, color, plate, vin, notes)
-    values (?,?,?,?,?,?,?,?)`).run(req.user.uid, make || null, model || null, year || null, color || null, plate || null, vin || null, notes || null);
-  const row = db.prepare(`select * from vehicles where id=?`).get(info.lastInsertRowid);
+
+  const doc = await Vehicle.create({
+    user_id: req.user.uid,
+    make,
+    model,
+    year,
+    color,
+    plate,
+    vin,
+    notes,
+  });
+
+  const v = doc.toObject();
+  v.id = v._id.toString();
+  delete v._id;
+
+  res.json(v);
+});
+
+app.put('/api/me/vehicles/:id', auth, async (req, res) => {
+  const id = req.params.id;
+  const { make, model, year, color, plate, vin, notes } = req.body || {};
+
+  const owner = await Vehicle.findOne({ _id: id, user_id: req.user.uid });
+  if (!owner) return res.status(404).json({ error: 'not found' });
+
+  const doc = await Vehicle.findByIdAndUpdate(
+    id,
+    {
+      $set: {
+        make,
+        model,
+        year,
+        color,
+        plate,
+        vin,
+        notes,
+      },
+    },
+    { new: true }
+  ).lean();
+
+  const row = { ...doc, id: doc._id.toString() };
+  delete row._id;
   res.json(row);
 });
 
-// PUT /api/me/vehicles/:id
-app.put('/api/me/vehicles/:id', auth, (req, res) => {
-  const id = +req.params.id;
-  const owner = db.prepare(`select user_id from vehicles where id=?`).get(id);
-  if (!owner || owner.user_id !== req.user.uid) return res.status(404).json({ error: 'not found' });
-  const { make, model, year, color, plate, vin, notes } = req.body || {};
-  db.prepare(`update vehicles set
-    make=coalesce(?,make), model=coalesce(?,model), year=coalesce(?,year),
-    color=coalesce(?,color), plate=coalesce(?,plate), vin=coalesce(?,vin), notes=coalesce(?,notes)
-    where id=?`).run(make ?? null, model ?? null, year ?? null, color ?? null, plate ?? null, vin ?? null, notes ?? null, id);
-  const row = db.prepare(`select * from vehicles where id=?`).get(id);
-  res.json(row);
-});
+app.delete('/api/me/vehicles/:id', auth, async (req, res) => {
+  const id = req.params.id;
+  const owner = await Vehicle.findOne({ _id: id, user_id: req.user.uid });
+  if (!owner) return res.status(404).json({ error: 'not found' });
 
-// DELETE /api/me/vehicles/:id
-app.delete('/api/me/vehicles/:id', auth, (req, res) => {
-  const id = +req.params.id;
-  const owner = db.prepare(`select user_id from vehicles where id=?`).get(id);
-  if (!owner || owner.user_id !== req.user.uid) return res.status(404).json({ error: 'not found' });
-  db.prepare(`delete from vehicles where id=?`).run(id);
+  await Vehicle.deleteOne({ _id: id });
   res.json({ ok: true });
 });
 
-/* ====== PAYMENT METHODS (safe only) ====== */
+// ====================== PAYMENT METHODS ======================
+
 // GET /api/me/payment-methods
-app.get('/api/me/payment-methods', auth, (req, res) => {
-  const rows = db.prepare(`select * from user_payment_methods where user_id=? order by is_default desc, id desc`).all(req.user.uid);
-  res.json(rows);
+app.get('/api/me/payment-methods', auth, async (req, res) => {
+  const rows = await UserPaymentMethod.find({ user_id: req.user.uid })
+    .sort({ is_default: -1, _id: -1 })
+    .lean();
+
+  const normalized = rows.map((r) => ({
+    ...r,
+    id: r._id.toString(),
+    _id: undefined,
+  }));
+
+  res.json(normalized);
 });
 
 // POST /api/me/payment-methods
-app.post('/api/me/payment-methods', auth, (req, res) => {
+app.post('/api/me/payment-methods', auth, async (req, res) => {
   const { brand, last4, exp_month, exp_year, is_default } = req.body || {};
-  if (!brand || !last4 || !exp_month || !exp_year) return res.status(400).json({ error: 'missing fields' });
-
-  if (is_default) {
-    db.prepare(`update user_payment_methods set is_default=0 where user_id=?`).run(req.user.uid);
+  if (!brand || !last4 || !exp_month || !exp_year) {
+    return res.status(400).json({ error: 'missing fields' });
   }
-  const info = db.prepare(`insert into user_payment_methods (user_id,brand,last4,exp_month,exp_year,is_default)
-    values (?,?,?,?,?,?)`).run(req.user.uid, brand, last4, exp_month, exp_year, is_default ? 1 : 0);
-  const row = db.prepare(`select * from user_payment_methods where id=?`).get(info.lastInsertRowid);
-  res.json(row);
+
+  try {
+    if (is_default) {
+      await UserPaymentMethod.updateMany(
+        { user_id: req.user.uid },
+        { $set: { is_default: false } }
+      );
+    }
+
+    const doc = await UserPaymentMethod.create({
+      user_id: req.user.uid,
+      brand,
+      last4,
+      exp_month,
+      exp_year,
+      is_default: !!is_default,
+    });
+
+    const row = doc.toObject();
+    row.id = row._id.toString();
+    delete row._id;
+
+    res.json(row);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'failed to create payment method' });
+  }
 });
 
 // PUT /api/me/payment-methods/:id
-app.put('/api/me/payment-methods/:id', auth, (req, res) => {
-  const id = +req.params.id;
-  const owner = db.prepare(`select user_id from user_payment_methods where id=?`).get(id);
-  if (!owner || owner.user_id !== req.user.uid) return res.status(404).json({ error: 'not found' });
-
+app.put('/api/me/payment-methods/:id', auth, async (req, res) => {
+  const id = req.params.id;
   const { brand, last4, exp_month, exp_year, is_default } = req.body || {};
-  if (is_default === true) {
-    db.prepare(`update user_payment_methods set is_default=0 where user_id=?`).run(req.user.uid);
+
+  const owner = await UserPaymentMethod.findById(id);
+  if (!owner || owner.user_id.toString() !== req.user.uid) {
+    return res.status(404).json({ error: 'not found' });
   }
-  db.prepare(`update user_payment_methods set
-    brand=coalesce(?,brand), last4=coalesce(?,last4),
-    exp_month=coalesce(?,exp_month), exp_year=coalesce(?,exp_year),
-    is_default=coalesce(?,is_default)
-    where id=?`).run(brand ?? null, last4 ?? null, exp_month ?? null, exp_year ?? null,
-                     (is_default == null ? null : (is_default ? 1 : 0)), id);
-  const row = db.prepare(`select * from user_payment_methods where id=?`).get(id);
-  res.json(row);
+
+  try {
+    if (is_default === true) {
+      await UserPaymentMethod.updateMany(
+        { user_id: req.user.uid },
+        { $set: { is_default: false } }
+      );
+    }
+
+    const update = {};
+    if (brand !== undefined) update.brand = brand;
+    if (last4 !== undefined) update.last4 = last4;
+    if (exp_month !== undefined) update.exp_month = exp_month;
+    if (exp_year !== undefined) update.exp_year = exp_year;
+    if (is_default != null) update.is_default = !!is_default;
+
+    const doc = await UserPaymentMethod.findByIdAndUpdate(
+      id,
+      { $set: update },
+      { new: true }
+    ).lean();
+
+    const row = { ...doc, id: doc._id.toString() };
+    delete row._id;
+    res.json(row);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'failed to update payment method' });
+  }
 });
 
 // DELETE /api/me/payment-methods/:id
-app.delete('/api/me/payment-methods/:id', auth, (req, res) => {
-  const id = +req.params.id;
-  const owner = db.prepare(`select user_id from user_payment_methods where id=?`).get(id);
-  if (!owner || owner.user_id !== req.user.uid) return res.status(404).json({ error: 'not found' });
-  db.prepare(`delete from user_payment_methods where id=?`).run(id);
+app.delete('/api/me/payment-methods/:id', auth, async (req, res) => {
+  const id = req.params.id;
+  const owner = await UserPaymentMethod.findById(id);
+  if (!owner || owner.user_id.toString() !== req.user.uid) {
+    return res.status(404).json({ error: 'not found' });
+  }
+
+  await UserPaymentMethod.deleteOne({ _id: id });
   res.json({ ok: true });
 });
 
-/* ====== REQUESTS (юзер бачить/редагує свої) ====== */
+// ====================== REQUESTS (юзер) ======================
+
 // GET /api/requests
-app.get('/api/requests', auth, (req, res) => {
-  const rows = db.prepare(`select * from requests where user_id=? order by created_at desc`).all(req.user.uid);
-  res.json(rows);
+app.get('/api/requests', auth, async (req, res) => {
+  const rows = await RequestModel.find({ user_id: req.user.uid })
+    .sort({ created_at: -1 })
+    .lean();
+
+  const normalized = rows.map((r) => ({
+    ...r,
+    id: r._id.toString(),
+    _id: undefined,
+  }));
+  res.json(normalized);
 });
 
 // GET /api/requests/:id
-app.get('/api/requests/:id', auth, (req, res) => {
-  const id = +req.params.id;
-  const row = db.prepare(`select * from requests where id=? and user_id=?`).get(id, req.user.uid);
+app.get('/api/requests/:id', auth, async (req, res) => {
+  const id = req.params.id;
+  const row = await RequestModel.findOne({ _id: id, user_id: req.user.uid }).lean();
   if (!row) return res.status(404).json({ error: 'not found' });
+
+  row.id = row._id.toString();
+  delete row._id;
   res.json(row);
 });
 
 // POST /api/requests
-app.post('/api/requests', auth, (req, res) => {
+app.post('/api/requests', auth, async (req, res) => {
   const {
-    vehicle_id, status = 'new', location_type = 'shop',
-    service_date, time_window,
-    service_address, pickup_address, dropoff_address,
-    items_json, currency = 'USD',
-    subtotal = 0, tax = 0, total = 0,
-    notes_customer
+    vehicle_id,
+    status = 'new',
+    location_type = 'shop',
+    service_date,
+    time_window,
+    service_address,
+    pickup_address,
+    dropoff_address,
+    items_json,
+    currency = 'USD',
+    subtotal = 0,
+    tax = 0,
+    total = 0,
+    notes_customer,
   } = req.body || {};
 
-  const info = db.prepare(`insert into requests
-    (user_id, vehicle_id, status, location_type, service_date, time_window,
-     service_address, pickup_address, dropoff_address, items_json, currency,
-     subtotal, tax, total, notes_customer, created_at, updated_at)
-    values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'),datetime('now'))`)
-    .run(req.user.uid, vehicle_id ?? null, status, location_type, service_date || null, time_window || null,
-         service_address || null, pickup_address || null, dropoff_address || null, items_json || '[]', currency,
-         subtotal, tax, total, notes_customer || null);
-  const row = db.prepare(`select * from requests where id=?`).get(info.lastInsertRowid);
-  res.json(row);
+  try {
+    const doc = await RequestModel.create({
+      user_id: req.user.uid,
+      vehicle_id: vehicle_id || null,
+      status,
+      location_type,
+      service_date: service_date || null,
+      time_window: time_window || null,
+      service_address: service_address || null,
+      pickup_address: pickup_address || null,
+      dropoff_address: dropoff_address || null,
+      items_json: items_json || '[]',
+      currency,
+      subtotal,
+      tax,
+      total,
+      notes_customer: notes_customer || null,
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
+
+    const row = doc.toObject();
+    row.id = row._id.toString();
+    delete row._id;
+    res.json(row);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'failed to create request' });
+  }
 });
 
-// PUT /api/requests/:id  (юзер може оновити свою, базово без жорстких правил)
-app.put('/api/requests/:id', auth, (req, res) => {
-  const id = +req.params.id;
-  const exists = db.prepare(`select * from requests where id=? and user_id=?`).get(id, req.user.uid);
+// PUT /api/requests/:id
+app.put('/api/requests/:id', auth, async (req, res) => {
+  const id = req.params.id;
+  const exists = await RequestModel.findOne({ _id: id, user_id: req.user.uid });
   if (!exists) return res.status(404).json({ error: 'not found' });
 
-  const { vehicle_id, status, location_type, service_date, time_window,
-          service_address, pickup_address, dropoff_address,
-          items_json, currency, subtotal, tax, total, notes_customer } = req.body || {};
+  const {
+    vehicle_id,
+    status,
+    location_type,
+    service_date,
+    time_window,
+    service_address,
+    pickup_address,
+    dropoff_address,
+    items_json,
+    currency,
+    subtotal,
+    tax,
+    total,
+    notes_customer,
+  } = req.body || {};
 
-  db.prepare(`update requests set
-    vehicle_id=coalesce(?,vehicle_id),
-    status=coalesce(?,status),
-    location_type=coalesce(?,location_type),
-    service_date=coalesce(?,service_date),
-    time_window=coalesce(?,time_window),
-    service_address=coalesce(?,service_address),
-    pickup_address=coalesce(?,pickup_address),
-    dropoff_address=coalesce(?,dropoff_address),
-    items_json=coalesce(?,items_json),
-    currency=coalesce(?,currency),
-    subtotal=coalesce(?,subtotal),
-    tax=coalesce(?,tax),
-    total=coalesce(?,total),
-    notes_customer=coalesce(?,notes_customer),
-    updated_at=datetime('now')
-  where id=?`).run(
-    vehicle_id ?? null, status ?? null, location_type ?? null, service_date ?? null, time_window ?? null,
-    service_address ?? null, pickup_address ?? null, dropoff_address ?? null,
-    items_json ?? null, currency ?? null, subtotal ?? null, tax ?? null, total ?? null,
-    notes_customer ?? null, id
-  );
-  const row = db.prepare(`select * from requests where id=?`).get(id);
+  const update = { updated_at: new Date() };
+  if (vehicle_id !== undefined) update.vehicle_id = vehicle_id || null;
+  if (status !== undefined) update.status = status;
+  if (location_type !== undefined) update.location_type = location_type;
+  if (service_date !== undefined) update.service_date = service_date || null;
+  if (time_window !== undefined) update.time_window = time_window || null;
+  if (service_address !== undefined) update.service_address = service_address || null;
+  if (pickup_address !== undefined) update.pickup_address = pickup_address || null;
+  if (dropoff_address !== undefined) update.dropoff_address = dropoff_address || null;
+  if (items_json !== undefined) update.items_json = items_json;
+  if (currency !== undefined) update.currency = currency;
+  if (subtotal !== undefined) update.subtotal = subtotal;
+  if (tax !== undefined) update.tax = tax;
+  if (total !== undefined) update.total = total;
+  if (notes_customer !== undefined) update.notes_customer = notes_customer || null;
+
+  const doc = await RequestModel.findByIdAndUpdate(id, { $set: update }, { new: true }).lean();
+  const row = { ...doc, id: doc._id.toString() };
+  delete row._id;
   res.json(row);
 });
 
 // DELETE /api/requests/:id
-app.delete('/api/requests/:id', auth, (req, res) => {
-  const id = +req.params.id;
-  const exists = db.prepare(`select * from requests where id=? and user_id=?`).get(id, req.user.uid);
+app.delete('/api/requests/:id', auth, async (req, res) => {
+  const id = req.params.id;
+  const exists = await RequestModel.findOne({ _id: id, user_id: req.user.uid });
   if (!exists) return res.status(404).json({ error: 'not found' });
-  db.prepare(`delete from requests where id=?`).run(id);
+
+  await RequestModel.deleteOne({ _id: id });
   res.json({ ok: true });
 });
 
-/* ====== ADMIN: REQUESTS ====== */
+// ====================== ADMIN: REQUESTS ======================
+
 // список усіх заявок з фільтрами
-app.get('/api/admin/requests', auth, requireAdmin, (req, res) => {
+app.get('/api/admin/requests', auth, requireAdmin, async (req, res) => {
   const { status } = req.query;
-  let q = `
-    select
-      r.*,
-      u.email as user_email,
-      u.phone as user_phone,
-      trim(coalesce(u.first_name,'') || ' ' || coalesce(u.last_name,'')) as user_full_name,
-      v.make  as vehicle_make,
-      v.model as vehicle_model,
-      v.year  as vehicle_year
-    from requests r
-    join users u on u.id = r.user_id
-    left join vehicles v on v.id = r.vehicle_id
-  `;
-  const cond = [];
-  const params = [];
-  if (status) { cond.push(`r.status=?`); params.push(status); }
-  if (cond.length) q += ' where ' + cond.join(' and ');
-  q += ' order by r.created_at desc';
-  const rows = db.prepare(q).all(...params);
-  // нормалізоване ім'я «Unknown name», якщо порожнє:
-  rows.forEach(r => { if (!r.user_full_name || r.user_full_name.trim() === '') r.user_full_name = 'Unknown name'; });
-  res.json(rows);
+  const filter = {};
+  if (status) filter.status = status;
+
+  try {
+    const rows = await RequestModel.find(filter)
+      .sort({ created_at: -1 })
+      .populate('user_id')
+      .populate('vehicle_id')
+      .lean();
+
+    const normalized = rows.map((r) => {
+      const user = r.user_id || {};
+      const vehicle = r.vehicle_id || {};
+      const user_full_name =
+        `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Unknown name';
+
+      return {
+        ...r,
+        id: r._id.toString(),
+        _id: undefined,
+        user_email: user.email || null,
+        user_phone: user.phone || null,
+        user_full_name,
+        vehicle_make: vehicle.make || null,
+        vehicle_model: vehicle.model || null,
+        vehicle_year: vehicle.year || null,
+      };
+    });
+
+    res.json(normalized);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'failed to load admin requests' });
+  }
 });
 
-
-
 // отримати одну заявку
-app.get('/api/admin/requests/:id', auth, requireAdmin, (req, res) => {
-  const id = +req.params.id;
-  const row = db.prepare(`select * from requests where id=?`).get(id);
-  if (!row) return res.status(404).json({ error: 'not found' });
-  res.json(row);
+app.get('/api/admin/requests/:id', auth, requireAdmin, async (req, res) => {
+  const id = req.params.id;
+  try {
+    const row = await RequestModel.findById(id).lean();
+    if (!row) return res.status(404).json({ error: 'not found' });
+
+    row.id = row._id.toString();
+    delete row._id;
+    res.json(row);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'failed to load request' });
+  }
 });
 
 // створити нову (адмін від імені користувача)
-app.post('/api/admin/requests', auth, requireAdmin, (req, res) => {
+app.post('/api/admin/requests', auth, requireAdmin, async (req, res) => {
   const { user_id, ...rest } = req.body || {};
   if (!user_id) return res.status(400).json({ error: 'user_id required' });
 
   const {
-    vehicle_id, status = 'new', location_type = 'shop',
-    service_date, time_window, service_address, pickup_address, dropoff_address,
-    items_json, currency = 'USD', subtotal = 0, tax = 0, total = 0,
-    notes_customer, notes_admin
+    vehicle_id,
+    status = 'new',
+    location_type = 'shop',
+    service_date,
+    time_window,
+    service_address,
+    pickup_address,
+    dropoff_address,
+    items_json,
+    currency = 'USD',
+    subtotal = 0,
+    tax = 0,
+    total = 0,
+    notes_customer,
+    notes_admin,
   } = rest;
 
-  const info = db.prepare(`insert into requests
-    (user_id, vehicle_id, status, location_type, service_date, time_window,
-     service_address, pickup_address, dropoff_address, items_json, currency,
-     subtotal, tax, total, notes_customer, notes_admin, created_at, updated_at)
-    values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'),datetime('now'))`)
-    .run(user_id, vehicle_id ?? null, status, location_type, service_date || null, time_window || null,
-         service_address || null, pickup_address || null, dropoff_address || null, items_json || '[]', currency,
-         subtotal, tax, total, notes_customer || null, notes_admin || null);
-  const row = db.prepare(`select * from requests where id=?`).get(info.lastInsertRowid);
-  res.json(row);
+  try {
+    const doc = await RequestModel.create({
+      user_id,
+      vehicle_id: vehicle_id || null,
+      status,
+      location_type,
+      service_date: service_date || null,
+      time_window: time_window || null,
+      service_address: service_address || null,
+      pickup_address: pickup_address || null,
+      dropoff_address: dropoff_address || null,
+      items_json: items_json || '[]',
+      currency,
+      subtotal,
+      tax,
+      total,
+      notes_customer: notes_customer || null,
+      notes_admin: notes_admin || null,
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
+
+    const row = doc.toObject();
+    row.id = row._id.toString();
+    delete row._id;
+    res.json(row);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'failed to create request' });
+  }
 });
 
 // оновити будь-яку
-app.put('/api/admin/requests/:id', auth, requireAdmin, (req, res) => {
-  const id = +req.params.id;
-  const prev = db.prepare(`select * from requests where id=?`).get(id);
-  if (!prev) return res.status(404).json({ error: 'not found' });
+app.put('/api/admin/requests/:id', auth, requireAdmin, async (req, res) => {
+  const id = req.params.id;
+  const {
+    user_id,
+    vehicle_id,
+    status,
+    location_type,
+    service_date,
+    time_window,
+    service_address,
+    pickup_address,
+    dropoff_address,
+    items_json,
+    currency,
+    subtotal,
+    tax,
+    total,
+    notes_customer,
+    notes_admin,
+  } = req.body || {};
 
-  const { user_id, vehicle_id, status, location_type, service_date, time_window,
-          service_address, pickup_address, dropoff_address,
-          items_json, currency, subtotal, tax, total, notes_customer, notes_admin } = req.body || {};
+  try {
+    const prev = await RequestModel.findById(id);
+    if (!prev) return res.status(404).json({ error: 'not found' });
 
-  db.prepare(`update requests set
-    user_id=coalesce(?,user_id),
-    vehicle_id=coalesce(?,vehicle_id),
-    status=coalesce(?,status),
-    location_type=coalesce(?,location_type),
-    service_date=coalesce(?,service_date),
-    time_window=coalesce(?,time_window),
-    service_address=coalesce(?,service_address),
-    pickup_address=coalesce(?,pickup_address),
-    dropoff_address=coalesce(?,dropoff_address),
-    items_json=coalesce(?,items_json),
-    currency=coalesce(?,currency),
-    subtotal=coalesce(?,subtotal),
-    tax=coalesce(?,tax),
-    total=coalesce(?,total),
-    notes_customer=coalesce(?,notes_customer),
-    notes_admin=coalesce(?,notes_admin),
-    updated_at=datetime('now')
-  where id=?`).run(
-    user_id ?? null, vehicle_id ?? null, status ?? null, location_type ?? null,
-    service_date ?? null, time_window ?? null, service_address ?? null,
-    pickup_address ?? null, dropoff_address ?? null, items_json ?? null, currency ?? null,
-    subtotal ?? null, tax ?? null, total ?? null, notes_customer ?? null, notes_admin ?? null, id
-  );
-  const row = db.prepare(`select * from requests where id=?`).get(id);
-  res.json(row);
+    const update = { updated_at: new Date() };
+    if (user_id !== undefined) update.user_id = user_id;
+    if (vehicle_id !== undefined) update.vehicle_id = vehicle_id || null;
+    if (status !== undefined) update.status = status;
+    if (location_type !== undefined) update.location_type = location_type;
+    if (service_date !== undefined) update.service_date = service_date || null;
+    if (time_window !== undefined) update.time_window = time_window || null;
+    if (service_address !== undefined) update.service_address = service_address || null;
+    if (pickup_address !== undefined) update.pickup_address = pickup_address || null;
+    if (dropoff_address !== undefined) update.dropoff_address = dropoff_address || null;
+    if (items_json !== undefined) update.items_json = items_json;
+    if (currency !== undefined) update.currency = currency;
+    if (subtotal !== undefined) update.subtotal = subtotal;
+    if (tax !== undefined) update.tax = tax;
+    if (total !== undefined) update.total = total;
+    if (notes_customer !== undefined) update.notes_customer = notes_customer || null;
+    if (notes_admin !== undefined) update.notes_admin = notes_admin || null;
+
+    const doc = await RequestModel.findByIdAndUpdate(id, { $set: update }, { new: true }).lean();
+    const row = { ...doc, id: doc._id.toString() };
+    delete row._id;
+    res.json(row);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'failed to update request' });
+  }
 });
-
-app.use('/api/cards', cardsRouter)
-
-app.use('/api', reviewsRouter);
 
 // видалити
-app.delete('/api/admin/requests/:id', auth, requireAdmin, (req, res) => {
-  const id = +req.params.id;
-  db.prepare(`delete from requests where id=?`).run(id);
-  res.json({ ok: true });
+app.delete('/api/admin/requests/:id', auth, requireAdmin, async (req, res) => {
+  const id = req.params.id;
+  try {
+    await RequestModel.deleteOne({ _id: id });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'failed to delete request' });
+  }
 });
 
+// додаткові роутери
+app.use('/api/cards', cardsRouter);
+app.use('/api', reviewsRouter);
+
 // ---- запуск ----
-app.listen(PORT, HOST, () => {
-  console.log(`API listening on http://${HOST}:${PORT} (NODE_ENV=${process.env.NODE_ENV || 'dev'})`);
-});
+initDb()
+  .then(async () => {
+    await seedAdmin(); // 🟢 створюємо адміна, якщо немає
+
+    app.listen(PORT, HOST, () => {
+      console.log(
+        `API listening on http://${HOST}:${PORT} (NODE_ENV=${process.env.NODE_ENV || 'dev'})`
+      );
+    });
+  })
+  .catch((err) => {
+    console.error('Failed to init DB', err);
+    process.exit(1);
+  });

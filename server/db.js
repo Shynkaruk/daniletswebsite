@@ -1,183 +1,134 @@
 // server/db.js
-import Database from 'better-sqlite3';
-import fs from 'fs';
-import path from 'path';
+import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-const DB_PATH = process.env.DB_PATH || path.resolve('data.sqlite');
-if (!fs.existsSync(path.dirname(DB_PATH))) {
-  fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) {
+  throw new Error('MONGODB_URI is not set');
 }
 
-const db = new Database(DB_PATH);
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+// ----- SCHEMAS -----
 
-const schema = `
--- ===== USERS =====
-create table if not exists users (
-  id integer primary key autoincrement,
-  email text unique not null,
-  password text not null,     -- bcrypt hash
-  first_name text,
-  last_name text,
-  phone text,
-  is_admin integer default 0, -- 1 = admin
-  created_at text default (datetime('now'))
-);
+const userSchema = new mongoose.Schema({
+  email:      { type: String, required: true, unique: true },
+  password:   { type: String, required: true }, // bcrypt hash
+  first_name: String,
+  last_name:  String,
+  phone:      String,
+  is_admin:   { type: Boolean, default: false },
+  created_at: { type: Date, default: Date.now },
+});
 
--- ===== CONTENT BLOCKS =====
-create table if not exists content_blocks (
-  id integer primary key autoincrement,
-  key text not null,
-  page text,
-  lang text default 'en',
-  value text not null,
-  published integer default 1,
-  sort_order integer default 0,
-  updated_at text default (datetime('now')),
-  updated_by integer references users(id)
-);
-create unique index if not exists idx_content_key_lang on content_blocks(key, lang);
+const contentBlockSchema = new mongoose.Schema({
+  key:        { type: String, required: true },
+  page:       String,
+  lang:       { type: String, default: 'en' },
+  value:      { type: String, required: true }, // можна потім зробити Mixed
+  published:  { type: Boolean, default: true },
+  sort_order: { type: Number, default: 0 },
+  updated_at: { type: Date, default: Date.now },
+  updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+});
 
--- ===== CARDS =====
-create table if not exists cards (
-  id integer primary key autoincrement,
-  type text not null,         -- "service" | "portfolio" | ...
-  title text not null,
-  subtitle text,
-  body text,
-  image_url text,
-  price real,
-  slug text,
-  sort_order integer default 0,
-  published integer default 1,
-  created_at text default (datetime('now')),
-  updated_at text default (datetime('now')),
-  created_by integer references users(id)
-);
-create index if not exists idx_cards_type on cards(type);
+const cardSchema = new mongoose.Schema({
+  type:       { type: String, required: true }, // "service" | "portfolio" | ...
+  title:      { type: String, required: true },
+  subtitle:   String,
+  body:       String,
+  image_url:  String,
+  price:      Number,
+  slug:       String,
+  sort_order: { type: Number, default: 0 },
+  published:  { type: Boolean, default: true },
+  created_at: { type: Date, default: Date.now },
+  updated_at: { type: Date, default: Date.now },
+  created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+});
 
--- ===== USER PAYMENT METHODS (safe only) =====
-create table if not exists user_payment_methods (
-  id integer primary key autoincrement,
-  user_id integer not null references users(id) on delete cascade,
-  brand text not null,
-  last4 text not null,
-  exp_month integer not null,
-  exp_year integer not null,
-  is_default integer default 0,
-  external_id text,
-  created_at text default (datetime('now'))
-);
-create index if not exists idx_upm_uid on user_payment_methods(user_id);
+const userPaymentMethodSchema = new mongoose.Schema({
+  user_id:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  brand:      { type: String, required: true },
+  last4:      { type: String, required: true },
+  exp_month:  { type: Number, required: true },
+  exp_year:   { type: Number, required: true },
+  is_default: { type: Boolean, default: false },
+  external_id:String,
+  created_at: { type: Date, default: Date.now },
+});
 
--- ===== VEHICLES =====
-create table if not exists vehicles (
-  id integer primary key autoincrement,
-  user_id integer not null references users(id) on delete cascade,
-  make text,
-  model text,
-  year integer,
-  color text,
-  plate text,
-  vin text,
-  notes text,
-  created_at text default (datetime('now'))
-);
-create index if not exists idx_vehicles_uid on vehicles(user_id);
+const vehicleSchema = new mongoose.Schema({
+  user_id:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  make:       String,
+  model:      String,
+  year:       Number,
+  color:      String,
+  plate:      String,
+  vin:        String,
+  notes:      String,
+  created_at: { type: Date, default: Date.now },
+});
 
--- ===== CARDS =====
-create table if not exists cards (
-  id integer primary key autoincrement,
-  type text not null,         -- "service" | "portfolio" | ...
-  title text not null,
-  subtitle text,
-  body text,
-  image_url text,
-  price real,
-  slug text,
-  sort_order integer default 0,
-  published integer default 1,
-  created_at text default (datetime('now')),
-  updated_at text default (datetime('now')),
-  created_by integer references users(id)
-);
-create index if not exists idx_cards_type on cards(type);
+const requestSchema = new mongoose.Schema({
+  user_id:         { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  vehicle_id:      { type: mongoose.Schema.Types.ObjectId, ref: 'Vehicle' },
+  status:          { type: String, default: 'new' },       // new|confirmed|...
+  location_type:   { type: String, default: 'shop' },      // shop|mobile|pickup
+  service_date:    String,                                 // 'YYYY-MM-DD'
+  time_window:     String,                                 // '09:00-11:00'
+  service_address: String,
+  pickup_address:  String,
+  dropoff_address: String,
+  items_json:      { type: String, default: '[]' },        // можна потім зробити Array
+  currency:        { type: String, default: 'USD' },
+  subtotal:        { type: Number, default: 0 },
+  tax:             { type: Number, default: 0 },
+  total:           { type: Number, default: 0 },
+  notes_customer:  String,
+  notes_admin:     String,
+  created_at:      { type: Date, default: Date.now },
+  updated_at:      { type: Date, default: Date.now },
+});
 
+// ----- MODELS -----
 
--- ===== REQUESTS =====
-create table if not exists requests (
-  id integer primary key autoincrement,
-  user_id integer not null references users(id) on delete cascade,
-  vehicle_id integer references vehicles(id) on delete set null,
-  status text not null default 'new',      -- new|confirmed|in_progress|done|cancelled|draft
-  location_type text not null default 'shop', -- shop|mobile|pickup
-  service_date text,                       -- 'YYYY-MM-DD'
-  time_window text,                        -- '09:00-11:00'
-  service_address text,
-  pickup_address text,
-  dropoff_address text,
-  items_json text,                         -- JSON array
-  currency text default 'USD',
-  subtotal real default 0,
-  tax real default 0,
-  total real default 0,
-  notes_customer text,
-  notes_admin text,
-  created_at text default (datetime('now')),
-  updated_at text default (datetime('now'))
-);
-create index if not exists idx_requests_uid on requests(user_id);
-create index if not exists idx_requests_status on requests(status);
-`;
+export const User              = mongoose.model('User', userSchema);
+export const ContentBlock      = mongoose.model('ContentBlock', contentBlockSchema);
+export const Card              = mongoose.model('Card', cardSchema);
+export const UserPaymentMethod = mongoose.model('UserPaymentMethod', userPaymentMethodSchema);
+export const Vehicle           = mongoose.model('Vehicle', vehicleSchema);
+export const RequestModel      = mongoose.model('Request', requestSchema);
 
+// ----- INIT + SEED ADMIN -----
 
-db.exec(schema);
-
-/** Optional seed admin (runs once if no admin exists) */
-function seedAdmin() {
-  const exists = db.prepare(`select id from users where is_admin=1 limit 1`).get();
+async function seedAdmin() {
+  const exists = await User.findOne({ is_admin: true });
   if (exists) return;
 
   const email = process.env.SEED_ADMIN_EMAIL || 'admin@example.com';
-  const pass = process.env.SEED_ADMIN_PASSWORD || 'admin123';
-  const hash = bcrypt.hashSync(pass, 10);
+  const pass  = process.env.SEED_ADMIN_PASSWORD || 'admin123';
+  const hash  = bcrypt.hashSync(pass, 10);
 
-  db.prepare(`insert into users (email, password, first_name, last_name, phone, is_admin)
-              values (?,?,?,?,?,1)`).run(email, hash, 'Admin', 'User', '');
-  // eslint-disable-next-line no-console
+  await User.create({
+    email,
+    password: hash,
+    first_name: 'Admin',
+    last_name:  'User',
+    phone: '',
+    is_admin: true,
+  });
+
   console.log(`[db] Seeded admin: ${email} / ${pass}`);
 }
-seedAdmin();
 
-function seedCardsOnce() {
-  const count = db.prepare(`select count(*) as c from cards where type in ('service','addon')`).get().c;
-  if (count > 0) return;
+export async function initDb() {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) throw new Error("MONGODB_URI missing");
 
-  const insert = db.prepare(`
-    insert into cards (type, title, subtitle, price, sort_order, published)
-    values (@type, @title, @subtitle, @price, @sort_order, @published)
-  `);
+  await mongoose.connect(uri, {
+    dbName: "admin",
+  });
 
-  const services = [
-    { type:'service', title:'Ceramic Coating',       subtitle:'Full body ceramic coat',   price:299.99, sort_order:10, published:1 },
-    { type:'service', title:'Interior and Exterior', subtitle:'Complete detail in & out', price:199.99, sort_order:20, published:1 },
-    { type:'service', title:'Interior only',         subtitle:'Deep interior clean',      price: 99.99, sort_order:30, published:1 },
-    { type:'service', title:'Exterior only',         subtitle:'Wash, clay, wax',          price:109.99, sort_order:40, published:1 },
-  ];
-  const addons = [
-    { type:'addon', title:'Ozone Treatment',  subtitle:'Odor removal',        price:77.99, sort_order:10, published:1 },
-    { type:'addon', title:'Metal Polish',     subtitle:'Shine & protect',     price:77.99, sort_order:20, published:1 },
-    { type:'addon', title:'Sticker Removal',  subtitle:'Adhesive cleanup',    price:77.99, sort_order:30, published:1 },
-    { type:'addon', title:'Overspray',        subtitle:'Paint overspray fix', price:77.99, sort_order:40, published:1 },
-  ];
+  console.log("[DB] Connected to MongoDB");
 
-  const tx = db.transaction((rows) => rows.forEach(r => insert.run(r)));
-  tx([...services, ...addons]);
-
-  console.log('[db] Seeded default services & addons');
+  await seedAdmin(); // 🟢 створюємо адміна, якщо немає
 }
-seedCardsOnce();
-
-export default db;
