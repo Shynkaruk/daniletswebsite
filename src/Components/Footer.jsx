@@ -4,12 +4,10 @@ import { FaGoogle, FaTiktok, FaYoutube, FaFacebookF } from "react-icons/fa";
 
 import logo from "../assets/logo/logo.svg";
 import logoRed from "../assets/logo/Danilets_logo_red.svg";
-import logoCleaning from "../assets/logo/Danilets_logo_cleaning.svg";
 
 import contactIcon1 from "../assets/icons/icon-envelope.png";
 import contactIcon2 from "../assets/icons/icon-phone.png";
 import RightArrowIcon from "../assets/icons/angle-right-icon.png";
-
 // 🔹 Модальне вікно соцмереж
 import SocialModal from "./SocialModal.jsx";
 
@@ -114,17 +112,15 @@ const Footer = () => {
                 <h3 className="text-[18px] lg:text-[19px] font-extrabold text-[#18181B] mb-1">
                   Menu
                 </h3>
-                {["Home", "About Us", "Contact Form", "Newsletter"].map(
-                  (text, i) => (
-                    <Link
-                      key={i}
-                      to={`/${text.toLowerCase().replace(" ", "-")}`}
-                      className="text-[15px] lg:text-[16px] font-normal text-[#18181B] hover:text-yellow-600"
-                    >
-                      {text}
-                    </Link>
-                  )
-                )}
+                {["Home", "About Us", "Contact"].map((text, i) => (
+                  <Link
+                    key={i}
+                    to={`/${text.toLowerCase().replace(" ", "-")}`}
+                    className="text-[15px] lg:text-[16px] font-normal text-[#18181B] hover:text-yellow-600"
+                  >
+                    {text}
+                  </Link>
+                ))}
               </div>
 
               <div className="flex flex-col gap-1">
@@ -181,16 +177,30 @@ const Footer = () => {
             <div className="hidden lg:flex lg:items-start lg:ml-auto lg:self-start">
               <Link
                 to="/book-online"
-                className="h-[50px] min-w-[170px] max-w-[200px] rounded-[88px] flex items-center justify-between px-4"
+                className="
+                  group relative
+                  h-[50px] min-w-[170px] max-w-[200px]
+                  rounded-[88px]
+                  flex items-center justify-between px-4
+                  overflow-hidden
+                "
                 style={{ background: buttonGradient }}
               >
-                <span className="text-[14px] font-semibold text-black whitespace-nowrap">
+                {/* Hover overlay */}
+                <div
+                  className="
+                    absolute inset-0 bg-black
+                    opacity-0 group-hover:opacity-20
+                    transition-opacity duration-200
+                  "
+                />
+                <span className="text-[14px] font-semibold text-black whitespace-nowrap relative z-10">
                   Book Now
                 </span>
                 <img
                   src={RightArrowIcon}
                   alt="Arrow Right"
-                  className="w-4 h-4 shrink-0"
+                  className="w-4 h-4 shrink-0 relative z-10"
                 />
               </Link>
             </div>
@@ -199,16 +209,30 @@ const Footer = () => {
             <div className="flex lg:hidden w-full pt-2">
               <Link
                 to="/book-online"
-                className="mx-auto w-full max-w-[320px] h-[50px] rounded-[88px] flex items-center justify-center gap-2 px-5"
+                className="
+                  group relative
+                  mx-auto w-full max-w-[320px] h-[50px]
+                  rounded-[88px]
+                  flex items-center justify-center gap-2 px-5
+                  overflow-hidden
+                "
                 style={{ background: buttonGradient }}
               >
-                <span className="text-[15px] font-semibold text-black">
+                {/* Hover overlay */}
+                <div
+                  className="
+                    absolute inset-0 bg-black
+                    opacity-0 group-hover:opacity-20
+                    transition-opacity duration-200
+                  "
+                />
+                <span className="text-[15px] font-semibold text-black relative z-10">
                   Book Now
                 </span>
                 <img
                   src={RightArrowIcon}
                   alt="Arrow Right"
-                  className="w-4 h-4"
+                  className="w-4 h-4 relative z-10"
                 />
               </Link>
             </div>

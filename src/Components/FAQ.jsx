@@ -16,7 +16,7 @@ const FAQ = () => {
     {
       question: "What areas do you serve? ",
       answer:
-        "We serve the Greater Columbus area and surrounding communities. Contact us to confirm we service your specific location.",
+        "We serve the Greater Columbus area and surrounding communities. Contact us to confirm if we service your specific location.",
     },
     {
       question: "How do I book services with Danilets?",

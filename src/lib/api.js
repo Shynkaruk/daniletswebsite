@@ -353,6 +353,18 @@ export const reqApi = {
   },
 };
 
+// ===== УНІВЕРСАЛЬНИЙ HELPER ДЛЯ ЗАПИТІВ НА API (GET) =====
+export async function apiGet(path) {
+  // path типу "/api/reviews/google/detailing"
+  return getJson(`${API}${path}`);
+}
+
+// (якщо потім треба буде POST/PUT можна зробити apiSend)
+export async function apiSend(path, method = "POST", body = {}) {
+  return sendJson(`${API}${path}`, method, body);
+}
+
+
 /** ================= Admin: Requests ================= **/
 
 export const adminReqApi = {

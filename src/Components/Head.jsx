@@ -36,13 +36,13 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
           </button>
 
           {/* Logo */}
-          <div className="flex justify-center flex-1 px-3">
+          <Link to="/" className="flex justify-center flex-1 px-3">
             <img
               src={logo}
               alt="Logo"
               className="h-[30px] object-contain pr-5 scale-110"
             />
-          </div>
+          </Link>
 
           {/* CTA + Account */}
           <div className="flex items-center gap-2">
@@ -75,13 +75,15 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
               isMenuOpen ? "translate-x-0" : "-translate-x-full"
             }`}
           >
-            <div className="relative p-4 h-full flex flex-col">
+            <div to="/" className="relative p-4 h-full flex flex-col">
               {/* Logo */}
+              <Link to="/">
               <img
                 src={logo}
                 alt="Logo"
                 className="absolute top-3 left-3 h-[24px] object-contain"
               />
+              </Link>
 
               {/* Close */}
               <button
@@ -226,13 +228,13 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
       <div className="relative left-1/2 -translate-x-1/2 w-[min(1800px,calc(100vw-32px))]">
         <div className="bg-white h-[72px] xl:h-20 rounded-[48px] overflow-visible flex items-center justify-between px-4 sm:px-6 shadow-md">
           {/* Лого */}
-          <div className="flex items-center shrink-0">
+          <Link to='/' className="flex items-center shrink-0">
             <img
               src={logo}
               alt="Logo"
               className="h-8 xl:h-10 w-auto object-contain min-w-[120px] xl:min-w-[150px]"
             />
-          </div>
+          </Link>
 
           {/* Навігація по центру */}
           <nav className="flex-1 flex justify-center items-center">

@@ -3,15 +3,15 @@ import { useLocation } from "react-router-dom";
 import avatarIcon from "../assets/icons/avatar-icon.png";
 import RightArrowIcon from "../assets/icons/angle-right-icon.png";
 import LeftArrowIcon from "../assets/icons/angle-left-icon.png";
-import { reqApi } from "../lib/api"; // перевір, щоб шлях співпадав зі структурою проєкту
+import { apiGet } from "../lib/api";
 
 const OurReviews = () => {
   const location = useLocation();
- const isDetailingPage = location.pathname.includes("/services/detailing");
-const isCleaningPage = location.pathname.includes("/services/cleaning");
+  const isDetailingPage = location.pathname.includes("/services/detailing");
+  const isCleaningPage = location.pathname.includes("/services/cleaning");
 
-// Якщо на одній зі сторінок — перемикач ховаємо
-const hideTabs = isDetailingPage || isCleaningPage;
+  // Якщо на одній зі сторінок — перемикач ховаємо
+  const hideTabs = isDetailingPage || isCleaningPage;
 
   const [reviewsByService, setReviewsByService] = useState({
     Detailing: [],
@@ -23,21 +23,23 @@ const hideTabs = isDetailingPage || isCleaningPage;
   const [startIndex, setStartIndex] = useState(0);
   const visibleCards = 4;
 
-  // якщо переходимо на сторінку Detailing — фіксуємо сервіс на Detailing
+  // якщо переходимо на сторінку Detailing / Cleaning — фіксуємо сервіс
   useEffect(() => {
     if (isDetailingPage) {
       setSelectedService("Detailing");
       setStartIndex(0);
+    } else if (isCleaningPage) {
+      setSelectedService("Cleaning");
+      setStartIndex(0);
     }
-  }, [isDetailingPage]);
+  }, [isDetailingPage, isCleaningPage]);
 
   useEffect(() => {
     const fetchReviews = async () => {
       try {
         if (isDetailingPage) {
           // тільки Detailing для сторінки /services/detailing
-          const detRes = await reqApi.get("/reviews/detailing");
-          const detJson = detRes.data;
+          const detJson = await apiGet("/api/reviews/google/detailing");
 
           setReviewsByService({
             Detailing: detJson.reviews || [],
@@ -45,13 +47,10 @@ const hideTabs = isDetailingPage || isCleaningPage;
           });
         } else {
           // загальний випадок: тягнемо і Detailing, і Cleaning
-          const [detRes, cleanRes] = await Promise.all([
-            reqApi.get("/reviews/detailing"),
-            reqApi.get("/reviews/cleaning"),
+          const [detJson, cleanJson] = await Promise.all([
+            apiGet("/api/reviews/detailing"),
+            apiGet("/api/reviews/cleaning"),
           ]);
-
-          const detJson = detRes.data;
-          const cleanJson = cleanRes.data;
 
           setReviewsByService({
             Detailing: detJson.reviews || [],
@@ -102,15 +101,15 @@ const hideTabs = isDetailingPage || isCleaningPage;
   const [activePosition, setActivePosition] = useState({ left: 0, width: 0 });
 
   useEffect(() => {
-    // оновлюємо позицію підсвітки тільки якщо є таби (тобто не на DetailingPage)
-    if (!isDetailingPage) {
+    // оновлюємо позицію підсвітки тільки якщо є таби (тобто не на Detailing/Cleaning)
+    if (!hideTabs) {
       const activeButton = buttonRefs.current[selectedService];
       if (activeButton) {
         const { offsetLeft, offsetWidth } = activeButton;
         setActivePosition({ left: offsetLeft, width: offsetWidth });
       }
     }
-  }, [selectedService, isDetailingPage]);
+  }, [selectedService, hideTabs]);
 
   if (loading) {
     return (
@@ -131,7 +130,7 @@ const hideTabs = isDetailingPage || isCleaningPage;
           Reviews
         </h2>
 
-        {/* Перемикач показуємо тільки якщо ми НЕ на /services/detailing */}
+        {/* Перемикач показуємо тільки якщо ми НЕ на /services/detailing або /services/cleaning */}
         {!hideTabs && (
           <div className="relative inline-flex items-center bg-white rounded-full px-1 py-1">
             {/* Підсвітка активного табу */}
@@ -167,9 +166,7 @@ const hideTabs = isDetailingPage || isCleaningPage;
       {/* Картки */}
       <div className="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4 px-4 md:px-12">
         {visibleItems.length === 0 && (
-          <p className="text-lg text-[#52525B]">
-            Reviews coming soon
-          </p>
+          <p className="text-lg text-[#52525B]">Reviews coming soon</p>
         )}
 
         {visibleItems.map((item, index) => (

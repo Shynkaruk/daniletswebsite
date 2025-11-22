@@ -20,7 +20,7 @@ import {
   RequestModel,
 } from "./db.js";
 import googleCodeRouter from "./routes/authGoogle.js";
-import reviewsRouter from "./routes/reviews.js";
+import googleReviewsRouter  from "./routes/reviews.js";
 import { OtpCode } from "./db.js";
 import { sendOtpEmail } from "./email.js";
 
@@ -39,6 +39,8 @@ app.set("trust proxy", true);
 
 app.use(cors({ origin: "*", credentials: false }));
 app.use(express.json({ limit: "10mb" }));
+
+app.use("/api/reviews", googleReviewsRouter);
 
 // директорії з урахуванням __dirname (щоб не зламалось у контейнері)
 const UPLOADS_DIR = path.join(__dirname, "uploads");
@@ -1286,8 +1288,6 @@ app.delete("/api/admin/requests/:id", auth, requireAdmin, async (req, res) => {
   }
 });
 
-// додаткові роутери
-app.use("/api", reviewsRouter);
 
 // ---- запуск ----
 initDb()

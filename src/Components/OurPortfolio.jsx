@@ -75,7 +75,7 @@ const OurPortfolio = () => {
                   : "text-gray-700 hover:bg-gray-100"
               }`}
             >
-              Video
+              Videos
             </button>
           </div>
         </div>

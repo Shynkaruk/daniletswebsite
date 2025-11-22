@@ -1,64 +1,35 @@
 // routes/reviews.js
-import express from 'express';
-import axios from 'axios';
+import express from "express";
+import axios from "axios";
+import "dotenv/config";
 
 const router = express.Router();
 
-const {
-  GOOGLE_PLACES_API_KEY,
-  GOOGLE_PLACE_ID_DETAILING,
-  GOOGLE_PLACE_ID_CLEANING,
-} = process.env;
+const PLACE_ID = "ChIJFVGaxLp9OIgRwOVAPJkrA3A";
+const API_KEY = process.env.GOOGLE_API_KEY;
 
-const PLACE_IDS = {
-  detailing: GOOGLE_PLACE_ID_DETAILING,
-  cleaning: GOOGLE_PLACE_ID_CLEANING,
-};
-
-router.get('/reviews/:service', async (req, res) => {
+router.get("/google/detailing", async (req, res) => {
   try {
-    const service = req.params.service.toLowerCase();
+    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${PLACE_ID}&key=${API_KEY}`;
+    const response = await axios.get(url);
+    const result = response.data.result;
 
-    if (!PLACE_IDS[service]) {
-      return res.status(400).json({ error: 'Unknown service type' });
+    if (!result || !result.reviews) {
+      return res.json({ reviews: [] });
     }
 
-    const placeId = PLACE_IDS[service];
-
-    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=rating,user_ratings_total,reviews,name&key=${GOOGLE_PLACES_API_KEY}`;
-
-    const { data } = await axios.get(url);
-
-    if (data.status !== 'OK') {
-      console.error('Google Places error:', data.status, data.error_message);
-      return res.status(500).json({
-        error: 'Google Places API error',
-        status: data.status,
-        message: data.error_message,
-      });
-    }
-
-    const place = data.result || {};
-
-    const reviews = (place.reviews || []).map((r, idx) => ({
-      id: idx,
+    const formattedReviews = result.reviews.map((r) => ({
       name: r.author_name,
-      review: r.text,
+      profilePhotoUrl: r.profile_photo_url,
       rating: r.rating,
       relativeTime: r.relative_time_description,
-      profilePhotoUrl: r.profile_photo_url,
+      review: r.text,
     }));
 
-    res.json({
-      service,
-      placeName: place.name,
-      rating: place.rating,
-      totalReviews: place.user_ratings_total,
-      reviews,
-    });
+    res.json({ reviews: formattedReviews });
   } catch (err) {
-    console.error('Error fetching Google reviews:', err.message);
-    res.status(500).json({ error: 'Server error while fetching reviews' });
+    console.error("Google Reviews Error:", err.response?.data || err.message);
+    res.status(500).json({ error: "Failed to load Google reviews" });
   }
 });
 

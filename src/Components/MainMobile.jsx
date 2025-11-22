@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Head from "./Head.jsx";
 import Services from "./Services.jsx";
+import { Link } from "react-router-dom";
 
 import bg_detaling from "../assets/photo/bg2_mobile_detailing.png";
 import bg_cleaining from "../assets/photo/cleaningn_bg.png";
@@ -13,82 +14,120 @@ import ActionMini from "./ActionMini.jsx";
 import FAQ from "./FAQ.jsx";
 import Footer from "./Footer.jsx";
 import StatsBlock from "./StatsBlock.jsx";
-import familyphoto from './../assets/photo/family-photo.png'
+import familyphoto from "./../assets/photo/family-photo.png";
+
+// СЛАЙДИ ДЛЯ МОБІЛЬНОЇ ВЕРСІЇ
+const SLIDES = [
+  {
+    id: "family",
+    image: familyphoto,
+    alt: "Danilets family",
+    link: "/about-us",
+  },
+  {
+    id: "detailing",
+    image: bg_detaling,
+    alt: "Danilets Detailing",
+    link: "/detailing",
+  },
+  {
+    id: "cleaning",
+    image: bg_cleaining,
+    alt: "Danilets Cleaning",
+    link: "/cleaning",
+  },
+];
 
 const MainMobile = () => {
-  // 👉 Сюди потім підставиш свої мобільні фото (Detailing / Cleaning)
-  const images = [familyphoto, bg_detaling, bg_cleaining];
-
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Авто-ротація кожні 2.5 секунди з плавним переходом
+  // AUTO ROTATION — 5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % images.length);
-    }, 2500); // 2000–3000 ms як тобі комфортно
+      setCurrentImageIndex((prev) => (prev + 1) % SLIDES.length);
+    }, 5000);
 
     return () => clearInterval(interval);
-  }, [images.length]);
+  }, []);
+
+  const goNext = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % SLIDES.length);
+  };
+
+  const goPrev = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
+  };
+
+  const currentSlide = SLIDES[currentImageIndex];
 
   return (
-    <div className="bg-[rgba(235,235,235,1)] min-h-screen pb-8">
+    <div className="bg-[rgba(235,235,235,1)] min-h-screen pb-8 overflow-x-hidden">
       <Head />
 
-      {/* hero-блок з фоновою каруселлю */}
-      <main className="relative min-h-[calc(100vh-80px)] overflow-x-clip">
-        {/* 🔥 Фонова карусель (fade між зображеннями) */}
+      {/* HERO */}
+      <main className="relative min-h-[92vh] overflow-x-hidden">
+
+        {/* Фонова карусель */}
         <div className="absolute inset-0">
-          {images.map((img, index) => (
+          {SLIDES.map((slide, index) => (
             <img
-              key={index}
-              src={img}
-              alt=""
+              key={slide.id}
+              src={slide.image}
+              alt={slide.alt}
               className={`
-                w-full h-full
-                object-cover
-                absolute inset-0
+                w-full h-full object-cover absolute inset-0
                 transition-opacity duration-700
                 ${index === currentImageIndex ? "opacity-100" : "opacity-0"}
               `}
             />
           ))}
 
-          {/* Легкий темний overlay для читабельності тексту */}
-          <div className="absolute inset-0 bg-black/30" />
+          {/* overlay */}
+          <div className="absolute inset-0 bg-black/35" />
         </div>
 
-        {/* Контент поверх фону */}
-        <div className="relative z-10 flex min-h-[calc(100vh-80px)]">
-          <div className="w-full mx-auto mt-[120px] ml-5 px-4">
+        {/* Контент поверх */}
+        <div className="relative z-10 flex min-h-[92vh]">
+          <div className="w-full mx-auto mt-[120px] px-4">
             <div className="space-y-4">
+
               <h1
-                className="text-[40px] font-extrabold leading-[100%] tracking-[0%] text-white"
-                style={{ fontFamily: "Manrope, sans-serif", fontWeight: 800 }}
+                className="text-[38px] font-extrabold leading-[100%] text-white pr-4"
+                style={{ fontFamily: "Manrope, sans-serif" }}
               >
                 WELCOME TO DANILETS
               </h1>
+
               <p
-                className="text-[15px] font-normal leading-[140%] tracking-[0%] text-[rgba(230,230,235,1)]"
-                style={{ fontFamily: "Manrope, sans-serif", fontWeight: 400 }}
+                className="text-[15px] leading-[140%] text-[rgba(230,230,235,1)] max-w-[85%]"
+                style={{ fontFamily: "Manrope, sans-serif" }}
               >
-                Columbus' Trusted Provider of Premium Services Tailored with
-                precision and delivered with excellence
+                Columbus' trusted provider of premium services tailored with
+                precision and delivered with excellence.
               </p>
-              <button className="border border-white px-4 py-2 rounded-full text-white text-[14px] font-semibold hover:bg-white hover:text-black transition">
-                Lets is More
-              </button>
+
+              {/* Learn More — веде на різні сторінки залежно від слайду */}
+              <Link
+                to={currentSlide.link}
+                className="
+                  inline-block border border-white px-5 py-2 rounded-full
+                  text-white text-[14px] font-semibold
+                  hover:bg-white hover:text-black transition
+                "
+              >
+                Learn More
+              </Link>
             </div>
           </div>
 
-          {/* бейдж праворуч внизу */}
+          {/* Бейдж справа */}
           <div
             className="
-              absolute bottom-[80px] right-4
-              w-[140px] h-[40px]
+              absolute bottom-[90px] right-4
+              bg-[rgba(235,176,108,0.18)]
               rounded-full
-              bg-[rgba(235,176,108,0.15)]
-              flex items-center justify-between
-              py-2 px-3
+              px-4 py-2
+              flex items-center gap-2
               z-10
             "
           >
@@ -97,10 +136,35 @@ const MainMobile = () => {
               Lets is More
             </span>
           </div>
+
+          {/* СТРІЛКИ КАРУСЕЛІ → як на десктопі */}
+          <div className="absolute bottom-[25px] left-4 flex gap-2 z-20">
+            <button
+              onClick={goPrev}
+              className="
+                w-9 h-9 rounded-full bg-black/50 border border-white/40
+                flex items-center justify-center text-white text-xl
+                hover:bg-white hover:text-black transition
+              "
+            >
+              ‹
+            </button>
+
+            <button
+              onClick={goNext}
+              className="
+                w-9 h-9 rounded-full bg-black/50 border border-white/40
+                flex items-center justify-center text-white text-xl
+                hover:bg-white hover:text-black transition
+              "
+            >
+              ›
+            </button>
+          </div>
         </div>
       </main>
 
-      <Services className="relative z-10 mt-[-60px]" />
+      <Services className="relative z-10 mt-[-40px]" />
       <StatsBlock />
 
       <OurPortfolio />
