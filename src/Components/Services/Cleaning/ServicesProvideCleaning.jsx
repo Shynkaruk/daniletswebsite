@@ -9,19 +9,9 @@ const cleaningServices = [
     short:
       "Comprehensive cleaning for businesses — retail spaces, offices, and more.",
     detailed: `
-Professional commercial cleaning services designed to maintain your business environment at the highest standards. 
-Your workspace reflects your brand—cleanliness impacts employee productivity and customer perception.
+Professional commercial cleaning services designed to maintain your business environment at the highest standards. We understand that your workspace is a reflection of your brand, and cleanliness directly impacts employee productivity and customer perception. Our comprehensive services include floor care, surface sanitization of high-touch areas, restroom deep cleaning and restocking, break room and kitchen cleaning, trash removal and recycling management, and dusting of all surfaces.
 
-Our services include:
-• Floor care  
-• High-touch surface sanitization  
-• Restroom deep cleaning & restocking  
-• Break room & kitchen cleaning  
-• Trash removal & recycling  
-• Dusting for all areas  
-
-We service retail spaces, corporate offices, and all commercial properties.  
-Flexible scheduling: after-hours, early mornings, or weekends.
+We work with retail spaces, corporate offices, and various other commercial properties using professional-grade products that are effective yet safe. Flexible scheduling available including after-hours, early morning, and weekend services to minimize disruption to your operations.
 `,
   },
   {
@@ -30,19 +20,9 @@ Flexible scheduling: after-hours, early mornings, or weekends.
     short:
       "Specialized cleaning for office environments that support productivity.",
     detailed: `
-We create clean, productive office environments where your team can thrive.
+Specialized office cleaning services that create healthy, productive work environments for your team. We provide thorough desk and workstation cleaning, conference room sanitization, reception area maintenance, kitchen and break room deep cleaning, restroom sanitization and supply restocking, floor care for all surface types, and window and glass cleaning.
 
-Our services include:
-• Desk & workstation cleaning  
-• Conference room sanitization  
-• Reception area cleaning  
-• Break room deep clean  
-• Restroom sanitization & supply restocking  
-• Floor care for all types  
-• Window & glass cleaning  
-
-We respect confidentiality and security in office spaces.  
-Flexible scheduling: after-hours, early mornings, weekends.
+Our team understands the importance of confidentiality and security in office settings. Flexible scheduling options include after-hours cleaning, early morning services, or weekend deep cleans to ensure minimal disruption while maintaining the highest cleaning standards. Perfect for corporate environments where professionalism and attention to detail matter.
 `,
   },
   {
@@ -51,18 +31,9 @@ Flexible scheduling: after-hours, early mornings, weekends.
     short:
       "Professional cleaning for short-term rentals. Perfect for maintaining 5-star ratings.",
     detailed: `
-Designed for Airbnb and short-term rental hosts who want consistent 5-star reviews.
+Professional Airbnb and short-term rental cleaning services designed specifically for hosts who want to maintain 5-star ratings. Our service includes complete bedroom preparation with fresh linens, bathroom deep cleaning and sanitization, kitchen clean with appliance care, living area refresh, floor care throughout the property, and final walkthrough to ensure everything is guest-ready.
 
-Includes:
-• Bedroom prep with fresh linens  
-• Bathroom deep sanitization  
-• Kitchen cleaning + appliances  
-• Living area refresh  
-• Floor care  
-• Final walkthrough  
-
-Fast turnover for same-day check-ins.  
-Guests notice the details — we guarantee the “hotel-clean” experience.
+We work on your booking schedule with fast turnaround times between guests. Same-day turnovers available for back-to-back bookings. Our team pays special attention to the details that guests notice in reviews—fresh scents, spotless bathrooms, and that hotel-clean feeling that earns 5-star ratings.
 `,
   },
   {
@@ -71,22 +42,9 @@ Guests notice the details — we guarantee the “hotel-clean” experience.
     short:
       "Intensive, detailed cleaning for move-ins, move-outs, seasonal refresh, and more.",
     detailed: `
-Complete deep cleaning far beyond regular maintenance.
+Intensive, comprehensive deep cleaning services that go far beyond regular maintenance cleaning. Our service includes baseboard cleaning, detailed window cleaning, thorough appliance cleaning inside and out, cabinet cleaning, light fixture and ceiling fan cleaning, vent cleaning, detailed bathroom cleaning with grout scrubbing, kitchen deep clean with backsplash scrubbing, and hard floor care.
 
-Includes:
-• Baseboards  
-• Windows  
-• Inside appliances  
-• Cabinets  
-• Light fixtures  
-• Ceiling fans  
-• Vent cleaning  
-• Bathroom grout scrubbing  
-• Kitchen deep cleaning  
-• Hard floor care  
-
-Ideal for move-ins/outs, post-construction, seasonal refresh, or one-time resets.  
-Uses professional-grade equipment and products.
+Perfect for move-in and move-out situations, post-construction cleaning, seasonal deep cleans, or when your space needs a complete refresh. We bring professional-grade equipment and products that deliver results you can see and feel. Available as a one-time service or periodic deep clean to supplement regular maintenance.
 `,
   },
 ];
@@ -101,16 +59,15 @@ const ServicesProvideCleaning = () => {
   };
 
   const closeModal = () => {
-    setModalOpen(false);
     setModalService(null);
+    setModalOpen(false);
   };
 
   return (
-    // даємо більше відступу зверху, щоб було з чого “заїхати”
     <section className="w-full bg-[#F5F5F7] pt-16 md:pt-28 pb-10 md:pb-16">
       <div className="w-[min(1600px,100%)] mx-auto px-4 md:px-8">
 
-        {/* ТІЛЬКИ ЦЕЙ КОНТЕЙНЕР ПІДНІМАЄМО */}
+        {/* Контейнер із картками */}
         <div className="relative z-10 -mt-10 md:-mt-50 bg-white rounded-[32px] px-4 py-6 md:px-10 md:py-10 shadow-sm">
           <h2 className="text-[24px] md:text-[36px] font-semibold mb-6 md:mb-10">
             Services we provide
@@ -118,35 +75,63 @@ const ServicesProvideCleaning = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
             {cleaningServices.map((service) => (
-              <div
+              <button
                 key={service.id}
-                className="bg-[#F3F4F6] rounded-[32px] p-6 flex flex-col gap-5"
+                type="button"
+                onClick={() => openModal(service)}
+                className="
+                  group cursor-pointer
+                  bg-[#F3F4F6] rounded-[32px] p-6
+                  flex flex-col text-left
+                  transition
+                  hover:bg-white hover:shadow-lg
+                  focus:outline-none focus:ring-2 focus:ring-[#FF5252CC]
+                "
               >
-                <div className="w-10 h-10 rounded-full bg-[#FF5252CC] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-[#FF5252CC] flex items-center justify-center mb-3">
                   <span className="text-lg">✓</span>
                 </div>
 
-                <h3 className="text-[24px] md:text-[32px] font-semibold leading-tight">
-                  {service.title}
-                </h3>
-                <p className="text-[15px] md:text-[18px] text-[#6B7280]">
-                  {service.short}
-                </p>
+                {/* Заголовок фіксованої висоти */}
+                <div className="min-h-[72px] flex items-start">
+                  <h3 className="text-[24px] md:text-[28px] font-semibold leading-tight">
+                    {service.title}
+                  </h3>
+                </div>
 
-                <button
-                  onClick={() => openModal(service)}
-                  className="mt-auto w-full flex items-center justify-between px-6 py-3 rounded-full bg-white text-[14px] font-semibold text-[#3E0C0C] hover:bg-[#3E0C0C] transition"
+                {/* Сабтайтл фіксованої висоти */}
+                <div className="mt-2 min-h-[96px] md:min-h-[110px] flex items-start">
+                  <p className="text-[15px] md:text-[16px] text-[#6B7280] leading-snug">
+                    {service.short}
+                  </p>
+                </div>
+
+                {/* Кнопка Learn More як у Detailing */}
+                <div
+                  className="
+                    mt-auto flex items-center justify-between
+                    w-full h-[44px] md:h-[48px]
+                    rounded-[999px]
+                    text-[14px] md:text-[15px] px-5 font-semibold
+                    transition-transform duration-200
+                    group-hover:scale-[1.01]
+                  "
+                  style={{
+                    background:
+                      "linear-gradient(107.27deg, #8B3434 -27.97%, #A84E4E -12.13%, #F29292 22.69%, #FF9E9E 45.99%, #E17B7B 77.51%)",
+                    fontFamily: "Manrope, sans-serif",
+                  }}
                 >
                   <span>Learn More</span>
-                  <span className="text-base ml-2">›</span>
-                </button>
-              </div>
+                  <span className="text-lg">↗</span>
+                </div>
+              </button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Модалка як була */}
+      {/* Модалка — форматуємо як у документі */}
       {modalOpen && modalService && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[200] px-4">
           <div className="bg-white rounded-[24px] max-w-xl w-full p-6 shadow-xl relative">
@@ -157,17 +142,38 @@ const ServicesProvideCleaning = () => {
               ✕
             </button>
 
-            <h3 className="text-[26px] font-semibold mb-4">{modalService.title}</h3>
+            <div className="text-[16px] leading-relaxed text-[#333] space-y-4">
+              <h3 className="font-bold text-[20px]">
+                Service {modalService.id}: {modalService.title}
+              </h3>
 
-            <p className="whitespace-pre-line text-[16px] text-[#444] leading-relaxed">
-              {modalService.detailed}
-            </p>
+              <p className="font-semibold">
+                Detailed Description (for pop-up when clicking "Learn More"):
+              </p>
+
+              {modalService.detailed
+                .trim()
+                .split(/\n\s*\n/)
+                .map((paragraph, idx) => (
+                  <p key={idx} className="text-[16px] leading-[1.55]">
+                    {paragraph.trim()}
+                  </p>
+                ))}
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={closeModal}
+                className="px-6 py-2 rounded-full border border-[#D4D4D8] text-sm md:text-[15px] hover:bg-[#F4F4F5] transition"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
     </section>
   );
 };
-
 
 export default ServicesProvideCleaning;

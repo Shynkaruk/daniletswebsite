@@ -12,18 +12,18 @@ const TABs = ["Detailing", "Cleaning"];
 // === Замінити посилання на ваші реальні ===
 const SOCIALS = {
   Detailing: [
-    // { label: "Google", icon: FaGoogle, href: "#" },
+    { label: "Google", icon: FaGoogle, href: "#" },
     { label: "Instagram", icon: FaInstagram, href: "https://www.instagram.com/daniletsdetailing?igsh=MWphOGk5MGc2bHBvNg==" },
-    // { label: "TikTok", icon: FaTiktok, href: "#" },
-    // { label: "YouTube", icon: FaYoutube, href: "#" },
-    // { label: "Facebook", icon: FaFacebookF, href: "#" },
+    { label: "TikTok", icon: FaTiktok, href: "#" },
+    { label: "YouTube", icon: FaYoutube, href: "#" },
+    { label: "Facebook", icon: FaFacebookF, href: "#" },
   ],
   Cleaning: [
-    // { label: "Google", icon: FaGoogle, href: "#" },
+    { label: "Google", icon: FaGoogle, href: "#" },
     { label: "Instagram", icon: FaInstagram, href: "https://www.instagram.com/daniletscleaning?igsh=ajcwdW9uZGxkb2M5" },
-    // { label: "TikTok", icon: FaTiktok, href: "#" },
-    // { label: "YouTube", icon: FaYoutube, href: "#" },
-    // { label: "Facebook", icon: FaFacebookF, href: "#" },
+    { label: "TikTok", icon: FaTiktok, href: "#" },
+    { label: "YouTube", icon: FaYoutube, href: "#" },
+    { label: "Facebook", icon: FaFacebookF, href: "#" },
   ],
 };
 

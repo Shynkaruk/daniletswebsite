@@ -107,7 +107,10 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
 
                 {/* ===== Services with dropdown ===== */}
                 <details className="group">
-                  <summary className="text-[#A1A1A5] border border-[#A1A1A5] rounded-[44px] text-[14px] font-bold py-2 px-4 cursor-pointer list-none flex items-center justify-between hover:bg-[rgba(245,218,147,0.8)] hover:text-black transition">
+                  <summary className="text-[#A1A1A5] border border-[#A1A1A5] rounded-[44px] 
+  text-[14px] font-bold py-2 px-4 cursor-pointer list-none
+  flex items-center justify-center relative
+  hover:bg-[rgba(245,218,147,0.8)] hover:text-black transition">
                     <span>Services</span>
                     <span className="transition-transform group-open:rotate-180">
                       ▾

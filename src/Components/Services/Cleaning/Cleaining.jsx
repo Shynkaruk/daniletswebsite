@@ -37,18 +37,13 @@ const Cleaning = () => {
       {/* Контент */}
       <div className="relative z-20 px-6 pt-6 md:pt-[10vh] md:ml-15">
         <Head />
-        <div className="mt-20 md:mt-20">
+        <div className="mt-20 md:mt-30">
           {/* LogoRed */}
           <img
             src={LogoRed}
             alt="Danilets Logo"
-            className="w-68 md:w-124 mb-6 object-contain"
+            className="w-[420px] md:w-[720px] mb-12 object-contain"
           />
-
-          <h1 className="text-5xl md:text-6xl font-bold leading-tight break-words">
-            Danilets Cleaning
-          </h1>
-
           <p
             className="mt-2 text-xl md:hidden max-w-md"
             style={{ color: "#A1A1A5" }}
@@ -81,7 +76,7 @@ const Cleaning = () => {
             className="w-6 h-6 object-contain"
           />
           <span className="text-base font-bold md:text-lg whitespace-nowrap">
-            Lets Detail
+            Lets Clean
           </span>
         </div>
       </div>

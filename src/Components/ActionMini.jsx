@@ -17,7 +17,7 @@ const ActionMini = () => {
             className="text-[20px] sm:text-[24px] lg:text-[28px] font-bold text-white"
             style={{ fontFamily: 'Manrope, sans-serif' }}
           >
-            Promotions
+            Deals Coming Soon
           </h2>
         </div>
 
