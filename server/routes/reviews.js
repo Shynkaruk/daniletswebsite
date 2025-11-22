@@ -6,7 +6,7 @@ import "dotenv/config";
 const router = express.Router();
 
 // 👉 Place ID саме того бізнесу, де є Google-відгуки
-const PLACE_ID = "ChIJFVGaxLp9OIgRwOVAPJkrA3A";
+const PLACE_ID = "ChIJFUW6xLp9OIgRsOEBCpmTwMA";
 const API_KEY = process.env.GOOGLE_API_KEY;
 
 // Виносимо в окрему функцію, щоб використовувати і в /google/detailing, і в /detailing
