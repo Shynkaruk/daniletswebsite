@@ -5,17 +5,32 @@ import "dotenv/config";
 
 const router = express.Router();
 
-// Place ID твоєї детейлінг-локації в Google Maps
+// 👉 Place ID саме того бізнесу, де є Google-відгуки
 const PLACE_ID = "ChIJFVGaxLp9OIgRwOVAPJkrA3A";
 const API_KEY = process.env.GOOGLE_API_KEY;
 
-// Окрема функція, щоб не дублювати код
+// Виносимо в окрему функцію, щоб використовувати і в /google/detailing, і в /detailing
 async function fetchGoogleDetailingReviews() {
-  const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${PLACE_ID}&key=${API_KEY}`;
+  const url =
+    "https://maps.googleapis.com/maps/api/place/details/json" +
+    `?place_id=${PLACE_ID}` +
+    "&fields=rating,reviews,user_ratings_total" + // 👉 явно просимо reviews
+    "&reviews_sort=newest" +
+    "&language=en" +
+    `&key=${API_KEY}`;
+
   const response = await axios.get(url);
 
+  // Для діагностики – подивитись, що саме вертає Google
+  console.log("Google Place status:", response.data.status);
+  console.log(
+    "Google Place result keys:",
+    response.data.result && Object.keys(response.data.result)
+  );
+
   const result = response.data.result;
-  if (!result || !result.reviews) {
+
+  if (!result || !Array.isArray(result.reviews)) {
     return [];
   }
 
@@ -37,39 +52,36 @@ router.get("/google/detailing", async (req, res) => {
     const reviews = await fetchGoogleDetailingReviews();
     res.json({ reviews });
   } catch (err) {
-    console.error("Google Reviews Error (google/detailing):", err.response?.data || err.message);
+    console.error(
+      "Google Reviews Error (google/detailing):",
+      err.response?.data || err.message
+    );
     res.status(500).json({ error: "Failed to load Google reviews" });
   }
 });
 
 /**
- * 2) Загальний роут для Detailing
+ * 2) Загальний роут для Detailing (Home/Reviews блок)
  *    GET /api/reviews/detailing
- *    – використовує ті самі Google-відгуки
  */
 router.get("/detailing", async (req, res) => {
   try {
     const reviews = await fetchGoogleDetailingReviews();
     res.json({ reviews });
   } catch (err) {
-    console.error("Google Reviews Error (detailing):", err.response?.data || err.message);
+    console.error(
+      "Google Reviews Error (detailing):",
+      err.response?.data || err.message
+    );
     res.status(500).json({ error: "Failed to load Detailing reviews" });
   }
 });
 
 /**
- * 3) Загальний роут для Cleaning
- *    GET /api/reviews/cleaning
- *    – поки що повертає пустий список (можеш потім підʼєднати інше джерело)
+ * 3) Cleaning — поки пусто
  */
 router.get("/cleaning", async (req, res) => {
-  try {
-    // тимчасово без Google, просто пустий масив
-    res.json({ reviews: [] });
-  } catch (err) {
-    console.error("Cleaning Reviews Error:", err.message);
-    res.status(500).json({ error: "Failed to load Cleaning reviews" });
-  }
+  res.json({ reviews: [] });
 });
 
 export default router;
