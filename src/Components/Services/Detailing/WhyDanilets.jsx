@@ -8,12 +8,32 @@ import iconFlexible from '../../../assets/icons/icon_flexible-scheduling.svg'
 import iconDrops from '../../../assets/icons/iconDropsRed.svg'
 
 const WhyDanilets = () => {
-  const items = useMemo(() => [
-    { id: 1, title: '+1,500 Vehicles Detailed',   subtitle: 'Since 2020, weve transformed over 1,500 vehicles',                            icon: iconFull },
-    { id: 2, title: 'Attention to Detail',      subtitle: 'We dont cut corners',          icon: iconPaint },
-    { id: 3, title: 'Dealership & Fleet Services',        subtitle: 'Consistent quality for businesses',                    icon: iconPrecision },
-    { id: 4, title: 'Family-Owned',   subtitle: 'Youre not just a transaction—youre family',                     icon: iconFlexible },
-  ], [])
+const items = useMemo(() => [
+  { 
+    id: 1,
+    title: '+1,500 Vehicles Detailed',
+    subtitle: "Since 2020, we've transformed over 1,500 vehicles.",
+    icon: iconFull
+  },
+  { 
+    id: 2,
+    title: 'Attention to Detail',
+    subtitle: "We don’t cut corners.",
+    icon: iconPaint
+  },
+  { 
+    id: 3,
+    title: 'Dealership & Fleet Services',
+    subtitle: "Consistent quality for businesses.",
+    icon: iconPrecision
+  },
+  { 
+    id: 4,
+    title: 'Family-Owned',
+    subtitle: "You’re not just a transaction—you’re family.",
+    icon: iconFlexible
+  },
+], []);
 
   return (
     <section className="w-full px-4 pb-8">

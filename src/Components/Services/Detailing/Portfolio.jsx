@@ -38,59 +38,58 @@ const Modal = ({ open, onClose, item }) => {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4"
       onClick={onClose}
     >
+      {/* Темний фон */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
 
+      {/* Модальне вікно */}
       <div
-        className="relative z-[101] mx-auto w-[90vw] max-w-[1100px] max-h-[90vh] rounded-2xl bg-white shadow-[0_20px_60px_rgba(0,0,0,0.25)] overflow-hidden animate-[fadeIn_200ms_ease-out]"
+        className="
+          relative z-[101]
+          max-w-[95vw]
+          max-h-[90vh]
+          bg-white
+          rounded-xl
+          shadow-[0_20px_60px_rgba(0,0,0,0.25)]
+          overflow-hidden
+          flex flex-col items-center
+          px-2 pt-12 pb-2
+        "
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close */}
+        {/* Хрестик */}
         <button
           onClick={onClose}
           aria-label="Close"
-          className="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow hover:bg-white transition"
+          className="
+            absolute top-3 right-3
+            z-20
+            h-9 w-9
+            flex items-center justify-center
+            rounded-full bg-white/90 shadow
+            hover:bg-white transition
+          "
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-              clipRule="evenodd"
-            />
-          </svg>
+          ✕
         </button>
 
-        {/* Image */}
-        <div className="mt-6 mx-6 rounded-xl overflow-hidden">
-          <img
-            src={item.image}
-            alt="Portfolio item"
-            className="w-full h-auto object-cover select-none"
-            decoding="async"
-            loading="lazy"
-            style={{
-              imageRendering: "auto", // natural smoothing
-              transform: "translateZ(0)", // hardware acceleration
-              backfaceVisibility: "hidden",
-              WebkitFontSmoothing: "antialiased",
-            }}
-          />
-        </div>
+        {/* Фото */}
+        <img
+          src={item.image}
+          alt="Portfolio item"
+          className="max-w-full max-h-[80vh] object-contain select-none"
+          decoding="async"
+          loading="lazy"
+          style={{
+            imageRendering: "auto",
+            transform: "translateZ(0)",
+            backfaceVisibility: "hidden",
+            WebkitFontSmoothing: "antialiased",
+          }}
+        />
       </div>
-
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(6px) scale(0.99); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
     </div>
   );
 };
@@ -101,12 +100,12 @@ const Portfolio = () => {
   return (
     <section className="px-5 md:px-10 lg:px-20 py-10 lg:py-16 -mt-10 md:-mt-10">
       <div className="w-full mx-auto">
-        {/* Title */}
+        {/* Заголовок */}
         <h2 className="text-[32px] sm:text-[40px] lg:text-[52px] font-extrabold text-black mb-10">
           Portfolio
         </h2>
 
-        {/* Grid */}
+        {/* Сітка */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-10">
           {portfolioItems.map((item) => (
             <article
@@ -133,7 +132,7 @@ const Portfolio = () => {
                 </div>
               </div>
 
-              {/* Порожній блок замість назв */}
+              {/* Порожній блок */}
               <div className="px-6 lg:px-8 pb-6 lg:pb-8 h-[28px]" />
             </article>
           ))}

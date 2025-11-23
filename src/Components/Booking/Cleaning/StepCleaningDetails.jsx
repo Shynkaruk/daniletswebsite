@@ -4,7 +4,7 @@ import { FiChevronLeft } from "react-icons/fi";
 import DatePicker from "../DatePicker";
 
 const GOLD_GRADIENT =
-  "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
+  "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#45.99%,#E1C07B 77.51%)";
 
 const AREAS_OPTIONS = [
   "Kitchen",
@@ -39,6 +39,21 @@ const KITCHEN_TASKS_OPTIONS = [
   "Inside Fridge",
   "Inside Microwave",
   "Other",
+];
+
+// окремі списки для Type of Project
+const RESIDENTIAL_PROJECT_OPTIONS = [
+  { key: "deep_clean", label: "Deep clean" },
+  { key: "post_construction", label: "Post construction" },
+  { key: "move_in_out", label: "Move in/out" },
+  { key: "other", label: "Other" },
+];
+
+const COMMERCIAL_PROJECT_OPTIONS = [
+  { key: "office", label: "Office" },
+  { key: "airbnb", label: "Airbnb/rental properties" },
+  { key: "post_construction", label: "Post construction" },
+  { key: "other", label: "Other" },
 ];
 
 const StepCleaningDetails = ({
@@ -97,6 +112,7 @@ const StepCleaningDetails = ({
   let canContinue = false;
   if (isResidential) {
     canContinue =
+      !!propertyType &&
       !!projectType &&
       !!bedrooms &&
       !!bathrooms &&
@@ -106,6 +122,7 @@ const StepCleaningDetails = ({
       !!dueDate;
   } else if (isCommercial) {
     canContinue =
+      !!propertyType &&
       !!projectType &&
       !!companyName &&
       !!companyAddress &&
@@ -113,6 +130,12 @@ const StepCleaningDetails = ({
       !!frequency &&
       !!comBudget;
   }
+
+  const projectOptions = isResidential
+    ? RESIDENTIAL_PROJECT_OPTIONS
+    : isCommercial
+    ? COMMERCIAL_PROJECT_OPTIONS
+    : [];
 
   return (
     <div className="w-full max-w-full min-w-0 text-left">
@@ -127,7 +150,7 @@ const StepCleaningDetails = ({
             <FiChevronLeft className="text-[18px] text-[#18181B]" />
           </button>
           <h2 className="text-[20px] sm:text-[22px] font-extrabold text-[#18181B]">
-            Tell Us About Your Cleaning
+            Get a quote
           </h2>
         </div>
 
@@ -149,7 +172,7 @@ const StepCleaningDetails = ({
         {/* Type: Residential / Commercial */}
         <section className="space-y-2 mt-1">
           <div className="text-sm text-[#6B7280] font-medium">
-            Type (select one)
+            Type (select one) *
           </div>
           <div className="grid grid-cols-2 gap-2">
             {[
@@ -177,38 +200,35 @@ const StepCleaningDetails = ({
           </div>
         </section>
 
-        {/* Type of Project */}
-        <section className="space-y-2">
-          <div className="text-sm text-[#6B7280] font-medium">
-            Type of Project (select one)
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { key: "deep_clean", label: "Deep Clean" },
-              { key: "post_construction", label: "Post-Construction" },
-              { key: "move_in_out", label: "Move In/Out" },
-              { key: "other", label: "Other" },
-            ].map((opt) => {
-              const active = projectType === opt.key;
-              return (
-                <button
-                  key={opt.key}
-                  type="button"
-                  onClick={() => setProjectType(opt.key)}
-                  className={`h-[44px] rounded-[16px] border text-sm font-semibold
-                    ${
-                      active
-                        ? "border-transparent text-black"
-                        : "border-[#E5E7EB] text-[#4B5563] bg-white"
-                    }`}
-                  style={{ background: active ? GOLD_GRADIENT : undefined }}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-        </section>
+        {/* Type of Project – тільки після вибору Residential/Commercial */}
+        {(isResidential || isCommercial) && (
+          <section className="space-y-2">
+            <div className="text-sm text-[#6B7280] font-medium">
+              Type of project (select one) *
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {projectOptions.map((opt) => {
+                const active = projectType === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => setProjectType(opt.key)}
+                    className={`h-[44px] rounded-[16px] border text-sm font-semibold
+                      ${
+                        active
+                          ? "border-transparent text-black"
+                          : "border-[#E5E7EB] text-[#4B5563] bg-white"
+                      }`}
+                    style={{ background: active ? GOLD_GRADIENT : undefined }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* ------- Residential ------- */}
         {isResidential && (
@@ -216,7 +236,7 @@ const StepCleaningDetails = ({
             {/* Bedrooms/Bathrooms */}
             <section className="bg-white rounded-[20px] border border-[#E5E7EB] p-4 space-y-2">
               <div className="text-sm text-[#6B7280] font-medium">
-                How many bedrooms and bathrooms?
+                How many bedrooms and bathrooms? *
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <input
@@ -224,7 +244,6 @@ const StepCleaningDetails = ({
                   onChange={(e) => setBedrooms(e.target.value)}
                   type="number"
                   min="0"
-                  placeholder="Bedrooms"
                   className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none"
                 />
                 <input
@@ -232,7 +251,6 @@ const StepCleaningDetails = ({
                   onChange={(e) => setBathrooms(e.target.value)}
                   type="number"
                   min="0"
-                  placeholder="Bathrooms"
                   className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none"
                 />
               </div>
@@ -241,9 +259,9 @@ const StepCleaningDetails = ({
             {/* Areas */}
             <section className="bg-white rounded-[20px] border border-[#E5E7EB] p-4 space-y-2">
               <div className="text-sm text-[#6B7280] font-medium">
-                What Areas Do You Need Cleaned? (Select all that apply) *
+                What areas do you need cleaned? (select all that apply) *
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-1 text-sm text-[#111827] mt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-2 text-sm text-[#111827] mt-1">
                 {AREAS_OPTIONS.map((name) => (
                   <label
                     key={name}
@@ -266,9 +284,9 @@ const StepCleaningDetails = ({
             {/* General tasks */}
             <section className="bg-white rounded-[20px] border border-[#E5E7EB] p-4 space-y-2">
               <div className="text-sm text-[#6B7280] font-medium">
-                What Will We Be Doing? (Select all that apply) *
+                What will we be doing? (select all that apply) *
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-sm text-[#111827] mt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm text-[#111827] mt-1">
                 {GENERAL_TASKS_OPTIONS.map((name) => (
                   <label
                     key={name}
@@ -291,9 +309,9 @@ const StepCleaningDetails = ({
             {/* Kitchen tasks */}
             <section className="bg-white rounded-[20px] border border-[#E5E7EB] p-4 space-y-2">
               <div className="text-sm text-[#6B7280] font-medium">
-                What Will We Be Doing in the Kitchen? (Select all that apply)
+                What will we be doing in the kitchen? (select all that apply) *
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-sm text-[#111827] mt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm text-[#111827] mt-1">
                 {KITCHEN_TASKS_OPTIONS.map((name) => (
                   <label
                     key={name}
@@ -313,42 +331,40 @@ const StepCleaningDetails = ({
               </div>
             </section>
 
-            {/* Budget + date + notes */}
+            {/* Budget + date + notes (Residential) */}
             <section className="bg-white rounded-[20px] border border-[#E5E7EB] p-4 space-y-4">
               <div className="space-y-2">
                 <div className="text-sm text-[#6B7280] font-medium">
-                  What is Your Budget? *
+                  What is your budget? *
                 </div>
                 <input
                   value={resBudget}
                   onChange={(e) => setResBudget(e.target.value)}
-                  placeholder="Your budget"
                   className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none"
                 />
               </div>
 
               <div className="space-y-2">
                 <div className="text-sm text-[#6B7280] font-medium">
-                  By What Date does the Service Need to be Done? *
+                  By what date does the service need to be done? *
                 </div>
                 <DatePicker
                   value={dueDate}
                   onChange={setDueDate}
                   disablePast={true}
-                  placeholder="Select preferred date"
+                  displayFormat="MM.DD.YYYY" // 11.21.2025 формат
                 />
               </div>
 
               <div className="space-y-2">
                 <div className="text-sm text-[#6B7280] font-medium">
-                  Is there Anything You Would Like to Add?
+                  Is there anything you would like to add?
                 </div>
                 <textarea
                   value={extraDetails}
                   onChange={(e) => setExtraDetails(e.target.value)}
                   rows={3}
                   className="w-full rounded-[16px] bg-[#F4F4F5] px-4 py-2 text-[14px] outline-none resize-none"
-                  placeholder="Any additional details about your project"
                 />
               </div>
             </section>
@@ -361,38 +377,35 @@ const StepCleaningDetails = ({
             <section className="bg-white rounded-[20px] border border-[#E5E7EB] p-4 space-y-4">
               <div className="space-y-2">
                 <div className="text-sm text-[#6B7280] font-medium">
-                  Company Name *
+                  Company name *
                 </div>
                 <input
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="Company Name"
                   className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none"
                 />
               </div>
 
               <div className="space-y-2">
                 <div className="text-sm text-[#6B7280] font-medium">
-                  Company Address *
+                  Company address *
                 </div>
                 <input
                   value={companyAddress}
                   onChange={(e) => setCompanyAddress(e.target.value)}
-                  placeholder="Company Address"
                   className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none"
                 />
               </div>
 
               <div className="space-y-2">
                 <div className="text-sm text-[#6B7280] font-medium">
-                  How Many Square Feet? *
+                  How many square feet? *
                 </div>
                 <input
                   value={squareFeet}
                   onChange={(e) => setSquareFeet(e.target.value)}
                   type="number"
                   min="0"
-                  placeholder="Square Feet"
                   className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none"
                 />
               </div>
@@ -402,9 +415,9 @@ const StepCleaningDetails = ({
               <div className="text-sm text-[#6B7280] font-medium">
                 Frequency *
               </div>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm text-[#111827] mt-1">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-[#111827] mt-1">
                 {[
-                  { key: "one_time", label: "One-Time" },
+                  { key: "one_time", label: "One-time" },
                   { key: "daily", label: "Daily" },
                   { key: "weekly", label: "Weekly" },
                   { key: "monthly", label: "Monthly" },
@@ -427,17 +440,28 @@ const StepCleaningDetails = ({
               </div>
             </section>
 
+            {/* Budget (dropdown) + extra details */}
             <section className="bg-white rounded-[20px] border border-[#E5E7EB] p-4 space-y-4">
               <div className="space-y-2">
                 <div className="text-sm text-[#6B7280] font-medium">
                   Budget *
                 </div>
-                <input
+                <select
                   value={comBudget}
                   onChange={(e) => setComBudget(e.target.value)}
-                  placeholder="Your budget"
-                  className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none"
-                />
+                  className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none w-full"
+                >
+                  {/* поле пусте до вибору, без placeholder тексту */}
+                  <option value=""></option>
+                  <option value="Below $1,000">Below $1,000</option>
+                  <option value="Between $1,000-$3,000">
+                    Between $1,000-$3,000
+                  </option>
+                  <option value="Between $3,000-$5,000">
+                    Between $3,000-$5,000
+                  </option>
+                  <option value="$5,000+">$5,000+</option>
+                </select>
               </div>
 
               <div className="space-y-2">
@@ -449,7 +473,6 @@ const StepCleaningDetails = ({
                   onChange={(e) => setComExtraDetails(e.target.value)}
                   rows={3}
                   className="w-full rounded-[16px] bg-[#F4F4F5] px-4 py-2 text-[14px] outline-none resize-none"
-                  placeholder="Describe anything important for this project"
                 />
               </div>
             </section>

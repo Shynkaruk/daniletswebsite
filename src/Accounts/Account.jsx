@@ -1,5 +1,5 @@
 // src/pages/Account.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Head from "../Components/Head";
 import Footer from "../Components/Footer";
 import { meApi, reqApi } from "../lib/api";
@@ -10,7 +10,7 @@ const GRADIENT =
 
 const TABS = [
   { key: "profile", label: "Personal Information" },
-  { key: "car", label: "Car Information" },
+  { key: "car", label: "Vehicle Information" },
   { key: "payment", label: "Payment Information" },
   { key: "orders", label: "Past Orders" },
 ];
@@ -31,40 +31,45 @@ export default function Account() {
         }}
       >
         <main className="w-full">
-          {/* Більший відступ зверху від Header */}
-          <div className="max-w-[1160px] mx-auto px-4 pt-40 pb-6 text-center">
-            <h1 className="text-4xl font-extrabold text-[#18181B]">Your Profile</h1>
+          {/* Top spacing from Header */}
+          <div className="max-w-[1160px] mx-auto px-4 pt-28 md:pt-40 pb-4 md:pb-6 text-center">
+            <h1 className="text-3xl md:text-4xl font-extrabold text-[#18181B]">
+              Profile
+            </h1>
           </div>
 
-          {/* Tabs — з великим правим відступом */}
+          {/* Tabs — centered under Profile + mobile-friendly */}
           <div className="max-w-[1160px] mx-auto px-4 mb-6">
-            {/* правий внутрішній відступ збільшує “повітря” праворуч */}
-            <div className="pr-24 md:pr-36 xl:pr-48">
-              <div className="inline-flex items-center bg-white/95 rounded-[999px] p-1 shadow-[0_6px_22px_rgba(0,0,0,0.07)] border border-[#ECECEC] gap-1">
-                {TABS.map((t) => {
-                  const isActive = active === t.key;
-                  return (
-                    <button
-                      key={t.key}
-                      onClick={() => setActive(t.key)}
-                      className={[
-                        "h-12 md:h-14 px-5 md:px-6 rounded-[999px] text-[14px] md:text-[15px] font-semibold transition whitespace-nowrap",
-                        isActive
-                          ? "bg-white shadow text-[#18181B]"
-                          : "text-[#5E5E61] hover:text-[#18181B]",
-                      ].join(" ")}
-                    >
-                      {t.label}
-                    </button>
-                  );
-                })}
+            <div className="w-full flex justify-center">
+              {/* wrapper with horizontal scroll on small screens */}
+              <div className="max-w-full overflow-x-auto">
+                <div className="inline-flex items-center bg-white/95 rounded-[999px] p-1 md:p-1.5 shadow-[0_6px_22px_rgba(0,0,0,0.07)] border border-[#ECECEC] gap-1 min-w-max">
+                  {TABS.map((t) => {
+                    const isActive = active === t.key;
+                    return (
+                      <button
+                        key={t.key}
+                        onClick={() => setActive(t.key)}
+                        className={[
+                          "h-11 md:h-14 px-4 md:px-6 rounded-[999px]",
+                          "text-[13px] md:text-[15px] font-semibold transition whitespace-nowrap",
+                          isActive
+                            ? "bg-white shadow text-[#18181B]"
+                            : "text-[#5E5E61] hover:text-[#18181B]",
+                        ].join(" ")}
+                      >
+                        {t.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Контейнер з контентом по центру */}
+          {/* Content container */}
           <div className="max-w-[1160px] mx-auto px-4 pb-16">
-            <div className="bg-white/95 rounded-[28px] shadow-[0_12px_38px_rgba(0,0,0,0.08)] border border-[#ECECEC] p-5 md:p-8">
+            <div className="bg-white/95 rounded-[28px] shadow-[0_12px_38px_rgba(0,0,0,0.08)] border border-[#ECECEC] p-4 md:p-8">
               {active === "profile" && <ProfileCard />}
               {active === "car" && <CarCard />}
               {active === "payment" && <PaymentCard />}
@@ -124,31 +129,31 @@ function ProfileCard() {
   };
 
   return (
-    <Section title="Your Contact Details">
+    <Section title="Personal Information">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
         <Input
-          placeholder="Enter your first name"
+          placeholder="First Name"
           value={form.first_name}
           onChange={(v) => setForm({ ...form, first_name: v })}
         />
         <Input
-          placeholder="Enter your last name"
+          placeholder="Last Name"
           value={form.last_name}
           onChange={(v) => setForm({ ...form, last_name: v })}
         />
         <Input
-          placeholder="Enter your phone number"
+          placeholder="Phone Number"
           value={form.phone}
           onChange={(v) => setForm({ ...form, phone: v })}
         />
         <Input
-          placeholder="Enter your birthday"
+          placeholder="Birthday"
           value={form.birthday}
           onChange={(v) => setForm({ ...form, birthday: v })}
         />
         <Input
           className="md:col-span-2"
-          placeholder="Enter your email"
+          placeholder="Email"
           value={form.email}
           disabled
         />
@@ -163,7 +168,7 @@ function ProfileCard() {
   );
 }
 
-/* ======================= Car Information ======================= */
+/* ======================= Vehicle Information ======================= */
 function CarCard() {
   const [year, setYear] = useState("");
   const [make, setMake] = useState("");
@@ -181,13 +186,13 @@ function CarCard() {
   };
 
   return (
-    <Section title="Your Car Details">
+    <Section title="Vehicle Information">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-        <Input placeholder="Year of your car" value={year} onChange={setYear} />
-        <Input placeholder="Make of your car" value={make} onChange={setMake} />
+        <Input placeholder="Year" value={year} onChange={setYear} />
+        <Input placeholder="Make" value={make} onChange={setMake} />
         <Input
           className="md:col-span-2"
-          placeholder="Your car model"
+          placeholder="Model"
           value={model}
           onChange={setModel}
         />
@@ -218,23 +223,23 @@ function PaymentCard() {
   };
 
   return (
-    <Section title="Your Payment Details">
+    <Section title="Payment Information">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
         <Input
           className="md:col-span-2"
-          placeholder="Enter your cardholder name"
+          placeholder="Card Holder Name"
           value={holder}
           onChange={setHolder}
         />
-        <Input placeholder="Enter your CVV / CVC" value={cvc} onChange={setCvc} />
+        <Input placeholder="CVV / CVC" value={cvc} onChange={setCvc} />
         <Input
-          placeholder="Enter your expiration date"
+          placeholder="Expiration Date"
           value={exp}
           onChange={setExp}
         />
         <Input
           className="md:col-span-2"
-          placeholder="Enter your card number"
+          placeholder="Card Number"
           value={card}
           onChange={setCard}
         />
@@ -255,16 +260,13 @@ function OrdersCard() {
     (async () => {
       setLoading(true);
       try {
-        // 1) серверна фільтрація (бажано)
         let orders = [];
         if (typeof reqApi.listMine === "function") {
           orders = (await reqApi.listMine({ status: COMPLETED })) || [];
         } else {
-          // fallback на інші варіанти, якщо вони колись будуть
           orders = [];
         }
 
-        // 2) нормалізація
         const normalized = (orders || []).map((o) => {
           const items = safeParseJSON(o.items_json) || [];
           return {
@@ -277,10 +279,10 @@ function OrdersCard() {
           };
         });
 
-        // 3) клієнтський фільтр (на випадок, якщо бек ігнорує параметр)
-        const completedOnly = normalized.filter((o) => o.status === COMPLETED);
+        const completedOnly = normalized.filter(
+          (o) => o.status === COMPLETED
+        );
 
-        // 4) сортування — останні оновлені зверху
         completedOnly.sort((a, b) => {
           const aT = new Date(a.updated_at || a.created_at || 0).getTime();
           const bT = new Date(b.updated_at || b.created_at || 0).getTime();
@@ -298,7 +300,7 @@ function OrdersCard() {
   }, []);
 
   return (
-    <Section title="Your Past Orders">
+    <Section title="Past Orders">
       {loading ? (
         <div className="text-[#6B7280]">Loading…</div>
       ) : list.length === 0 ? (
@@ -310,15 +312,21 @@ function OrdersCard() {
               key={o.id ?? i}
               className={[
                 "w-full rounded-[16px] border px-4 py-3 flex items-center justify-between",
-                i === 0 ? "bg-[#FAF3E6] border-[#F0E1C8]" : "bg-white border-[#EAEAEA]",
+                i === 0
+                  ? "bg-[#FAF3E6] border-[#F0E1C8]"
+                  : "bg-white border-[#EAEAEA]",
               ].join(" ")}
             >
               <div className="min-w-0">
-                <div className="font-semibold text-[#18181B] truncate">{o.title}</div>
+                <div className="font-semibold text-[#18181B] truncate">
+                  {o.title}
+                </div>
                 <div className="text-sm text-[#6B7280]">
                   {formatDate(o.updated_at || o.created_at)}
                 </div>
-                <div className="text-xs text-[#9CA3AF] mt-0.5">Status: done</div>
+                <div className="text-xs text-[#9CA3AF] mt-0.5">
+                  Status: done
+                </div>
               </div>
               <div className="shrink-0 text-sm text-[#111] font-semibold">
                 ${o.total.toFixed(2)}

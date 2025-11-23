@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import carRed from "../../../assets/icons/carred.svg";
 
 const services = [
   {
@@ -105,7 +106,7 @@ Consultation available to determine the best solution for your needs.
     id: 6,
     title: "Other Services",
     shortDescription:
-      "Additional detailing services: Glass Coating, Wheel Coating, Headlight Restoration, Trim Restoration, Decal and Sticker Removal, Window Tinting.",
+      "Glass Coating, Wheel Coating, Headlight Restoration, Trim Restoration, Decal and Sticker Removal, Window Tinting, and more. Complete solutions for all of your vehicle care needs.",
     items: [
       {
         title: "Glass Coating",
@@ -152,7 +153,8 @@ const ServicesProvide = () => {
       {/* Заголовок */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
         <h2 className="text-[28px] sm:text-[36px] md:text-[48px] font-bold text-black">
-          Services We<br /> Provide
+          Services We
+          <br /> Provide
         </h2>
       </div>
 
@@ -163,14 +165,24 @@ const ServicesProvide = () => {
             key={service.id}
             className="flex flex-col bg-[#F5F5F5] rounded-[24px] p-5 md:p-6 min-h-[220px] hover:shadow-lg transition-transform duration-200 hover:scale-[1.01]"
           >
-            <h3
-              className="text-[20px] md:text-[22px] font-bold text-black mb-3"
-              style={{ fontFamily: "Manrope, sans-serif" }}
-            >
-              {service.title}
-            </h3>
+            {/* Іконка над заголовком, без фону */}
+            <div className="flex flex-col items-start mb-4">
+              <img
+                src={carRed}
+                alt=""
+                className="w-12 h-12 md:w-14 md:h-14 object-contain"
+              />
+
+              <h3
+                className="text-[24px] md:text-[36px] font-bold mt-3 text-black"
+                style={{ fontFamily: "Manrope, sans-serif" }}
+              >
+                {service.title}
+              </h3>
+            </div>
+
             <p
-              className="text-[14px] md:text-[15px] text-[#4B4B4F] mb-6 flex-1"
+              className="text-[15px] md:text-[18px] text-[#4B4B4F] mb-6 flex-1"
               style={{ fontFamily: "Manrope, sans-serif" }}
             >
               {service.shortDescription}
@@ -178,7 +190,7 @@ const ServicesProvide = () => {
 
             <button
               onClick={() => openModal(service)}
-              className="flex items-center justify-between w-full h-[44px] md:h-[48px] rounded-[999px] text-[14px] md:text-[15px] px-5 font-semibold mt-auto"
+              className="flex items-center justify-between w-full h-[44px] md:h-[48px] rounded-[999px] text-[15px] md:text-[16px] px-5 font-semibold mt-auto"
               style={{
                 background:
                   "linear-gradient(107.27deg, #8B3434 -27.97%, #A84E4E -12.13%, #F29292 22.69%, #FF9E9E 45.99%, #E17B7B 77.51%)",
@@ -216,9 +228,7 @@ const ServicesProvide = () => {
               {activeService.title}
             </h3>
 
-            {/* Контент модалки */}
             {activeService.id === 6 && activeService.items ? (
-              // Other Services: кожна послуга з нового абзацу, заголовок жирний
               <div className="space-y-5">
                 {activeService.items.map((item) => (
                   <div key={item.title}>
@@ -238,7 +248,6 @@ const ServicesProvide = () => {
                 ))}
               </div>
             ) : (
-              // Інші сервіси: звичайний текст з переносами
               <p
                 className="text-[14px] md:text-[15px] text-[#3F3F46] whitespace-pre-line leading-relaxed"
                 style={{ fontFamily: "Manrope, sans-serif" }}

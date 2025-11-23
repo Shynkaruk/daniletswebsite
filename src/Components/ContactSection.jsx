@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 
 import iconSay from "../assets/icons/icon_say.svg";
 import iconArrow from "../assets/icons/icon_arrow.svg";
@@ -7,7 +7,6 @@ import iconWarning from "../assets/icons/icon_warning.svg";
 import iconWarningRed from "../assets/icons/warning_red_icon.svg";
 import iconSayRed from "../assets/icons/information_red_icon.svg";
 import iconWarningGreen from "../assets/icons/iconWarningGreen.svg";
-import iconSayGreen from "../assets/icons/iconSayGreen.svg";
 import arrow from "../assets/icons/arrow_right_button_sumbit_icon.svg";
 
 const ContactSection = () => {
@@ -16,10 +15,8 @@ const ContactSection = () => {
   const isDetailingPage = location.pathname.startsWith("/services/detailing");
   const isCleaningPage = location.pathname.startsWith("/services/cleaning");
 
-  // 🎨 Кольори та іконки для різних сторінок
   const theme = isDetailingPage
     ? {
-        // Detailing (червона тема)
         badgeBg: "#FF525226",
         infoBg: "#FF525226",
         focus: "#FF9E9E",
@@ -30,7 +27,6 @@ const ContactSection = () => {
       }
     : isCleaningPage
     ? {
-        // Cleaning (червона тема як Detailing)
         badgeBg: "#FF525226",
         infoBg: "#FF525226",
         focus: "#FF9E9E",
@@ -40,7 +36,6 @@ const ContactSection = () => {
         iconWarning: iconWarningRed,
       }
     : {
-        // Базова (золота) тема для інших сторінок
         badgeBg: "rgba(235,176,108,0.25)",
         infoBg: "rgba(235,176,108,0.25)",
         focus: "#EBAE6C",
@@ -50,7 +45,6 @@ const ContactSection = () => {
         iconWarning: iconWarning,
       };
 
-  // 🧾 Стейт форми
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -59,15 +53,10 @@ const ContactSection = () => {
     message: "",
   });
 
-  // 🧯 Стейт помилок
-  const [errors, setErrors] = useState({
-    contact: "", // помилка по звʼязку (phone/email)
-  });
-
+  const [errors, setErrors] = useState({ contact: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
 
-  // Оновлення полів
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -76,47 +65,34 @@ const ContactSection = () => {
       [name]: value,
     }));
 
-    // очищаємо помилку, якщо юзер щось ввів
-    setErrors((prev) => ({
-      ...prev,
-      contact: "",
-    }));
+    setErrors((prev) => ({ ...prev, contact: "" }));
     setSent(false);
   };
 
-  // Сабміт форми
   const handleSubmit = (e) => {
     e.preventDefault();
     setSent(false);
 
     const newErrors = {};
 
-    // Валідація: має бути хоча б телефон АБО email
     if (!formData.phone.trim() && !formData.email.trim()) {
       newErrors.contact = "Please provide at least a phone number or email.";
     }
 
-    // Якщо є помилки — показуємо й не відправляємо форму
     if (Object.keys(newErrors).length > 0) {
       setErrors((prev) => ({ ...prev, ...newErrors }));
       return;
     }
 
-    // Якщо помилок немає — тут можна відправити на бекенд
     setIsSubmitting(true);
 
-    // Імітація відправки
     setTimeout(() => {
       console.log("Form submitted:", formData);
       setIsSubmitting(false);
       setSent(true);
-
-      // за бажанням можна очистити форму
-      // setFormData({ firstName: "", lastName: "", phone: "", email: "", message: "" });
     }, 500);
   };
 
-  // Базові класи для інпутів
   const inputBase =
     "h-12 px-4 rounded-[20px] bg-[#efefef] text-[15px] placeholder:text-[#a0a0a0] focus:outline-none";
 
@@ -124,9 +100,10 @@ const ContactSection = () => {
     <section className="px-5 md:px-10 lg:px-20 py-10 lg:py-16 md:-mt-15">
       <div className="mx-auto max-w-[1440px]">
         <div className="lg:grid lg:grid-cols-12 lg:gap-12 items-center">
-          {/* Ліва частина */}
+          
+          {/* LEFT SIDE */}
           <div className="max-w-[560px] lg:col-span-5">
-            {/* Badge */}
+
             <div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
               style={{ background: theme.badgeBg }}
@@ -143,27 +120,26 @@ const ContactSection = () => {
               Danilets Difference
             </h2>
 
+            {/* 27 — FIXED TEXT */}
             <p className="mt-4 text-[15px] leading-6 text-[#6b6b6b] max-w-[520px]">
-              Interested in our detailing services? Fill out your information
+              Interested in our cleaning services? Fill out your information
               and let us know how we can help. We&apos;ll get back to you
               promptly.
             </p>
 
-            <p className="mt-2 text-[13px] leading-5 text-[#8a8a8a] max-w-[520px]">
-              Note: This is NOT a subscription section – it&apos;s for people to
-              reach out about services.
-            </p>
+            {/* 28 — NOTE REMOVED */}
 
-            <a
-              href="#about"
+            {/* 29 — BUTTON FIXED */}
+            <Link
+              to="/about-us"
               className="mt-6 inline-flex items-center gap-2 px-5 py-3 rounded-full bg-white border border-neutral-300 shadow-sm text-base font-semibold text-black hover:bg-neutral-100 transition"
             >
               About Us
               <img src={iconArrow} alt="" className="w-4 h-4" />
-            </a>
+            </Link>
           </div>
 
-          {/* Права частина */}
+          {/* RIGHT SIDE — FORM */}
           <div className="mt-8 lg:mt-0 lg:col-span-7">
             <div className="bg-white rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.08)] p-5 sm:p-7 lg:p-10">
               <h3 className="text-[28px] sm:text-[32px] font-extrabold text-black mb-6">
@@ -175,6 +151,7 @@ const ContactSection = () => {
                 onSubmit={handleSubmit}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4"
               >
+
                 {/* First Name */}
                 <input
                   type="text"
@@ -183,13 +160,6 @@ const ContactSection = () => {
                   value={formData.firstName}
                   onChange={handleChange}
                   className={inputBase}
-                  style={{ transition: "0.2s" }}
-                  onFocus={(e) =>
-                    (e.target.style.boxShadow = `0 0 0 2px ${theme.focus}`)
-                  }
-                  onBlur={(e) =>
-                    (e.target.style.boxShadow = "0 0 0 2px transparent")
-                  }
                 />
 
                 {/* Last Name */}
@@ -200,16 +170,9 @@ const ContactSection = () => {
                   value={formData.lastName}
                   onChange={handleChange}
                   className={inputBase}
-                  style={{ transition: "0.2s" }}
-                  onFocus={(e) =>
-                    (e.target.style.boxShadow = `0 0 0 2px ${theme.focus}`)
-                  }
-                  onBlur={(e) =>
-                    (e.target.style.boxShadow = "0 0 0 2px transparent")
-                  }
                 />
 
-                {/* Phone Number */}
+                {/* Phone */}
                 <input
                   type="tel"
                   name="phone"
@@ -219,13 +182,6 @@ const ContactSection = () => {
                   className={`${inputBase} lg:col-span-2 ${
                     errors.contact ? "border border-red-500" : ""
                   }`}
-                  style={{ transition: "0.2s" }}
-                  onFocus={(e) =>
-                    (e.target.style.boxShadow = `0 0 0 2px ${theme.focus}`)
-                  }
-                  onBlur={(e) =>
-                    (e.target.style.boxShadow = "0 0 0 2px transparent")
-                  }
                 />
 
                 {/* Email */}
@@ -238,21 +194,11 @@ const ContactSection = () => {
                   className={`${inputBase} lg:col-span-2 ${
                     errors.contact ? "border border-red-500" : ""
                   }`}
-                  style={{ transition: "0.2s" }}
-                  onFocus={(e) =>
-                    (e.target.style.boxShadow = `0 0 0 2px ${theme.focus}`)
-                  }
-                  onBlur={(e) =>
-                    (e.target.style.boxShadow = "0 0 0 2px transparent")
-                  }
                 />
 
-                {/* Повідомлення про помилку під phone/email */}
                 {errors.contact && (
                   <div className="lg:col-span-2">
-                    <p className="text-sm text-red-600">
-                      {errors.contact}
-                    </p>
+                    <p className="text-sm text-red-600">{errors.contact}</p>
                   </div>
                 )}
 
@@ -263,16 +209,9 @@ const ContactSection = () => {
                   value={formData.message}
                   onChange={handleChange}
                   className="lg:col-span-2 min-h-[96px] px-4 py-3 rounded-[20px] bg-[#efefef] text-[15px] placeholder:text-[#a0a0a0] focus:outline-none resize-none"
-                  style={{ transition: "0.2s" }}
-                  onFocus={(e) =>
-                    (e.target.style.boxShadow = `0 0 0 2px ${theme.focus}`)
-                  }
-                  onBlur={(e) =>
-                    (e.target.style.boxShadow = "0 0 0 2px transparent")
-                  }
                 />
 
-                {/* Info badge */}
+                {/* Info */}
                 <div
                   className="lg:col-span-2 flex items-center gap-3 px-4 py-3 rounded-[16px]"
                   style={{ background: theme.infoBg }}
@@ -284,7 +223,6 @@ const ContactSection = () => {
                   </span>
                 </div>
 
-                {/* Success message (опційно) */}
                 {sent && (
                   <div className="lg:col-span-2 flex items-center gap-3 px-4 py-3 rounded-[16px] bg-[#ecfdf3]">
                     <img src={iconWarningGreen} alt="" className="w-6 h-6" />
@@ -307,6 +245,7 @@ const ContactSection = () => {
               </form>
             </div>
           </div>
+
         </div>
       </div>
     </section>

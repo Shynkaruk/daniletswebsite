@@ -1,5 +1,6 @@
 // src/pages/Booking.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "./Head";
 import Footer from "./Footer";
 import fon_booking from "../assets/photo/fon_booking.png";
@@ -15,7 +16,7 @@ import Step7ContactDetails from "../Components/Booking/Step7ContactDetails";
 import Step8Checkout from "../Components/Booking/Step8Checkout";
 import StepCleaningDetails from "../Components/Booking/Cleaning/StepCleaningDetails";
 
-/** ======= Google Places loader (без сторонніх бібліотек) ======= */
+/** ======= Google Places loader (no external libs) ======= */
 function useGooglePlaces({
   language = "en",
   region = "US",
@@ -101,21 +102,24 @@ function useGooglePlaces({
 const CATEGORY_TABS = [
   { label: "Cleaning", key: "cleaning" },
   { label: "Detailing", key: "detailing" },
-  { label: "Media", key: "media" },
-  { label: "Pickleball", key: "pickleball" },
 ];
 
 const TAX_RATE = 0.07;
 
+const GOLD_GRADIENT =
+  "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
+
 const Booking = () => {
+  const navigate = useNavigate();
+
   const tabs = CATEGORY_TABS.map((t) => t.label);
-  const [active, setActive] = useState(tabs[0]); // стартуємо з Cleaning
+  const [active, setActive] = useState(tabs[0]); // default: Cleaning
   const activeKey = useMemo(
     () => CATEGORY_TABS.find((t) => t.label === active)?.key || "",
     [active]
   );
 
-  // Головний step (1–8)
+  // Main step (1–8)
   const [step, setStep] = useState(1);
 
   // Google Places
@@ -268,7 +272,7 @@ const Booking = () => {
   const [comBudget, setComBudget] = useState("");
   const [comExtraDetails, setComExtraDetails] = useState("");
 
-  /** ---------- SERVICES FROM DB (для активної категорії) ---------- */
+  /** ---------- SERVICES FROM DB (for active category) ---------- */
   const [servicesDb, setServicesDb] = useState([]);
   const [addonsDb, setAddonsDb] = useState([]);
   const [loadingServices, setLoadingServices] = useState(false);
@@ -384,10 +388,27 @@ const Booking = () => {
   const tax = +(subTotal * TAX_RATE).toFixed(2);
   const total = +(subTotal + tax + tip).toFixed(2);
 
-  // ========= Інтеграція із заявками =========
+  // ========= Requests integration =========
   const user = auth.getUser();
   const isLoggedIn = !!user;
   const [submitting, setSubmitting] = useState(false);
+
+  // Success modal state
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [lastRequestId, setLastRequestId] = useState(null);
+
+  // Info/error modal state
+  const [infoModal, setInfoModal] = useState({
+    open: false,
+    title: "",
+    message: "",
+  });
+
+  const openInfoModal = (title, message) =>
+    setInfoModal({ open: true, title, message });
+
+  const closeInfoModal = () =>
+    setInfoModal((prev) => ({ ...prev, open: false }));
 
   useEffect(() => {
     let ignore = false;
@@ -494,20 +515,36 @@ const Booking = () => {
 
   async function submitRequest() {
     if (submitting) return;
+
     if (!isLoggedIn) {
-      alert("Щоб надіслати заявку, увійдіть у свій акаунт.");
+      openInfoModal(
+        "Sign in required",
+        "Please sign in to your account before submitting a booking request."
+      );
       return;
     }
+
     if (!canContinueContact) {
-      alert("Заповніть, будь ласка, контактні дані.");
+      openInfoModal(
+        "Contact details incomplete",
+        "Please fill in all required contact fields (name, phone, email) before submitting."
+      );
       return;
     }
+
     if (!selectedServiceObj && activeKey !== "cleaning") {
-      alert("Будь ласка, виберіть послугу.");
+      openInfoModal(
+        "Service not selected",
+        "Please select a service package before submitting your booking."
+      );
       return;
     }
+
     if (activeKey === "detailing" && !canContinueVehicle) {
-      alert("Заповніть, будь ласка, інформацію про авто.");
+      openInfoModal(
+        "Vehicle details incomplete",
+        "Please provide valid vehicle details (year, make, model) before submitting."
+      );
       return;
     }
 
@@ -518,7 +555,7 @@ const Booking = () => {
       const items = buildItems();
 
       const notesParts = [
-        `Booked via website`,
+        "Booked via website",
         `Category: ${activeKey}`,
         selectedServiceObj ? `Service: ${selectedServiceObj.title}` : null,
       ];
@@ -542,8 +579,7 @@ const Booking = () => {
               `Bedrooms: ${bedrooms || 0}, Bathrooms: ${bathrooms || 0}`
             );
           }
-          if (areas.length)
-            notesParts.push(`Areas: ${areas.join(", ")}`);
+          if (areas.length) notesParts.push(`Areas: ${areas.join(", ")}`);
           if (generalTasks.length)
             notesParts.push(`Tasks: ${generalTasks.join(", ")}`);
           if (kitchenTasks.length)
@@ -594,14 +630,15 @@ const Booking = () => {
       };
 
       const saved = await reqApi.saveMine(payload);
-      const msg =
-        activeKey === "cleaning"
-          ? `✅ Заявка на прибирання створена (#${saved.id}). Ми з вами звʼяжемося найближчим часом.`
-          : `✅ Заявка створена (#${saved.id}). Ми звʼяжемось із вами найближчим часом.`;
-      alert(msg);
+
+      setLastRequestId(saved?.id || null);
+      setShowSuccessModal(true);
     } catch (e) {
-      const m = e?.error || e?.message || "Failed to submit";
-      alert("❌ Помилка надсилання: " + m);
+      const m = e?.error || e?.message || "Failed to submit booking.";
+      openInfoModal(
+        "Submission failed",
+        `Something went wrong while submitting your booking request. ${m}`
+      );
     } finally {
       setSubmitting(false);
     }
@@ -630,7 +667,7 @@ const Booking = () => {
             Book with Danilets
           </h1>
 
-          {/* Tabs — тільки на першому кроці */}
+          {/* Tabs – only on step 1 */}
           {step === 1 && (
             <div className="w-full max-w-[100vw] -mx-4 px-4 overflow-x-auto touch-pan-x mb-6">
               <div className="w-max inline-flex items-center bg-[#F2F2F2]/90 rounded-full p-1 gap-2 whitespace-nowrap">
@@ -670,8 +707,7 @@ const Booking = () => {
             <StepCleaningDetails
               visible={step === 2}
               onBack={() => setStep(1)}
-              onNext={() => setStep(7)} // одразу до контакту
-
+              onNext={() => setStep(7)} // straight to contact
               propertyType={propertyType}
               setPropertyType={setPropertyType}
               projectType={projectType}
@@ -711,6 +747,7 @@ const Booking = () => {
               serviceType={serviceType}
               setServiceType={setServiceType}
               onNext={() => (serviceType === "shop" ? setStep(3) : setStep(4))}
+              onBack={() => setStep(1)}
             />
           )}
 
@@ -743,7 +780,7 @@ const Booking = () => {
             onBack={() => setStep(serviceType === "shop" ? 3 : 2)}
           />
 
-          {/* STEP 5: Select Service (тільки Detailing) */}
+          {/* STEP 5: Select Service (Detailing only) */}
           <Step5SelectService
             visible={step === 5 && !isCleaning}
             servicesDb={servicesDb}
@@ -755,7 +792,7 @@ const Booking = () => {
             onBack={() => setStep(4)}
           />
 
-          {/* STEP 6: Add Ons (тільки Detailing) */}
+          {/* STEP 6: Add Ons (Detailing only) */}
           <Step6AddOns
             visible={step === 6 && !isCleaning}
             addonsDb={addonsDb}
@@ -766,7 +803,7 @@ const Booking = () => {
             onBack={() => setStep(5)}
           />
 
-          {/* STEP 7: Contact Details (обидва флоу) */}
+          {/* STEP 7: Contact Details (both flows) */}
           <Step7ContactDetails
             visible={step === 7}
             firstName={firstName}
@@ -782,8 +819,8 @@ const Booking = () => {
             canContinueContact={canContinueContact}
             onNext={() => setStep(8)}
             onBack={() => (isCleaning ? setStep(2) : setStep(6))}
-            // прогрес: 4 сегменти для Cleaning, 6 — для Detailing
             progressActive={isCleaning ? 4 : 6}
+            user={user}
           />
 
           {/* STEP 8: Checkout / Submit */}
@@ -834,6 +871,67 @@ const Booking = () => {
       <div className="mt-12">
         <Footer />
       </div>
+
+      {/* Info / error modal */}
+      {infoModal.open && (
+        <div className="fixed inset-0 z-[9998] bg-black/40 flex items-center justify-center px-4">
+          <div className="bg-white rounded-2xl shadow-lg max-w-sm w-full p-6 sm:p-7 text-center space-y-4">
+            <h3 className="text-xl font-bold text-[#18181B]">
+              {infoModal.title}
+            </h3>
+            <p className="text-sm text-[#4B5563] whitespace-pre-line">
+              {infoModal.message}
+            </p>
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={closeInfoModal}
+                className="w-full h-[44px] rounded-full border border-[#D4D4D8] text-sm font-semibold text-[#18181B]"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center px-4">
+          <div className="bg-white rounded-2xl shadow-lg max-w-sm w-full p-6 sm:p-8 text-center space-y-4">
+            <h3 className="text-xl font-bold text-[#18181B]">
+              Booking request submitted
+            </h3>
+            <p className="text-sm text-[#4B5563]">
+              {activeKey === "cleaning"
+                ? `Your cleaning request${
+                    lastRequestId ? ` (#${lastRequestId})` : ""
+                  } has been submitted. Our team will contact you shortly to confirm the details.`
+                : `Your detailing booking${
+                    lastRequestId ? ` (#${lastRequestId})` : ""
+                  } has been submitted. Our team will contact you shortly to confirm your appointment.`}
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3 mt-2">
+              <button
+                type="button"
+                onClick={() => setShowSuccessModal(false)}
+                className="flex-1 h-[44px] rounded-full border border-[#D4D4D8] text-sm font-semibold text-[#18181B]"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/")}
+                className="flex-1 h-[44px] rounded-full text-sm font-semibold text-black"
+                style={{ background: GOLD_GRADIENT }}
+              >
+                Go to homepage
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

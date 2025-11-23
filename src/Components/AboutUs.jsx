@@ -19,7 +19,6 @@ const AboutUs = () => {
       <AboutUsTeam></AboutUsTeam>
       <div className='mt-10 md:mx-3'>
         <OurCoreValues></OurCoreValues>
-        <OurReviewsStrip></OurReviewsStrip>
       </div>
         <ContactSection></ContactSection>
         <FAQ></FAQ>

@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import bg_detaling from "../assets/photo/bg2_mobile_detailing.png";
 import bg_cleaining from "../assets/photo/cleaningn_bg.png";
 
-import diamondicon from "../assets/icons/diamond-icon.png";
+import diamondicon from "../assets/icons/diamond-icon.svg";
 import OurPortfolio from "./OurPortfolio.jsx";
 import OurCoreValues from "./OurCoreValues.jsx";
 import OurReviews from "./OurReviews.jsx";

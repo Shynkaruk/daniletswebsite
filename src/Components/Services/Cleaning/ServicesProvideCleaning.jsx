@@ -68,11 +68,10 @@ const ServicesProvideCleaning = () => {
       <div className="w-[min(1600px,100%)] mx-auto px-4 md:px-8">
 
         {/* Контейнер із картками */}
-        <div className="relative z-10 -mt-10 md:-mt-50 bg-white rounded-[32px] px-4 py-6 md:px-10 md:py-10 shadow-sm">
-          <h2 className="text-[24px] md:text-[36px] font-semibold mb-6 md:mb-10">
-            Services we provide
-          </h2>
-
+        <div className="relative z-10 -mt-10 md:-mt-60 bg-white rounded-[32px] px-4 py-6 md:px-10 md:py-10 shadow-sm">
+        <h2 className="text-[28px] sm:text-[36px] md:text-[48px] font-bold text-black">
+          Services We<br /> Provide
+        </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
             {cleaningServices.map((service) => (
               <button

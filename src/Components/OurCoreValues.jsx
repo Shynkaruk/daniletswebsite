@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import IconGuard from "../assets/icons/icon-guard.png";
+import IconGuard from "../assets/icons/icon-guard.svg";
 import ArrowUpRightIcon from "../assets/icons/arrows/arrow-up-right.svg";
 
 const coreValues = [

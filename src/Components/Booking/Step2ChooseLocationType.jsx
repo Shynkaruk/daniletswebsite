@@ -1,6 +1,7 @@
 // src/components/booking/Step2ChooseLocationType.jsx
 import React from "react";
 import { FiAlertTriangle } from "react-icons/fi";
+import { FiChevronLeft } from "react-icons/fi";
 import { LuTruck, LuStore } from "react-icons/lu";
 import ProgressBar from "./ProgressBar";
 
@@ -12,6 +13,7 @@ const Step2ChooseLocationType = ({
   serviceType,
   setServiceType,
   onNext,
+  onBack, // ✅ додаємо проп для кроку назад
 }) => {
   if (!visible) return null;
 
@@ -21,16 +23,27 @@ const Step2ChooseLocationType = ({
   return (
     <div className="w-full max-w-full min-w-0 space-y-4 text-left">
       <div className="bg-white/90 backdrop-blur rounded-[24px] p-4 sm:p-5 shadow space-y-4">
+        {/* ======== HEADER ЗІ СТРІЛКОЮ НАЗАД ======== */}
         <div className="flex items-center gap-3">
-          <span className="w-6 h-6 rounded-full border-2 border-[#E5E7EB] bg-white inline-block" />
+          <button
+            onClick={onBack}
+            className="w-9 h-9 rounded-full bg-[#F2F2F2] inline-flex items-center justify-center"
+            aria-label="Back"
+          >
+            <FiChevronLeft className="text-[18px] text-[#18181B]" />
+          </button>
+
           <h2 className="text-[18px] sm:text-[20px] font-extrabold text-[#18181B]">
             Choose Locations
           </h2>
         </div>
 
+        {/* ======== PROGRESS BAR ======== */}
         <ProgressBar activeCount={1} />
 
+        {/* ======== OPTIONS ======== */}
         <div className="space-y-3">
+          {/* Mobile Service */}
           <button
             onClick={() => setServiceType("mobile")}
             aria-pressed={serviceType === "mobile"}
@@ -45,14 +58,13 @@ const Step2ChooseLocationType = ({
             </div>
             <span
               className={`w-7 h-7 rounded-full flex items-center justify-center
-                ${
-                  serviceType === "mobile" ? "bg-[#E7D3A3]" : "bg-[#EFEFEF]"
-                }`}
+                ${serviceType === "mobile" ? "bg-[#E7D3A3]" : "bg-[#EFEFEF]"}`}
             >
               {serviceType === "mobile" ? "✓" : ""}
             </span>
           </button>
 
+          {/* Shop Service */}
           <button
             onClick={() => setServiceType("shop")}
             aria-pressed={serviceType === "shop"}
@@ -67,14 +79,13 @@ const Step2ChooseLocationType = ({
             </div>
             <span
               className={`w-7 h-7 rounded-full flex items-center justify-center
-                ${
-                  serviceType === "shop" ? "bg-[#E7D3A3]" : "bg-[#EFEFEF]"
-                }`}
+                ${serviceType === "shop" ? "bg-[#E7D3A3]" : "bg-[#EFEFEF]"}`}
             >
               {serviceType === "shop" ? "✓" : ""}
             </span>
           </button>
 
+          {/* Warning */}
           <div className="w-full rounded-[16px] px-3 py-3 bg-[#FFF7E5] border border-[#FDE68A] text-[#6B4E15] text-[14px] leading-snug flex items-start gap-3">
             <span className="inline-flex items-center justify-center w-6 h-6 shrink-0">
               <FiAlertTriangle className="text-[18px]" />
@@ -85,6 +96,7 @@ const Step2ChooseLocationType = ({
           </div>
         </div>
 
+        {/* ======== CONTINUE BUTTON ======== */}
         <button
           onClick={onNext}
           className="w-full h-[52px] rounded-[88px] font-semibold text-black shadow inline-flex items-center justify-center gap-2"

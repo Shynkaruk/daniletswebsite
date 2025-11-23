@@ -1,5 +1,5 @@
 // src/Components/Booking/Step7ContactDetails.jsx
-import React from "react";
+import React, { useState } from "react";
 import { FiChevronLeft } from "react-icons/fi";
 import DatePicker from "./DatePicker";
 
@@ -14,20 +14,34 @@ const Step7ContactDetails = ({
   setLastName,
   phone,
   setPhone,
-  birthday,
-  setBirthday,
   email,
   setEmail,
   canContinueContact,
   onNext,
   onBack,
-  progressActive = 6, // для Cleaning 4, для Detailing 6
+  progressActive = 6,
+  user = null,             // <--- Додаємо (передаватимемо з Booking.jsx)
 }) => {
   if (!visible) return null;
+
+  const isLoggedIn = !!user;
+
+  // показувати форму чи картку
+  const [enterNew, setEnterNew] = useState(false);
+
+  // Якщо юзер залогінений і НЕ натиснув "Enter new details" → показуємо картку
+  const showAccountCard = isLoggedIn && !enterNew;
+
+  const handleUseAccount = () => {
+    // дані вже підставлені з useEffect у Booking.jsx
+    onNext();
+  };
 
   return (
     <div className="w-full max-w-full min-w-0 text-left">
       <div className="bg-white/90 backdrop-blur rounded-[24px] p-4 sm:p-5 shadow space-y-4">
+
+        {/* HEADER */}
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}
@@ -37,11 +51,11 @@ const Step7ContactDetails = ({
             <FiChevronLeft className="text-[18px] text-[#18181B]" />
           </button>
           <h2 className="text-[20px] sm:text-[22px] font-extrabold text-[#18181B]">
-            Your Contact Details
+            Contact Details
           </h2>
         </div>
 
-        {/* Прогрес */}
+        {/* PROGRESS */}
         <div className="flex items-center gap-2">
           {Array.from({ length: 6 }).map((_, i) => (
             <span
@@ -54,52 +68,86 @@ const Step7ContactDetails = ({
           ))}
         </div>
 
-        <div className="space-y-3">
-          <input
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            placeholder="Enter your first name"
-            className="w-full h-[56px] rounded-[16px] bg-[#F4F4F5] px-4 text-[16px] outline-none"
-          />
-          <input
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            placeholder="Enter your last name"
-            className="w-full h-[56px] rounded-[16px] bg-[#F4F4F5] px-4 text-[16px] outline-none"
-          />
-          <input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            type="tel"
-            placeholder="Enter your phone number"
-            className="w-full h-[56px] rounded-[16px] bg-[#F4F4F5] px-4 text-[16px] outline-none"
-          />
-          <DatePicker
-            label={null} // лейбл уже є в заголовку блоку, якщо потрібно – додай
-            value={birthday}
-            onChange={setBirthday}
-            placeholder="Your birthday"
-            disableFuture={true} // дня народження в майбутньому не даємо вибрати
-          />
+        {/* ======= КАРТКА ЗАЛОГІНЕНОГО КОРИСТУВАЧА ======= */}
+        {showAccountCard && (
+          <div className="space-y-4">
 
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            type="email"
-            placeholder="Enter your email"
-            className="w-full h-[56px] rounded-[16px] bg-[#F4F4F5] px-4 text-[16px] outline-none"
-          />
-        </div>
+            <div className="w-full rounded-[20px] border border-[#E5E7EB] bg-white p-4 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-[#F4F4F5] flex items-center justify-center text-[20px] font-bold text-[#18181B]">
+                {firstName?.[0] || "U"}
+              </div>
 
-        <button
-          onClick={onNext}
-          disabled={!canContinueContact}
-          className={`w-full h-[52px] rounded-[88px] font-semibold text-black shadow inline-flex items-center justify-center gap-2
-            ${!canContinueContact ? "opacity-60 cursor-not-allowed" : ""}`}
-          style={{ background: GOLD_GRADIENT }}
-        >
-          Continue <span className="text-lg">›</span>
-        </button>
+              <div className="flex flex-col">
+                <span className="text-[16px] font-semibold text-[#18181B]">
+                  {firstName} {lastName}
+                </span>
+                <span className="text-[14px] text-[#4B5563]">{email}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={handleUseAccount}
+              className="w-full h-[52px] rounded-[88px] font-semibold text-black shadow"
+              style={{ background: GOLD_GRADIENT }}
+            >
+              Use this account
+            </button>
+
+            <button
+              onClick={() => setEnterNew(true)}
+              className="w-full h-[52px] rounded-[88px] font-semibold text-[#18181B] border border-[#D4D4D8]"
+            >
+              Enter new details
+            </button>
+          </div>
+        )}
+
+        {/* ======= ФОРМА ВВОДУ (нові дані або не залогінений) ======= */}
+        {!showAccountCard && (
+          <>
+            <div className="space-y-3">
+              <input
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="First name"
+                className="w-full h-[56px] rounded-[16px] bg-[#F4F4F5] px-4 text-[16px] outline-none"
+              />
+
+              <input
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Last name"
+                className="w-full h-[56px] rounded-[16px] bg-[#F4F4F5] px-4 text-[16px] outline-none"
+              />
+
+              <input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                type="tel"
+                placeholder="Phone number"
+                className="w-full h-[56px] rounded-[16px] bg-[#F4F4F5] px-4 text-[16px] outline-none"
+              />
+
+              <input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                type="email"
+                placeholder="Email"
+                className="w-full h-[56px] rounded-[16px] bg-[#F4F4F5] px-4 text-[16px] outline-none"
+              />
+            </div>
+
+            <button
+              onClick={onNext}
+              disabled={!canContinueContact}
+              className={`w-full h-[52px] rounded-[88px] font-semibold text-black shadow inline-flex items-center justify-center gap-2
+                ${!canContinueContact ? "opacity-60 cursor-not-allowed" : ""}`}
+              style={{ background: GOLD_GRADIENT }}
+            >
+              Continue <span className="text-lg">›</span>
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
