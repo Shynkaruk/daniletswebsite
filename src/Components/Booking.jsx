@@ -100,8 +100,8 @@ function useGooglePlaces({
 /** ======= /loader ======= */
 
 const CATEGORY_TABS = [
-  { label: "Cleaning", key: "cleaning" },
   { label: "Detailing", key: "detailing" },
+  { label: "Cleaning", key: "cleaning" },
 ];
 
 const TAX_RATE = 0.07;
