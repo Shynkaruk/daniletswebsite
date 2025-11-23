@@ -310,25 +310,37 @@ const Booking = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeKey]);
 
-  useEffect(() => {
-    let ignore = false;
-    (async () => {
-      setLoadingAddons(true);
-      try {
-        const ad = await cardsApi.list({
-          type: "addon",
-          published: 1,
-          category: activeKey,
-        });
-        if (!ignore) setAddonsDb(Array.isArray(ad) ? ad : []);
-      } finally {
-        if (!ignore) setLoadingAddons(false);
+useEffect(() => {
+  let ignore = false;
+
+  (async () => {
+    setLoadingAddons(true);
+    try {
+      // Add-ons потрібні тільки для Detailing
+      if (activeKey !== "detailing") {
+        if (!ignore) setAddonsDb([]);
+        return;
       }
-    })();
-    return () => {
-      ignore = true;
-    };
-  }, [activeKey]);
+
+      const ad = await cardsApi.list({
+        type: "service",
+        published: 1,
+        slug: "detailing_addon", // 🔑 наш slug для додаткових послуг
+      });
+
+      if (!ignore) {
+        setAddonsDb(Array.isArray(ad) ? ad : []);
+      }
+    } finally {
+      if (!ignore) setLoadingAddons(false);
+    }
+  })();
+
+  return () => {
+    ignore = true;
+  };
+}, [activeKey]);
+
 
   const [selectedAddOns, setSelectedAddOns] = useState(new Set());
 

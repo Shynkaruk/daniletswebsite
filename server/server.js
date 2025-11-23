@@ -611,16 +611,33 @@ app.delete("/api/content/:id", auth, requireAdmin, async (req, res) => {
 
 // GET відкриті
 app.get("/api/cards", async (req, res) => {
-  const { type, published } = req.query;
+  const { type, published, slug, slug_in } = req.query;
 
   try {
     const filter = {};
     if (type) filter.type = type;
     if (published != null) filter.published = !!Number(published);
 
+    // 🔹 фільтр по одному slug
+    if (slug) {
+      filter.slug = slug;
+    }
+
+    // 🔹 опціонально: кілька slug через кому: ?slug_in=detailing,detailing_addon
+    if (slug_in) {
+      const list = String(slug_in)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (list.length) {
+        filter.slug = { $in: list };
+      }
+    }
+
     const rows = await Card.find(filter)
       .sort({ sort_order: 1, _id: -1 })
       .lean();
+
     const normalized = rows.map((r) => ({
       ...r,
       id: r._id.toString(),
@@ -632,6 +649,7 @@ app.get("/api/cards", async (req, res) => {
     res.status(500).json({ error: "failed to load cards" });
   }
 });
+
 
 // Запис/оновлення/видалення — лише admin
 app.post("/api/cards", auth, requireAdmin, async (req, res) => {
