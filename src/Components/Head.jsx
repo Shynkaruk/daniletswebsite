@@ -24,8 +24,8 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
   return (
     <div className="block md:hidden w-full">
       {/* Бар: в межах вікна, з безпечними полями */}
-      <div className="relative left-1/2 -translate-x-1/2 w-[min(1800px,calc(100vw-32px))] px-4">
-        <div className="flex items-center justify-between w-full mx-auto px-3 py-2 rounded-full bg-white shadow-md">
+      <div className="relative left-1/2 -translate-x-1/2 w-[min(1800px,calc(100vw-4px))] px-4">
+        <div className="flex items-center justify-between w-full mx-auto px-2 py-2 rounded-full bg-white shadow-md">
           {/* Burger */}
           <button
             onClick={toggleMenu}
@@ -40,7 +40,7 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
             <img
               src={logo}
               alt="Logo"
-              className="h-[30px] object-contain pr-5 scale-110"
+              className="h-[30px] object-contain pr-0 scale-110"
             />
           </Link>
 

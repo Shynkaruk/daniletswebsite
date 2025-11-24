@@ -15,7 +15,7 @@ const Detailing = () => {
       }}
     >
       {/* Фон — мобільний */}
-      <div className="absolute inset-0 z-0 pointer-events-none md:hidden flex justify-end items-end">
+      <div className="absolute bottom-10 inset-0 z-0 pointer-events-none md:hidden flex justify-end items-end">
         <img
           src={bgImageMobile}
           alt="Mobile background"
@@ -44,7 +44,7 @@ const Detailing = () => {
           <img
             src={LogoRed}
             alt="Danilets Logo"
-            className="w-[420px] md:w-[720px] mb-12 object-contain"
+            className="w-[600px] md:w-[720px] mb-7 object-contain"
           />
           {/* Опис */}
           <p

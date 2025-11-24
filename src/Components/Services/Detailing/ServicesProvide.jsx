@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import carRed from "../../../assets/icons/carred.svg";
 
 const services = [
@@ -148,6 +148,24 @@ const ServicesProvide = () => {
   const openModal = (service) => setActiveService(service);
   const closeModal = () => setActiveService(null);
 
+  // Лочимо скрол сторінки на мобайлі, коли модалка відкрита
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const isMobile = window.innerWidth <= 768;
+
+    if (activeService && isMobile) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev || "";
+      };
+    }
+
+    if (!activeService && isMobile) {
+      document.body.style.overflow = "";
+    }
+  }, [activeService]);
+
   return (
     <section className="relative w-[95%] max-w-[1792px] mx-auto bg-white rounded-[32px] py-10 px-4 md:px-10 shadow-md">
       {/* Заголовок */}
@@ -165,7 +183,6 @@ const ServicesProvide = () => {
             key={service.id}
             className="flex flex-col bg-[#F5F5F5] rounded-[24px] p-5 md:p-6 min-h-[220px] hover:shadow-lg transition-transform duration-200 hover:scale-[1.01]"
           >
-            {/* Іконка над заголовком, без фону */}
             <div className="flex flex-col items-start mb-4">
               <img
                 src={carRed}
@@ -197,17 +214,39 @@ const ServicesProvide = () => {
                 fontFamily: "Manrope, sans-serif",
               }}
             >
-              Learn More
-              <span className="text-lg">↗</span>
+              <span>Learn More</span>
+
+              {/* мобайл: svg-стрілка */}
+              <span className="inline md:hidden">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M7 17L17 7" />
+                  <path d="M9 7H17V15" />
+                </svg>
+              </span>
+
+              {/* ПК: залишається як було */}
+              <span className="hidden md:inline text-lg">↗</span>
             </button>
           </div>
         ))}
       </div>
 
-      {/* Модальне вікно */}
+      {/* Модалка */}
       {activeService && (
         <div
-          className="fixed top-[100px] left-0 right-0 bottom-0 z-[999] flex items-start justify-center bg-black/60 px-4 pt-4 md:pt-6"
+          // мобайл: перекриваємо весь екран (включно з Head), фон затемнений + blur
+          // ПК: top на 100px як і було раніше
+          className="fixed left-0 right-0 bottom-0 top-0 md:top-[100px] z-[999] flex items-start justify-center bg-black/50 backdrop-blur-sm px-4 pt-20 md:pt-6"
           onClick={closeModal}
         >
           <div

@@ -48,7 +48,6 @@ const items = useMemo(() => [
 
         <h2 className="text-black text-3xl leading-[1.2] font-bold mb-3">
           Excellence in Every Detail<br />
-          <span className="text-black">Loop with Danilets</span>
         </h2>
 
         <p className="text-neutral-900 text-xl leading-6 mb-6 mt-6">

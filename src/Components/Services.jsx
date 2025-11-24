@@ -63,7 +63,7 @@ const Services = ({ className }) => {
 
               {/* Назва */}
               <h3
-                className="text-[24px] sm:text-[28px] md:text-[32px] lg:text-[40px] font-bold leading-[110%] text-black mb-6 break-words"
+                className="text-[28px] sm:text-[28px] md:text-[32px] lg:text-[40px] font-bold leading-[110%] text-black mb-6 break-words"
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
                 {danilets}

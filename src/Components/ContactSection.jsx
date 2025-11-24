@@ -45,6 +45,13 @@ const ContactSection = () => {
         iconWarning: iconWarning,
       };
 
+  // 👇 різний текст для різних маршрутів
+  const descriptionText = isDetailingPage
+    ? "Interested in our detailing services? Fill out your information and let us know what your vehicle needs. We’ll get back to you promptly."
+    : isCleaningPage
+    ? "Interested in our cleaning services? Fill out your information and let us know how we can help. We’ll get back to you promptly."
+    : "Interested in our services? Fill out your information and let us know how we can help. We’ll get back to you promptly.";
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -100,10 +107,8 @@ const ContactSection = () => {
     <section className="px-5 md:px-10 lg:px-20 py-10 lg:py-16 md:-mt-15">
       <div className="mx-auto max-w-[1440px]">
         <div className="lg:grid lg:grid-cols-12 lg:gap-12 items-center">
-          
           {/* LEFT SIDE */}
           <div className="max-w-[560px] lg:col-span-5">
-
             <div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
               style={{ background: theme.badgeBg }}
@@ -120,16 +125,11 @@ const ContactSection = () => {
               Danilets Difference
             </h2>
 
-            {/* 27 — FIXED TEXT */}
+            {/* 27 — TEXT ЗАЛЕЖНО ВІД МАРШРУТУ */}
             <p className="mt-4 text-[15px] leading-6 text-[#6b6b6b] max-w-[520px]">
-              Interested in our cleaning services? Fill out your information
-              and let us know how we can help. We&apos;ll get back to you
-              promptly.
+              {descriptionText}
             </p>
 
-            {/* 28 — NOTE REMOVED */}
-
-            {/* 29 — BUTTON FIXED */}
             <Link
               to="/about-us"
               className="mt-6 inline-flex items-center gap-2 px-5 py-3 rounded-full bg-white border border-neutral-300 shadow-sm text-base font-semibold text-black hover:bg-neutral-100 transition"
@@ -151,8 +151,6 @@ const ContactSection = () => {
                 onSubmit={handleSubmit}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4"
               >
-
-                {/* First Name */}
                 <input
                   type="text"
                   name="firstName"
@@ -162,7 +160,6 @@ const ContactSection = () => {
                   className={inputBase}
                 />
 
-                {/* Last Name */}
                 <input
                   type="text"
                   name="lastName"
@@ -172,7 +169,6 @@ const ContactSection = () => {
                   className={inputBase}
                 />
 
-                {/* Phone */}
                 <input
                   type="tel"
                   name="phone"
@@ -184,7 +180,6 @@ const ContactSection = () => {
                   }`}
                 />
 
-                {/* Email */}
                 <input
                   type="email"
                   name="email"
@@ -202,7 +197,6 @@ const ContactSection = () => {
                   </div>
                 )}
 
-                {/* Message */}
                 <textarea
                   name="message"
                   placeholder="Message"
@@ -211,7 +205,6 @@ const ContactSection = () => {
                   className="lg:col-span-2 min-h-[96px] px-4 py-3 rounded-[20px] bg-[#efefef] text-[15px] placeholder:text-[#a0a0a0] focus:outline-none resize-none"
                 />
 
-                {/* Info */}
                 <div
                   className="lg:col-span-2 flex items-center gap-3 px-4 py-3 rounded-[16px]"
                   style={{ background: theme.infoBg }}
@@ -232,7 +225,6 @@ const ContactSection = () => {
                   </div>
                 )}
 
-                {/* Submit */}
                 <button
                   type="submit"
                   disabled={isSubmitting}

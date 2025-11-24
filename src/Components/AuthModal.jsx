@@ -45,7 +45,11 @@ export default function AuthModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[1000]">
+    <div
+      className="fixed inset-0 z-[1000] text-[#18181B]"
+      aria-modal="true"
+      role="dialog"
+    >
       {/* dim */}
       <div className="absolute inset-0 bg-black/50" />
 
@@ -53,11 +57,11 @@ export default function AuthModal({
       <div className="absolute inset-0 flex items-center justify-center p-4">
         <div
           ref={cardRef}
-          className="w-full max-w-[380px] rounded-[24px] bg-white shadow-xl p-4 sm:p-5"
+          className="w-full max-w-[380px] rounded-[24px] bg-white shadow-xl p-4 sm:p-5 text-[#18181B]"
         >
           {/* header */}
           <div className="flex items-center justify-between mb-3">
-            <div className="text-[18px] font-extrabold text-[#18181B]">
+            <div className="text-[18px] font-extrabold">
               {tab === "login" ? "Log In" : "Sign Up"}
             </div>
             <button
@@ -65,7 +69,7 @@ export default function AuthModal({
               className="w-8 h-8 rounded-full bg-[#F4F4F5] flex items-center justify-center"
               aria-label="Close"
             >
-              <FaTimes />
+              <FaTimes className="text-[#18181B]" />
             </button>
           </div>
 
@@ -129,12 +133,12 @@ export default function AuthModal({
 
             {/* поки Apple — як заглушка */}
             <button
-              className="h-11 rounded-[12px] bg-[#F4F4F5] font-semibold flex items-center justify-center gap-2"
+              className="h-11 rounded-[12px] bg-[#F4F4F5] font-semibold flex items-center justify-center gap-2 text-[#18181B]"
               disabled
               title="Soon"
             >
-              <FaApple />
-              Apple
+              <FaApple className="text-[#18181B]" />
+              <span>Apple</span>
             </button>
           </div>
         </div>
@@ -191,7 +195,7 @@ function LoginForm({ onSuccess }) {
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="w-full h-11 rounded-[12px] bg-[#F4F4F5] px-3 outline-none"
+        className="w-full h-11 rounded-[12px] bg-[#F4F4F5] px-3 outline-none text-[#18181B] placeholder:text-[#9CA3AF]"
       />
       <input
         type="password"
@@ -199,7 +203,7 @@ function LoginForm({ onSuccess }) {
         placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        className="w-full h-11 rounded-[12px] bg-[#F4F4F5] px-3 outline-none"
+        className="w-full h-11 rounded-[12px] bg-[#F4F4F5] px-3 outline-none text-[#18181B] placeholder:text-[#9CA3AF]"
       />
       {err && <div className="text-xs text-red-600">{err}</div>}
       <button
@@ -259,19 +263,19 @@ function SignupForm({ onSuccess }) {
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="w-full h-11 rounded-[12px] bg-[#F4F4F5] px-3 outline-none"
+        className="w-full h-11 rounded-[12px] bg-[#F4F4F5] px-3 outline-none text-[#18181B] placeholder:text-[#9CA3AF]"
       />
       <input
         placeholder="First name"
         value={first}
         onChange={(e) => setFirst(e.target.value)}
-        className="w-full h-11 rounded-[12px] bg-[#F4F4F5] px-3 outline-none"
+        className="w-full h-11 rounded-[12px] bg-[#F4F4F5] px-3 outline-none text-[#18181B] placeholder:text-[#9CA3AF]"
       />
       <input
         placeholder="Last name"
         value={last}
         onChange={(e) => setLast(e.target.value)}
-        className="w-full h-11 rounded-[12px] bg-[#F4F4F5] px-3 outline-none"
+        className="w-full h-11 rounded-[12px] bg-[#F4F4F5] px-3 outline-none text-[#18181B] placeholder:text-[#9CA3AF]"
       />
       <input
         type="tel"
@@ -279,7 +283,7 @@ function SignupForm({ onSuccess }) {
         placeholder="Enter your phone number"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
-        className="w-full h-11 rounded-[12px] bg-[#F4F4F5] px-3 outline-none"
+        className="w-full h-11 rounded-[12px] bg-[#F4F4F5] px-3 outline-none text-[#18181B] placeholder:text-[#9CA3AF]"
       />
       <input
         type="password"
@@ -287,7 +291,7 @@ function SignupForm({ onSuccess }) {
         placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        className="w-full h-11 rounded-[12px] bg-[#F4F4F5] px-3 outline-none"
+        className="w-full h-11 rounded-[12px] bg-[#F4F4F5] px-3 outline-none text-[#18181B] placeholder:text-[#9CA3AF]"
       />
       {err && <div className="text-xs text-red-600">{err}</div>}
       <button

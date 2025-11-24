@@ -65,8 +65,15 @@ const MainMobile = () => {
       <Head />
 
       {/* HERO */}
-      <main className="relative min-h-[92vh] overflow-x-hidden">
-
+      <main
+        className="relative min-h-[100dvh] overflow-hidden"
+        style={{
+          background:
+            currentSlide.id === "detailing"
+              ? "linear-gradient(90deg, #1C1C1C 46.13%)"
+              : "transparent",
+        }}
+      >
         {/* Фонова карусель */}
         <div className="absolute inset-0">
           {SLIDES.map((slide, index) => (
@@ -75,9 +82,15 @@ const MainMobile = () => {
               src={slide.image}
               alt={slide.alt}
               className={`
-                w-full h-full object-cover absolute inset-0
+                object-cover
+                absolute
                 transition-opacity duration-700
                 ${index === currentImageIndex ? "opacity-100" : "opacity-0"}
+                ${
+                  slide.id === "detailing"
+                    ? "w-full object-cover top-100"
+                    : "w-full h-full inset-0"
+                }
               `}
             />
           ))}
@@ -90,19 +103,18 @@ const MainMobile = () => {
         <div className="relative z-10 flex min-h-[92vh]">
           <div className="w-full mx-auto mt-[120px] px-4">
             <div className="space-y-4">
-
               <h1
-                className="text-[38px] font-extrabold leading-[100%] text-white pr-4"
+                className="text-[40px] font-extrabold leading-[100%] text-white pr-4"
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
                 WELCOME TO DANILETS
               </h1>
 
               <p
-                className="text-[15px] leading-[140%] text-[rgba(230,230,235,1)] max-w-[85%]"
+                className="text-[20px] text-[rgba(230,230,235,1)] max-w-[85%]"
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
-                Columbus' trusted provider of premium services tailored with
+                Columbus&apos; trusted provider of premium services tailored with
                 precision and delivered with excellence.
               </p>
 
@@ -110,7 +122,7 @@ const MainMobile = () => {
               <Link
                 to={currentSlide.link}
                 className="
-                  inline-block border border-white px-5 py-2 rounded-full
+                  inline-block border border-white px-8 py-4 rounded-full
                   text-white text-[14px] font-semibold
                   hover:bg-white hover:text-black transition
                 "
@@ -123,28 +135,43 @@ const MainMobile = () => {
           {/* Бейдж справа */}
           <div
             className="
-              absolute bottom-[90px] right-4
+              absolute bottom-[60px] right-4
               bg-[rgba(235,176,108,0.18)]
               rounded-full
-              px-4 py-2
+              px-4 py-3
               flex items-center gap-2
               z-10
             "
           >
-            <img src={diamondicon} alt="Diamond Icon" className="w-4 h-4" />
+            <img src={diamondicon} alt="Diamond Icon" className="w-8 h-6" />
             <span className="text-white text-[14px] font-semibold">
               Lets is More
             </span>
           </div>
 
-          {/* СТРІЛКИ КАРУСЕЛІ → як на десктопі */}
-          <div className="absolute bottom-[25px] left-4 flex gap-2 z-20">
+          {/* СТРІЛКИ КАРУСЕЛІ */}
+          <div
+            className="
+              absolute
+              bottom-15
+              left-1/4
+              -translate-x-1/2
+              flex gap-3
+              z-20
+            "
+          >
             <button
               onClick={goPrev}
               className="
-                w-9 h-9 rounded-full bg-black/50 border border-white/40
-                flex items-center justify-center text-white text-xl
-                hover:bg-white hover:text-black transition
+                w-[60px] h-[45px]
+                rounded-full
+                bg-[#4A4A4A]
+                flex items-center justify-center
+                text-white text-[22px]
+                font-semibold
+                shadow-md
+                active:scale-95
+                transition
               "
             >
               ‹
@@ -153,9 +180,15 @@ const MainMobile = () => {
             <button
               onClick={goNext}
               className="
-                w-9 h-9 rounded-full bg-black/50 border border-white/40
-                flex items-center justify-center text-white text-xl
-                hover:bg-white hover:text-black transition
+                w-[60px] h-[45px]
+                rounded-full
+                bg-[#4A4A4A]
+                flex items-center justify-center
+                text-white text-[22px]
+                font-semibold
+                shadow-md
+                active:scale-95
+                transition
               "
             >
               ›

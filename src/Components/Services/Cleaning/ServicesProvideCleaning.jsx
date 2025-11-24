@@ -146,10 +146,6 @@ const ServicesProvideCleaning = () => {
                 Service {modalService.id}: {modalService.title}
               </h3>
 
-              <p className="font-semibold">
-                Detailed Description (for pop-up when clicking "Learn More"):
-              </p>
-
               {modalService.detailed
                 .trim()
                 .split(/\n\s*\n/)

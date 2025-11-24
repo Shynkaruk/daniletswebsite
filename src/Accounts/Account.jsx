@@ -23,26 +23,26 @@ export default function Account() {
       <Head />
 
       <div
-        className="min-h-screen w-full grid grid-rows-[auto,1fr,auto]"
+        className="min-h-[100dvh] w-full flex flex-col"
         style={{
           backgroundImage: `url(${fon})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
       >
-        <main className="w-full">
+        <main className="w-full flex-1">
           {/* Top spacing from Header */}
-          <div className="max-w-[1160px] mx-auto px-4 pt-28 md:pt-40 pb-4 md:pb-6 text-center">
-            <h1 className="text-3xl md:text-4xl font-extrabold text-[#18181B]">
+          <div className="max-w-[1160px] mx-auto px-4 pt-24 md:pt-40 pb-3 md:pb-6 text-center">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#18181B]">
               Profile
             </h1>
           </div>
 
           {/* Tabs — centered under Profile + mobile-friendly */}
-          <div className="max-w-[1160px] mx-auto px-4 mb-6">
+          <div className="max-w-[1160px] mx-auto px-4 mb-5 md:mb-6">
             <div className="w-full flex justify-center">
               {/* wrapper with horizontal scroll on small screens */}
-              <div className="max-w-full overflow-x-auto">
+              <div className="max-w-full overflow-x-auto no-scrollbar">
                 <div className="inline-flex items-center bg-white/95 rounded-[999px] p-1 md:p-1.5 shadow-[0_6px_22px_rgba(0,0,0,0.07)] border border-[#ECECEC] gap-1 min-w-max">
                   {TABS.map((t) => {
                     const isActive = active === t.key;
@@ -51,8 +51,8 @@ export default function Account() {
                         key={t.key}
                         onClick={() => setActive(t.key)}
                         className={[
-                          "h-11 md:h-14 px-4 md:px-6 rounded-[999px]",
-                          "text-[13px] md:text-[15px] font-semibold transition whitespace-nowrap",
+                          "h-10 xs:h-11 md:h-14 px-3 xs:px-4 md:px-6 rounded-[999px]",
+                          "text-[12px] xs:text-[13px] md:text-[15px] font-semibold transition whitespace-nowrap",
                           isActive
                             ? "bg-white shadow text-[#18181B]"
                             : "text-[#5E5E61] hover:text-[#18181B]",
@@ -68,8 +68,8 @@ export default function Account() {
           </div>
 
           {/* Content container */}
-          <div className="max-w-[1160px] mx-auto px-4 pb-16">
-            <div className="bg-white/95 rounded-[28px] shadow-[0_12px_38px_rgba(0,0,0,0.08)] border border-[#ECECEC] p-4 md:p-8">
+          <div className="max-w-[1160px] mx-auto px-3 sm:px-4 pb-16">
+            <div className="bg-white/95 rounded-[20px] sm:rounded-[24px] md:rounded-[28px] shadow-[0_8px_26px_rgba(0,0,0,0.08)] border border-[#ECECEC] p-4 sm:p-5 md:p-8">
               {active === "profile" && <ProfileCard />}
               {active === "car" && <CarCard />}
               {active === "payment" && <PaymentCard />}
@@ -304,14 +304,16 @@ function OrdersCard() {
       {loading ? (
         <div className="text-[#6B7280]">Loading…</div>
       ) : list.length === 0 ? (
-        <div className="text-[#6B7280]">You don’t have any past orders yet.</div>
+        <div className="text-[#6B7280]">
+          You don’t have any past orders yet.
+        </div>
       ) : (
         <div className="space-y-3">
           {list.map((o, i) => (
             <div
               key={o.id ?? i}
               className={[
-                "w-full rounded-[16px] border px-4 py-3 flex items-center justify-between",
+                "w-full rounded-[16px] border px-4 py-3 flex items-center justify-between gap-3",
                 i === 0
                   ? "bg-[#FAF3E6] border-[#F0E1C8]"
                   : "bg-white border-[#EAEAEA]",
@@ -348,7 +350,7 @@ function OrdersCard() {
 function Section({ title, children }) {
   return (
     <div>
-      <div className="text-[15px] md:text-base font-semibold text-[#111] mb-3">
+      <div className="text-[14px] sm:text-[15px] md:text-base font-semibold text-[#111] mb-3">
         {title}
       </div>
       {children}
@@ -364,8 +366,8 @@ function Input({ placeholder, value, onChange, disabled, className }) {
       disabled={disabled}
       onChange={(e) => onChange?.(e.target.value)}
       className={[
-        "w-full rounded-[16px] bg-[#F4F4F5] outline-none",
-        "h-[54px] md:h-[60px] px-4 md:px-5 text-[15px] md:text-[16px] font-medium",
+        "w-full rounded-[14px] sm:rounded-[16px] bg-[#F4F4F5] outline-none",
+        "h-[48px] sm:h-[52px] md:h-[60px] px-3 sm:px-4 md:px-5 text-[14px] sm:text-[15px] md:text-[16px] font-medium",
         "placeholder:text-[#9CA3AF] text-[#18181B]",
         "disabled:opacity-60",
         className || "",
@@ -390,7 +392,7 @@ function GrayButton({ children, onClick, disabled }) {
     <button
       onClick={onClick}
       disabled={disabled}
-      className="h-[48px] md:h-[56px] rounded-[16px] px-6 font-semibold text-[#111] bg-[#E9E9EB] hover:bg-[#E4E4E6] disabled:opacity-60"
+      className="h-[44px] sm:h-[48px] md:h-[56px] rounded-[14px] sm:rounded-[16px] px-4 sm:px-6 font-semibold text-[#111] bg-[#E9E9EB] hover:bg-[#E4E4E6] disabled:opacity-60 w-full"
     >
       {children}
     </button>
@@ -402,7 +404,7 @@ function GoldButton({ children, onClick, disabled }) {
     <button
       onClick={onClick}
       disabled={disabled}
-      className="h-[48px] md:h-[56px] rounded-[16px] px-6 font-semibold text-black disabled:opacity-60"
+      className="h-[44px] sm:h-[48px] md:h-[56px] rounded-[14px] sm:rounded-[16px] px-4 sm:px-6 font-semibold text-black disabled:opacity-60 w-full"
       style={{ background: GRADIENT }}
     >
       {children}
