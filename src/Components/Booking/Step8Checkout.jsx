@@ -79,7 +79,9 @@ const Step8Checkout = ({
               <span
                 key={i}
                 className="h-1 rounded-full flex-[1.2]"
-                style={{ background: i < progressActive ? GOLD_GRADIENT : "#E5E7EB" }}
+                style={{
+                  background: i < progressActive ? GOLD_GRADIENT : "#E5E7EB",
+                }}
               />
             ))}
           </div>
@@ -134,6 +136,7 @@ const Step8Checkout = ({
           <button
             onClick={submitRequest}
             disabled={submitting}
+            type="button"
             className="w-full h-[52px] rounded-[88px] font-semibold text-black shadow inline-flex items-center justify-center gap-2 disabled:opacity-60"
             style={{ background: GOLD_GRADIENT }}
           >
@@ -145,7 +148,7 @@ const Step8Checkout = ({
     );
   }
 
-  // ===== DETAILING VARIANT (оригінальний Checkout) =====
+  // ===== DETAILING VARIANT (Checkout з заглушкою оплати) =====
   return (
     <div className="w-full max-w-full min-w-0 text-left space-y-4">
       <div className="bg-white/90 backdrop-blur rounded-[24px] p-4 sm:p-5 shadow space-y-4">
@@ -180,7 +183,9 @@ const Step8Checkout = ({
             <span
               key={i}
               className="h-1 rounded-full flex-[1.2]"
-              style={{ background: i < progressActive ? GOLD_GRADIENT : "#E5E7EB" }}
+              style={{
+                background: i < progressActive ? GOLD_GRADIENT : "#E5E7EB",
+              }}
             />
           ))}
         </div>
@@ -259,12 +264,19 @@ const Step8Checkout = ({
               </button>
             </div>
 
-            {/* CARD INFO (demo) */}
+            {/* PAYMENT PLACEHOLDER / ЗАГЛУШКА ОПЛАТИ */}
             <div className="space-y-2">
               <div className="text-sm text-[#6B7280] font-medium">
-                Your card information (demo)
+                Payment (coming soon)
               </div>
-              <div className="grid gap-2">
+              <p className="text-xs text-[#6B7280]">
+                Online card payment is not enabled yet. Your card will{" "}
+                <span className="font-semibold">not be charged</span>{" "}
+                automatically. After you submit your request, our team will
+                contact you to confirm the deposit and send a payment link or
+                options.
+              </p>
+              <div className="grid gap-2 opacity-60 pointer-events-none">
                 <input
                   value={cardName}
                   onChange={(e) => setCardName(e.target.value)}
@@ -301,13 +313,13 @@ const Step8Checkout = ({
                 {TIP_PRESETS.map((v) => (
                   <button
                     key={v}
+                    type="button"
                     onClick={() => setTip(v)}
                     className={`h-[36px] px-4 rounded-full border ${
                       tip === v ? "border-transparent" : "border-[#E5E7EB]"
                     }`}
                     style={{
-                      background:
-                        tip === v ? GOLD_GRADIENT : "#ffffff",
+                      background: tip === v ? GOLD_GRADIENT : "#ffffff",
                     }}
                   >
                     ${v}
@@ -339,7 +351,9 @@ const Step8Checkout = ({
           {/* Main service */}
           <div className="flex items-center justify-between text-[15px]">
             <span>{selectedServiceObj?.title || "—"}</span>
-            <span>${(Number(selectedServiceObj?.price) || 0).toFixed(2)}</span>
+            <span>
+              ${(Number(selectedServiceObj?.price) || 0).toFixed(2)}
+            </span>
           </div>
 
           {/* Add-ons */}
@@ -404,17 +418,19 @@ const Step8Checkout = ({
         <button
           onClick={submitRequest}
           disabled={submitting}
+          type="button"
           className="w-full h-[52px] rounded-[88px] font-semibold text-black shadow inline-flex items-center justify-center gap-2 disabled:opacity-60"
           style={{ background: GOLD_GRADIENT }}
         >
           {submitting
             ? "Submitting..."
-            : `Confirm Deposit ($${depositAmount})`}
+            : `Submit Request & Confirm Deposit ($${depositAmount})`}
           <span className="text-lg">›</span>
         </button>
 
         <button
           onClick={onAddMoreServices}
+          type="button"
           className="w-full h-[52px] rounded-[88px] font-semibold text-black shadow inline-flex items-center justify-center gap-2"
           style={{ background: GOLD_GRADIENT }}
         >

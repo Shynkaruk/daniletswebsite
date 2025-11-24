@@ -20,7 +20,7 @@ const Services = ({ className }) => {
       description:
         "Professional cleaning services specializing in commercial spaces, offices, Airbnb properties, and deep cleans. We deliver meticulous results that transform your environment.",
       icon: cleaningIcon,
-      link: "/comingsoon",
+      link: "/services/cleaning",
     },
   ];
 

@@ -8,6 +8,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import jwt from "jsonwebtoken";
+import axios from "axios"; 
 import bcrypt from "bcryptjs";
 import { fileURLToPath } from "url";
 import {
@@ -34,6 +35,8 @@ const PORT = process.env.PORT ? Number(process.env.PORT) : 8080;
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret_change_me";
 const TOKEN_EXPIRES = process.env.TOKEN_EXPIRES || "7d";
+
+const BITRIX_BASE_URL = process.env.BITRIX_BASE_URL || "";
 
 app.set("trust proxy", true);
 
@@ -89,6 +92,61 @@ function signToken(user) {
 function generateOtpCode() {
   return String(Math.floor(100000 + Math.random() * 900000)); // 6 цифр
 }
+
+async function createBitrixLeadFromRequest(requestDoc, userDoc) {
+  if (!BITRIX_BASE_URL) {
+    console.warn("BITRIX_BASE_URL not set, skipping Bitrix lead creation");
+    return;
+  }
+
+  try {
+    const fullName =
+      `${userDoc.first_name || ""} ${userDoc.last_name || ""}`.trim() ||
+      userDoc.email;
+
+    const url = `${BITRIX_BASE_URL}crm.lead.add.json`;
+
+    const payload = {
+      fields: {
+        TITLE: `New booking – ${requestDoc.location_type || "service"}`,
+        NAME: fullName,
+        PHONE: userDoc.phone
+          ? [{ VALUE: userDoc.phone, VALUE_TYPE: "WORK" }]
+          : [],
+        EMAIL: userDoc.email
+          ? [{ VALUE: userDoc.email, VALUE_TYPE: "WORK" }]
+          : [],
+        COMMENTS: `
+Status: ${requestDoc.status}
+Location type: ${requestDoc.location_type}
+Service date: ${requestDoc.service_date || "-"}
+Time window: ${requestDoc.time_window || "-"}
+Service address: ${requestDoc.service_address || "-"}
+Pickup address: ${requestDoc.pickup_address || "-"}
+Dropoff address: ${requestDoc.dropoff_address || "-"}
+Currency: ${requestDoc.currency}
+Subtotal: ${requestDoc.subtotal}
+Tax: ${requestDoc.tax}
+Total: ${requestDoc.total}
+
+Notes from customer:
+${requestDoc.notes_customer || "-"}
+        `,
+        SOURCE_ID: "WEB",
+      },
+    };
+
+    const { data } = await axios.post(url, payload);
+    console.log("Bitrix lead created:", data);
+    return data;
+  } catch (err) {
+    console.error(
+      "Failed to create Bitrix lead:",
+      err.response?.data || err.message
+    );
+  }
+}
+
 
 // Уніфікований ендпоінт для відправки OTP
 // body: { email, purpose: "verify" | "reset" }
@@ -977,6 +1035,59 @@ app.delete("/api/me/payment-methods/:id", auth, async (req, res) => {
 });
 
 // ====================== REQUESTS (юзер) ======================
+// ---- Хелпер для створення ліда в Bitrix24 ----
+async function createBitrixLeadFromRequest(requestDoc, userDoc) {
+  if (!BITRIX_BASE_URL) {
+    console.warn("BITRIX_BASE_URL not set, skipping Bitrix lead creation");
+    return;
+  }
+
+  try {
+    const fullName =
+      `${userDoc.first_name || ""} ${userDoc.last_name || ""}`.trim() ||
+      userDoc.email;
+
+    const url = `${BITRIX_BASE_URL}crm.lead.add.json`;
+
+    const payload = {
+      fields: {
+        TITLE: `New Booking – ${requestDoc.location_type || "service"}`,
+        NAME: fullName,
+        PHONE: userDoc.phone
+          ? [{ VALUE: userDoc.phone, VALUE_TYPE: "WORK" }]
+          : [],
+        EMAIL: userDoc.email
+          ? [{ VALUE: userDoc.email, VALUE_TYPE: "WORK" }]
+          : [],
+        COMMENTS: `
+Status: ${requestDoc.status}
+Service date: ${requestDoc.service_date || "-"}
+Time window: ${requestDoc.time_window || "-"}
+Service address: ${requestDoc.service_address || "-"}
+Pickup address: ${requestDoc.pickup_address || "-"}
+Dropoff address: ${requestDoc.dropoff_address || "-"}
+Currency: ${requestDoc.currency}
+Subtotal: ${requestDoc.subtotal}
+Tax: ${requestDoc.tax}
+Total: ${requestDoc.total}
+
+Customer notes:
+${requestDoc.notes_customer || "-"}
+        `,
+        SOURCE_ID: "WEB",
+      },
+    };
+
+    const { data } = await axios.post(url, payload);
+    console.log("Bitrix Lead created:", data);
+    return data;
+  } catch (err) {
+    console.error("Bitrix lead error:", err.response?.data || err.message);
+  }
+}
+
+
+// ====================== REQUEST ROUTES ======================
 
 // GET /api/requests
 app.get("/api/requests", auth, async (req, res) => {
@@ -1045,6 +1156,16 @@ app.post("/api/requests", auth, async (req, res) => {
       created_at: new Date(),
       updated_at: new Date(),
     });
+
+    // --- Bitrix ---
+    try {
+      const userDoc = await User.findById(req.user.uid).lean();
+      if (userDoc) {
+        await createBitrixLeadFromRequest(doc, userDoc);
+      }
+    } catch (e) {
+      console.error("Failed to send booking to Bitrix:", e);
+    }
 
     const row = doc.toObject();
     row.id = row._id.toString();
@@ -1118,6 +1239,7 @@ app.delete("/api/requests/:id", auth, async (req, res) => {
   await RequestModel.deleteOne({ _id: id });
   res.json({ ok: true });
 });
+
 
 // ====================== ADMIN: REQUESTS ======================
 
