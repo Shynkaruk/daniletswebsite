@@ -93,9 +93,10 @@ function generateOtpCode() {
   return String(Math.floor(100000 + Math.random() * 900000)); // 6 цифр
 }
 
-async function createBitrixLeadFromRequest(requestDoc, userDoc) {
+// ---- Хелпер для створення DEAL в Bitrix24 ----
+async function createBitrixDealFromRequest(requestDoc, userDoc) {
   if (!BITRIX_BASE_URL) {
-    console.warn("BITRIX_BASE_URL not set, skipping Bitrix lead creation");
+    console.warn("BITRIX_BASE_URL not set, skipping Bitrix deal creation");
     return;
   }
 
@@ -104,11 +105,22 @@ async function createBitrixLeadFromRequest(requestDoc, userDoc) {
       `${userDoc.first_name || ""} ${userDoc.last_name || ""}`.trim() ||
       userDoc.email;
 
-    const url = `${BITRIX_BASE_URL}crm.lead.add.json`;
+    // створюємо СДЕЛКУ
+    const url = `${BITRIX_BASE_URL}crm.deal.add.json`;
 
     const payload = {
       fields: {
-        TITLE: `New booking – ${requestDoc.location_type || "service"}`,
+        TITLE: `New Booking – ${requestDoc.location_type || "service"}`,
+
+        // воронка + перша стадія
+        CATEGORY_ID: 0,     // ID твоєї воронки (якщо інший – поміняєш тут)
+        STAGE_ID: "NEW",    // перша стадія (колонка "New")
+
+        // гроші
+        OPPORTUNITY: requestDoc.total ?? 0,
+        CURRENCY_ID: requestDoc.currency || "USD",
+
+        // контактні дані
         NAME: fullName,
         PHONE: userDoc.phone
           ? [{ VALUE: userDoc.phone, VALUE_TYPE: "WORK" }]
@@ -116,6 +128,8 @@ async function createBitrixLeadFromRequest(requestDoc, userDoc) {
         EMAIL: userDoc.email
           ? [{ VALUE: userDoc.email, VALUE_TYPE: "WORK" }]
           : [],
+
+        // коментар — тут є і дата детінлінгу
         COMMENTS: `
 Status: ${requestDoc.status}
 Location type: ${requestDoc.location_type}
@@ -129,7 +143,7 @@ Subtotal: ${requestDoc.subtotal}
 Tax: ${requestDoc.tax}
 Total: ${requestDoc.total}
 
-Notes from customer:
+Customer notes:
 ${requestDoc.notes_customer || "-"}
         `,
         SOURCE_ID: "WEB",
@@ -137,16 +151,12 @@ ${requestDoc.notes_customer || "-"}
     };
 
     const { data } = await axios.post(url, payload);
-    console.log("Bitrix lead created:", data);
+    console.log("Bitrix Deal created:", data);
     return data;
   } catch (err) {
-    console.error(
-      "Failed to create Bitrix lead:",
-      err.response?.data || err.message
-    );
+    console.error("Bitrix deal error:", err.response?.data || err.message);
   }
 }
-
 
 // Уніфікований ендпоінт для відправки OTP
 // body: { email, purpose: "verify" | "reset" }
@@ -1035,12 +1045,6 @@ app.delete("/api/me/payment-methods/:id", auth, async (req, res) => {
 });
 
 // ====================== REQUESTS (юзер) ======================
-// ---- Хелпер для створення ліда в Bitrix24 ----
-async function createBitrixLeadFromRequest(requestDoc, userDoc) {
-  if (!BITRIX_BASE_URL) {
-    console.warn("BITRIX_BASE_URL not set, skipping Bitrix lead creation");
-    return;
-  }
 
   try {
     const fullName =
@@ -1158,14 +1162,15 @@ app.post("/api/requests", auth, async (req, res) => {
     });
 
     // --- Bitrix ---
-    try {
-      const userDoc = await User.findById(req.user.uid).lean();
-      if (userDoc) {
-        await createBitrixLeadFromRequest(doc, userDoc);
-      }
-    } catch (e) {
-      console.error("Failed to send booking to Bitrix:", e);
-    }
+// --- Bitrix: створюємо DEAL у CRM ---
+try {
+  const userDoc = await User.findById(req.user.uid).lean();
+  if (userDoc) {
+    await createBitrixDealFromRequest(doc, userDoc);
+  }
+} catch (e) {
+  console.error("Failed to send booking to Bitrix:", e);
+}
 
     const row = doc.toObject();
     row.id = row._id.toString();
