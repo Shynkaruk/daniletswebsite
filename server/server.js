@@ -8,7 +8,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import jwt from "jsonwebtoken";
-import axios from "axios"; 
+import axios from "axios";
 import bcrypt from "bcryptjs";
 import { fileURLToPath } from "url";
 import {
@@ -19,10 +19,10 @@ import {
   UserPaymentMethod,
   Vehicle,
   RequestModel,
+  OtpCode,
 } from "./db.js";
 import googleCodeRouter from "./routes/authGoogle.js";
-import googleReviewsRouter  from "./routes/reviews.js";
-import { OtpCode } from "./db.js";
+import googleReviewsRouter from "./routes/reviews.js";
 import { sendOtpEmail } from "./email.js";
 
 const app = express();
@@ -113,8 +113,8 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
         TITLE: `New Booking – ${requestDoc.location_type || "service"}`,
 
         // воронка + перша стадія
-        CATEGORY_ID: 0,     // ID твоєї воронки (якщо інший – поміняєш тут)
-        STAGE_ID: "NEW",    // перша стадія (колонка "New")
+        CATEGORY_ID: 0, // ID твоєї воронки (якщо інший – поміняєш тут)
+        STAGE_ID: "NEW", // перша стадія (колонка "New")
 
         // гроші
         OPPORTUNITY: requestDoc.total ?? 0,
@@ -275,7 +275,6 @@ app.post("/api/auth/otp/verify", async (req, res) => {
   }
 });
 
-
 function requireAdmin(req, res, next) {
   if (!req.user?.is_admin) return res.status(403).json({ error: "forbidden" });
   next();
@@ -403,23 +402,23 @@ app.post("/api/auth/request-reset-otp", async (req, res) => {
 
 // POST /api/auth/verify-email-otp
 // body: { email, code }
-app.post('/api/auth/verify-email-otp', async (req, res) => {
+app.post("/api/auth/verify-email-otp", async (req, res) => {
   const { email, code } = req.body || {};
   if (!email || !code) {
-    return res.status(400).json({ error: 'email and code required' });
+    return res.status(400).json({ error: "email and code required" });
   }
 
   try {
     const otp = await OtpCode.findOne({
       email,
       code,
-      purpose: 'signup',
+      purpose: "signup",
       used: false,
       expires_at: { $gt: new Date() },
     });
 
     if (!otp) {
-      return res.status(400).json({ error: 'Invalid or expired code' });
+      return res.status(400).json({ error: "Invalid or expired code" });
     }
 
     otp.used = true;
@@ -431,7 +430,7 @@ app.post('/api/auth/verify-email-otp', async (req, res) => {
       { new: true }
     ).lean();
 
-    if (!userDoc) return res.status(404).json({ error: 'user not found' });
+    if (!userDoc) return res.status(404).json({ error: "user not found" });
 
     const user = {
       id: userDoc._id.toString(),
@@ -446,11 +445,10 @@ app.post('/api/auth/verify-email-otp', async (req, res) => {
 
     res.json({ user, token });
   } catch (e) {
-    console.error('verify-email-otp error', e);
-    res.status(500).json({ error: 'failed to verify code' });
+    console.error("verify-email-otp error", e);
+    res.status(500).json({ error: "failed to verify code" });
   }
 });
-
 
 // POST /api/auth/reset-password
 // body: { email, code, new_password }
@@ -691,7 +689,7 @@ app.get("/api/cards", async (req, res) => {
       filter.slug = slug;
     }
 
-    // 🔹 опціонально: кілька slug через кому: ?slug_in=detailing,detailing_addon
+    // 🔹 кілька slug через кому: ?slug_in=detailing,detailing_addon
     if (slug_in) {
       const list = String(slug_in)
         .split(",")
@@ -717,7 +715,6 @@ app.get("/api/cards", async (req, res) => {
     res.status(500).json({ error: "failed to load cards" });
   }
 });
-
 
 // Запис/оновлення/видалення — лише admin
 app.post("/api/cards", auth, requireAdmin, async (req, res) => {
@@ -1046,53 +1043,6 @@ app.delete("/api/me/payment-methods/:id", auth, async (req, res) => {
 
 // ====================== REQUESTS (юзер) ======================
 
-  try {
-    const fullName =
-      `${userDoc.first_name || ""} ${userDoc.last_name || ""}`.trim() ||
-      userDoc.email;
-
-    const url = `${BITRIX_BASE_URL}crm.lead.add.json`;
-
-    const payload = {
-      fields: {
-        TITLE: `New Booking – ${requestDoc.location_type || "service"}`,
-        NAME: fullName,
-        PHONE: userDoc.phone
-          ? [{ VALUE: userDoc.phone, VALUE_TYPE: "WORK" }]
-          : [],
-        EMAIL: userDoc.email
-          ? [{ VALUE: userDoc.email, VALUE_TYPE: "WORK" }]
-          : [],
-        COMMENTS: `
-Status: ${requestDoc.status}
-Service date: ${requestDoc.service_date || "-"}
-Time window: ${requestDoc.time_window || "-"}
-Service address: ${requestDoc.service_address || "-"}
-Pickup address: ${requestDoc.pickup_address || "-"}
-Dropoff address: ${requestDoc.dropoff_address || "-"}
-Currency: ${requestDoc.currency}
-Subtotal: ${requestDoc.subtotal}
-Tax: ${requestDoc.tax}
-Total: ${requestDoc.total}
-
-Customer notes:
-${requestDoc.notes_customer || "-"}
-        `,
-        SOURCE_ID: "WEB",
-      },
-    };
-
-    const { data } = await axios.post(url, payload);
-    console.log("Bitrix Lead created:", data);
-    return data;
-  } catch (err) {
-    console.error("Bitrix lead error:", err.response?.data || err.message);
-  }
-}
-
-
-// ====================== REQUEST ROUTES ======================
-
 // GET /api/requests
 app.get("/api/requests", auth, async (req, res) => {
   const rows = await RequestModel.find({ user_id: req.user.uid })
@@ -1161,16 +1111,15 @@ app.post("/api/requests", auth, async (req, res) => {
       updated_at: new Date(),
     });
 
-    // --- Bitrix ---
-// --- Bitrix: створюємо DEAL у CRM ---
-try {
-  const userDoc = await User.findById(req.user.uid).lean();
-  if (userDoc) {
-    await createBitrixDealFromRequest(doc, userDoc);
-  }
-} catch (e) {
-  console.error("Failed to send booking to Bitrix:", e);
-}
+    // --- Bitrix: створюємо DEAL у CRM ---
+    try {
+      const userDoc = await User.findById(req.user.uid).lean();
+      if (userDoc) {
+        await createBitrixDealFromRequest(doc, userDoc);
+      }
+    } catch (e) {
+      console.error("Failed to send booking to Bitrix:", e);
+    }
 
     const row = doc.toObject();
     row.id = row._id.toString();
@@ -1244,7 +1193,6 @@ app.delete("/api/requests/:id", auth, async (req, res) => {
   await RequestModel.deleteOne({ _id: id });
   res.json({ ok: true });
 });
-
 
 // ====================== ADMIN: REQUESTS ======================
 
@@ -1432,7 +1380,6 @@ app.delete("/api/admin/requests/:id", auth, requireAdmin, async (req, res) => {
     res.status(500).json({ error: "failed to delete request" });
   }
 });
-
 
 // ---- запуск ----
 initDb()
