@@ -195,153 +195,134 @@ function buildCleaningComment(requestDoc, userDoc) {
 
   const lines = [];
 
-  lines.push(`**🧹 CLEANING BOOKING**`);
-  lines.push(`**Status:** ${requestDoc.status || "-"}`);
-  lines.push(`**Service date:** ${requestDoc.service_date || "-"}`);
-  lines.push(`**Time window:** ${requestDoc.time_window || "-"}`);
-  lines.push(``);
-  lines.push(`---`);
-  lines.push(``);
+  // Заголовок
+  lines.push("CLEANING BOOKING");
+  lines.push("");
+  lines.push("Main information:");
+  lines.push(`- Status: ${requestDoc.status || "-"}`);
+  lines.push(`- Service type: Cleaning`);
+  lines.push(`- Service date: ${requestDoc.service_date || "-"}`);
+  lines.push(`- Time window: ${requestDoc.time_window || "-"}`);
+  lines.push("");
 
   if (propertyType === "residential") {
-    lines.push(`### **🏠 Residential Cleaning**`);
-    lines.push(`**Property type:** Residential`);
-    if (projectType) lines.push(`**Project type:** ${projectType}`);
-
-    lines.push(``);
+    lines.push("Residential cleaning:");
+    lines.push(`- Property type: Residential`);
+    if (projectType) lines.push(`- Project type: ${projectType}`);
     if (bedrooms || bathrooms) {
-      lines.push(`**Home details:**`);
-      if (bedrooms) lines.push(`• Bedrooms: ${bedrooms}`);
-      if (bathrooms) lines.push(`• Bathrooms: ${bathrooms}`);
-      lines.push(``);
+      lines.push("- Home details:");
+      if (bedrooms) lines.push(`  • Bedrooms: ${bedrooms}`);
+      if (bathrooms) lines.push(`  • Bathrooms: ${bathrooms}`);
     }
-
     if (Array.isArray(areas) && areas.length) {
-      lines.push(`**Areas:**`);
-      areas.forEach((a) => lines.push(`• ${a}`));
-      lines.push(``);
+      lines.push("- Areas to clean:");
+      areas.forEach((a) => lines.push(`  • ${a}`));
     }
-
     if (Array.isArray(generalTasks) && generalTasks.length) {
-      lines.push(`**General Tasks:**`);
-      generalTasks.forEach((t) => lines.push(`• ${t}`));
-      lines.push(``);
+      lines.push("- General tasks:");
+      generalTasks.forEach((t) => lines.push(`  • ${t}`));
     }
-
     if (Array.isArray(kitchenTasks) && kitchenTasks.length) {
-      lines.push(`**Kitchen Tasks:**`);
-      kitchenTasks.forEach((t) => lines.push(`• ${t}`));
-      lines.push(``);
+      lines.push("- Kitchen tasks:");
+      kitchenTasks.forEach((t) => lines.push(`  • ${t}`));
     }
-
-    if (resBudget) lines.push(`**Budget:** ${resBudget}`);
+    if (resBudget) lines.push(`- Budget: ${resBudget}`);
+    lines.push("");
   }
 
   if (propertyType === "commercial") {
-    lines.push(`### **🏢 Commercial Cleaning**`);
-    lines.push(`**Property type:** Commercial`);
-    if (projectType) lines.push(`**Project type:** ${projectType}`);
-
-    lines.push(``);
-    if (companyName) lines.push(`**Company name:** ${companyName}`);
-    if (companyAddress) lines.push(`**Company address:** ${companyAddress}`);
-    if (squareFeet) lines.push(`**Square footage:** ${squareFeet}`);
-    if (frequency) lines.push(`**Frequency:** ${frequency}`);
-    if (comBudget) lines.push(`**Budget:** ${comBudget}`);
-    lines.push(``);
+    lines.push("Commercial cleaning:");
+    lines.push(`- Property type: Commercial`);
+    if (projectType) lines.push(`- Project type: ${projectType}`);
+    if (companyName) lines.push(`- Company name: ${companyName}`);
+    if (companyAddress) lines.push(`- Company address: ${companyAddress}`);
+    if (squareFeet) lines.push(`- Square footage: ${squareFeet}`);
+    if (frequency) lines.push(`- Frequency: ${frequency}`);
+    if (comBudget) lines.push(`- Budget: ${comBudget}`);
+    lines.push("");
   }
 
-  if (extraDetails || comExtraDetails || requestDoc.notes_customer) {
-    lines.push(`---`);
-    lines.push(``);
-    lines.push(`### **📝 Additional Notes (Customer):**`);
-    if (extraDetails) lines.push(extraDetails);
-    if (comExtraDetails) lines.push(comExtraDetails);
-    if (requestDoc.notes_customer) lines.push(requestDoc.notes_customer);
-    lines.push(``);
+  // Додаткові нотатки (тільки якщо є текст)
+  const notes = [];
+  if (extraDetails) notes.push(extraDetails);
+  if (comExtraDetails) notes.push(comExtraDetails);
+  if (requestDoc.notes_customer) notes.push(requestDoc.notes_customer);
+
+  if (notes.length) {
+    lines.push("Additional notes from customer:");
+    notes.forEach((n) => lines.push(`- ${n}`));
+    lines.push("");
   }
 
-  lines.push(`---`);
-  lines.push(``);
-  lines.push(`### **👤 Customer Information**`);
-  if (userDoc.first_name || userDoc.last_name) {
-    lines.push(
-      `**Name:** ${userDoc.first_name || ""} ${userDoc.last_name || ""}`.trim()
-    );
-  }
-  if (userDoc.email) lines.push(`**Email:** ${userDoc.email}`);
-  if (userDoc.phone) lines.push(`**Phone:** ${userDoc.phone}`);
+  // Інфа про клієнта
+  lines.push("Customer information:");
+  const nameLine = `${userDoc.first_name || ""} ${userDoc.last_name || ""}`.trim();
+  if (nameLine) lines.push(`- Name: ${nameLine}`);
+  if (userDoc.email) lines.push(`- Email: ${userDoc.email}`);
+  if (userDoc.phone) lines.push(`- Phone: ${userDoc.phone}`);
 
-  return lines.join("\n");
+  const text = lines.join("\n").trim();
+  return text || "Cleaning booking from website";
 }
 
 function buildDetailingComment(requestDoc, userDoc, vehicleDoc) {
   const lines = [];
 
-  lines.push(`**🚗 DETAILING BOOKING**`);
-  lines.push(`**Status:** ${requestDoc.status || "-"}`);
-  lines.push(`**Service type:** ${requestDoc.location_type || "-"}`);
-  lines.push(`**Service date:** ${requestDoc.service_date || "-"}`);
-  lines.push(`**Time window:** ${requestDoc.time_window || "-"}`);
-  lines.push(``);
-  lines.push(`---`);
-  lines.push(``);
+  lines.push("DETAILING BOOKING");
+  lines.push("");
+  lines.push("Main information:");
+  lines.push(`- Status: ${requestDoc.status || "-"}`);
+  lines.push(`- Location type: ${requestDoc.location_type || "-"}`);
+  lines.push(`- Service date: ${requestDoc.service_date || "-"}`);
+  lines.push(`- Time window: ${requestDoc.time_window || "-"}`);
+  lines.push("");
 
-  // LOCATION
-  lines.push(`### **📍 Location**`);
+  // Локація
+  lines.push("Location:");
   if (requestDoc.service_address)
-    lines.push(`**Service address:** ${requestDoc.service_address}`);
+    lines.push(`- Service address: ${requestDoc.service_address}`);
   if (requestDoc.pickup_address)
-    lines.push(`**Pickup:** ${requestDoc.pickup_address}`);
+    lines.push(`- Pickup address: ${requestDoc.pickup_address}`);
   if (requestDoc.dropoff_address)
-    lines.push(`**Dropoff:** ${requestDoc.dropoff_address}`);
-  lines.push(``);
+    lines.push(`- Dropoff address: ${requestDoc.dropoff_address}`);
+  lines.push("");
 
-  // VEHICLE
+  // Авто
   if (vehicleDoc) {
-    lines.push(`---`);
-    lines.push(``);
-    lines.push(`### **🚘 Vehicle**`);
-    if (vehicleDoc.year) lines.push(`**Year:** ${vehicleDoc.year}`);
-    if (vehicleDoc.make) lines.push(`**Make:** ${vehicleDoc.make}`);
-    if (vehicleDoc.model) lines.push(`**Model:** ${vehicleDoc.model}`);
-    if (vehicleDoc.color) lines.push(`**Color:** ${vehicleDoc.color}`);
-    if (vehicleDoc.plate) lines.push(`**Plate:** ${vehicleDoc.plate}`);
-    lines.push(``);
+    lines.push("Vehicle:");
+    if (vehicleDoc.year) lines.push(`- Year: ${vehicleDoc.year}`);
+    if (vehicleDoc.make) lines.push(`- Make: ${vehicleDoc.make}`);
+    if (vehicleDoc.model) lines.push(`- Model: ${vehicleDoc.model}`);
+    if (vehicleDoc.color) lines.push(`- Color: ${vehicleDoc.color}`);
+    if (vehicleDoc.plate) lines.push(`- Plate: ${vehicleDoc.plate}`);
+    lines.push("");
   }
 
-  // PRICE
-  lines.push(`---`);
-  lines.push(``);
-  lines.push(`### **💵 Price**`);
-  lines.push(`**Subtotal:** ${requestDoc.subtotal || 0}`);
-  lines.push(`**Tax:** ${requestDoc.tax || 0}`);
-  lines.push(`**Total:** ${requestDoc.total || 0}`);
-  lines.push(``);
+  // Фінанси
+  lines.push("Price:");
+  lines.push(`- Subtotal: ${requestDoc.subtotal || 0}`);
+  lines.push(`- Tax: ${requestDoc.tax || 0}`);
+  lines.push(`- Total: ${requestDoc.total || 0}`);
+  lines.push("");
 
-  // NOTES
+  // Нотатки
   if (requestDoc.notes_customer) {
-    lines.push(`---`);
-    lines.push(``);
-    lines.push(`### **📝 Additional Notes (Customer):**`);
-    lines.push(requestDoc.notes_customer);
-    lines.push(``);
+    lines.push("Additional notes from customer:");
+    lines.push(`- ${requestDoc.notes_customer}`);
+    lines.push("");
   }
 
-  // CUSTOMER
-  lines.push(`---`);
-  lines.push(``);
-  lines.push(`### **👤 Customer Information**`);
-  if (userDoc.first_name || userDoc.last_name) {
-    lines.push(
-      `**Name:** ${userDoc.first_name || ""} ${userDoc.last_name || ""}`.trim()
-    );
-  }
-  if (userDoc.email) lines.push(`**Email:** ${userDoc.email}`);
-  if (userDoc.phone) lines.push(`**Phone:** ${userDoc.phone}`);
+  // Клієнт
+  lines.push("Customer information:");
+  const nameLine = `${userDoc.first_name || ""} ${userDoc.last_name || ""}`.trim();
+  if (nameLine) lines.push(`- Name: ${nameLine}`);
+  if (userDoc.email) lines.push(`- Email: ${userDoc.email}`);
+  if (userDoc.phone) lines.push(`- Phone: ${userDoc.phone}`);
 
-  return lines.join("\n");
+  const text = lines.join("\n").trim();
+  return text || "Detailing booking from website";
 }
+
 
 // ---- Хелпер для створення DEAL в Bitrix24 ----
 async function createBitrixDealFromRequest(requestDoc, userDoc) {
@@ -356,9 +337,6 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
       userDoc.email ||
       "New client";
 
-    // ✅ Визначаємо Cleaning / Detailing:
-    // якщо service_type прийшов з фронта – використовуємо його
-    // інакше – фолбек по location_type
     const isCleaning = requestDoc.service_type
       ? requestDoc.service_type === "cleaning"
       : requestDoc.location_type === "cleaning";
@@ -369,21 +347,16 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
 
     const titlePrefix = isCleaning ? "Cleaning" : "Detailing";
 
-    // Для Cleaning сума в угоді не ставиться
     const opportunity = isCleaning ? 0 : (requestDoc.total ?? 0);
-
-    // ✅ Правильний STAGE_ID для різних воронок
     const stageId =
       categoryId && categoryId > 0 ? `C${categoryId}:NEW` : "NEW";
 
-    // 🔗 Контакт
     const contactId = await ensureBitrixContact({
       fullName,
       email: userDoc.email,
       phone: userDoc.phone,
     });
 
-    // 🔎 Підтягнемо авто для Detailing (якщо є)
     let vehicleDoc = null;
     if (!isCleaning && requestDoc.vehicle_id) {
       try {
@@ -393,33 +366,30 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
       }
     }
 
+    const commentText = isCleaning
+      ? buildCleaningComment(requestDoc, userDoc)
+      : buildDetailingComment(requestDoc, userDoc, vehicleDoc);
+
+    // ↓ щоб в логах бачити, що саме ми шлемо в COMMENTS
+    console.log("Bitrix COMMENTS payload:\n", commentText);
+
     const url = `${BITRIX_BASE_URL}crm.deal.add.json`;
 
     const payload = {
       fields: {
         TITLE: `${titlePrefix} – ${fullName}`,
-
         CATEGORY_ID: categoryId,
         STAGE_ID: stageId,
-
         OPPORTUNITY: opportunity,
         CURRENCY_ID: requestDoc.currency || "USD",
-
         ...(contactId ? { CONTACT_ID: contactId } : {}),
-
-        NAME: fullName,
         PHONE: userDoc.phone
           ? [{ VALUE: userDoc.phone, VALUE_TYPE: "WORK" }]
           : [],
         EMAIL: userDoc.email
           ? [{ VALUE: userDoc.email, VALUE_TYPE: "WORK" }]
           : [],
-
-        // Коментарі різні для Cleaning / Detailing
-        COMMENTS: isCleaning
-          ? buildCleaningComment(requestDoc, userDoc)
-          : buildDetailingComment(requestDoc, userDoc, vehicleDoc),
-
+        COMMENTS: commentText,
         SOURCE_ID: "WEB",
       },
     };
@@ -427,9 +397,8 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
     const { data } = await axios.post(url, payload);
     console.log("Bitrix Deal created:", data);
 
-    // Якщо Bitrix повернув помилку в тілі – теж залогуй
     if (data && data.error) {
-      console.error("Bitrix deal error (body):", data.error);
+      console.error("Bitrix deal error (body):", data.error, data.error_description);
     }
 
     return data;
@@ -440,6 +409,7 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
     );
   }
 }
+
 
 
 // ====================== OTP ======================
