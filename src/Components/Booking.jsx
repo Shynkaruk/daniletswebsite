@@ -118,6 +118,7 @@ const Booking = () => {
     () => CATEGORY_TABS.find((t) => t.label === active)?.key || "",
     [active]
   );
+  const isCleaning = activeKey === "cleaning";
 
   // Main step (1–8)
   const [step, setStep] = useState(1);
@@ -284,16 +285,27 @@ const Booking = () => {
     [servicesDb, selectedServiceId]
   );
 
+  // services (detailing only)
   useEffect(() => {
     let ignore = false;
     (async () => {
       setLoadingServices(true);
       try {
+        // Для Cleaning сервіси з БД не потрібні
+        if (activeKey === "cleaning") {
+          if (!ignore) {
+            setServicesDb([]);
+            setSelectedServiceId(null);
+          }
+          return;
+        }
+
         const svc = await cardsApi.list({
           type: "service",
           published: 1,
           category: activeKey,
         });
+
         if (!ignore) {
           setServicesDb(Array.isArray(svc) ? svc : []);
           if (!selectedServiceId && Array.isArray(svc) && svc.length) {
@@ -310,6 +322,7 @@ const Booking = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeKey]);
 
+  // add-ons (only detailing)
   useEffect(() => {
     let ignore = false;
 
@@ -325,7 +338,7 @@ const Booking = () => {
         const ad = await cardsApi.list({
           type: "service",
           published: 1,
-          slug: "detailing_addon", // 🔑 наш slug для додаткових послуг
+          slug: "detailing_addon", // наш slug для додаткових послуг
         });
 
         if (!ignore) {
@@ -367,13 +380,12 @@ const Booking = () => {
 
   const isEmail = (v) => /\S+@\S+\.\S+/.test(v);
   const isPhone = (v) => v.replace(/[^\d]/g, "").length >= 7;
-
   const canContinueContact =
     firstName.trim() &&
     lastName.trim() &&
     isPhone(phone) &&
     isEmail(email) &&
-    !!serviceDate; // 🔹 тепер дата обов'язкова для всіх
+    !!serviceDate; // дата обов'язкова для всіх
 
   /** ---------- STEP 8: Checkout / Submit ---------- */
   const [receiptOnly, setReceiptOnly] = useState(false);
@@ -387,23 +399,26 @@ const Booking = () => {
   const [depositAmount, setDepositAmount] = useState(100);
   const [includeExtraAddress, setIncludeExtraAddress] = useState(true);
 
-  const mainServicePrice = selectedServiceObj?.price
-    ? Number(selectedServiceObj.price)
-    : 0;
+  const mainServicePrice =
+    !isCleaning && selectedServiceObj?.price
+      ? Number(selectedServiceObj.price)
+      : 0;
 
   const selectedAddOnsArr = useMemo(
     () => Array.from(selectedAddOns),
     [selectedAddOns]
   );
 
-  const addOnsTotal = selectedAddOnsArr.reduce((acc, id) => {
-    const found = addonsDb.find((a) => a.id === id);
-    return acc + (found ? Number(found.price) || 0 : 0);
-  }, 0);
+  const addOnsTotal = isCleaning
+    ? 0
+    : selectedAddOnsArr.reduce((acc, id) => {
+        const found = addonsDb.find((a) => a.id === id);
+        return acc + (found ? Number(found.price) || 0 : 0);
+      }, 0);
 
-  const subTotal = mainServicePrice + addOnsTotal;
-  const tax = +(subTotal * TAX_RATE).toFixed(2);
-  const total = +(subTotal + tax + tip).toFixed(2);
+  const subTotal = isCleaning ? 0 : mainServicePrice + addOnsTotal;
+  const tax = isCleaning ? 0 : +(subTotal * TAX_RATE).toFixed(2);
+  const total = isCleaning ? 0 : +(subTotal + tax + tip).toFixed(2);
 
   // ========= Requests integration =========
   const user = auth.getUser();
@@ -427,6 +442,7 @@ const Booking = () => {
   const closeInfoModal = () =>
     setInfoModal((prev) => ({ ...prev, open: false }));
 
+  // автозаповнення контактів для залогіненого юзера
   useEffect(() => {
     let ignore = false;
     (async () => {
@@ -487,7 +503,30 @@ const Booking = () => {
     };
   }
 
+  // items_json: об'єкт для Cleaning, масив для Detailing
   function buildItems() {
+    if (isCleaning) {
+      return {
+        propertyType,
+        projectType,
+
+        bedrooms,
+        bathrooms,
+        areas,
+        generalTasks,
+        kitchenTasks,
+        resBudget,
+        extraDetails,
+
+        companyName,
+        companyAddress,
+        squareFeet,
+        frequency,
+        comBudget,
+        comExtraDetails,
+      };
+    }
+
     const items = [];
     if (selectedServiceObj) {
       items.push({
@@ -575,7 +614,6 @@ const Booking = () => {
         "Booked via website",
         `Category: ${activeKey}`,
         selectedServiceObj ? `Service: ${selectedServiceObj.title}` : null,
-        serviceDate ? `Service date: ${serviceDate}` : null,
       ];
 
       if (activeKey === "detailing") {
@@ -633,7 +671,6 @@ const Booking = () => {
       const payload = {
         vehicle_id,
         status: "new",
-        service_type: activeKey, // 🔹 важливо для CRM: "detailing" або "cleaning"
         location_type: loc.location_type,
         service_date: serviceDate || null,
         time_window: null,
@@ -642,9 +679,9 @@ const Booking = () => {
         dropoff_address: loc.dropoff_address,
         items_json: JSON.stringify(items),
         currency: "USD",
-        subtotal: subTotal,
-        tax,
-        total,
+        subtotal: isCleaning ? 0 : subTotal,
+        tax: isCleaning ? 0 : tax,
+        total: isCleaning ? 0 : total,
         notes_customer: notes,
       };
 
@@ -662,8 +699,6 @@ const Booking = () => {
       setSubmitting(false);
     }
   }
-
-  const isCleaning = activeKey === "cleaning";
 
   return (
     <div
@@ -726,7 +761,7 @@ const Booking = () => {
             <StepCleaningDetails
               visible={step === 2}
               onBack={() => setStep(1)}
-              onNext={() => setStep(7)} // straight to contact
+              onNext={() => setStep(7)} // відразу до контактів
               propertyType={propertyType}
               setPropertyType={setPropertyType}
               projectType={projectType}

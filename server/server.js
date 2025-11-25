@@ -37,7 +37,13 @@ const JWT_SECRET = process.env.JWT_SECRET || "dev_secret_change_me";
 const TOKEN_EXPIRES = process.env.TOKEN_EXPIRES || "7d";
 
 const BITRIX_BASE_URL = process.env.BITRIX_BASE_URL || "";
-console.log("BITRIX_BASE_URL =", BITRIX_BASE_URL);
+// 🆕 ID воронок у Bitrix (ставиш свої значення з CRM)
+const BITRIX_CATEGORY_DETAILING = Number(
+  process.env.BITRIX_CATEGORY_DETAILING ?? 0
+);
+const BITRIX_CATEGORY_CLEANING = Number(
+  process.env.BITRIX_CATEGORY_CLEANING ?? 1
+);
 
 app.set("trust proxy", true);
 
@@ -152,6 +158,114 @@ async function ensureBitrixContact({ fullName, email, phone }) {
   }
 }
 
+function buildCleaningComment(requestDoc) {
+  let parsed = {};
+  try {
+    parsed = JSON.parse(requestDoc.items_json || "{}");
+  } catch (e) {
+    console.error("Failed to parse items_json for cleaning", e);
+  }
+
+  const {
+    propertyType,
+    projectType,
+    bedrooms,
+    bathrooms,
+    areas,
+    generalTasks,
+    kitchenTasks,
+    resBudget,
+    extraDetails,
+    companyName,
+    companyAddress,
+    squareFeet,
+    frequency,
+    comBudget,
+    comExtraDetails,
+  } = parsed;
+
+  const isResidential = propertyType === "residential";
+  const isCommercial = propertyType === "commercial";
+
+  let lines = [];
+
+  lines.push(`Status: ${requestDoc.status}`);
+  lines.push(`Service type: CLEANING`);
+  lines.push(`Property type: ${propertyType || "-"}`);
+  lines.push(`Project type: ${projectType || "-"}`);
+  lines.push(`Service date: ${requestDoc.service_date || "-"}`);
+  lines.push(`Time window: ${requestDoc.time_window || "-"}`);
+  lines.push("");
+
+  if (isResidential) {
+    lines.push("=== Residential details ===");
+    if (bedrooms != null || bathrooms != null) {
+      lines.push(
+        `Bedrooms / Bathrooms: ${bedrooms || 0} / ${bathrooms || 0}`
+      );
+    }
+    if (Array.isArray(areas) && areas.length) {
+      lines.push(`Areas: ${areas.join(", ")}`);
+    }
+    if (Array.isArray(generalTasks) && generalTasks.length) {
+      lines.push(`General tasks: ${generalTasks.join(", ")}`);
+    }
+    if (Array.isArray(kitchenTasks) && kitchenTasks.length) {
+      lines.push(`Kitchen tasks: ${kitchenTasks.join(", ")}`);
+    }
+    if (resBudget) {
+      lines.push(`Budget: ${resBudget}`);
+    }
+    if (extraDetails) {
+      lines.push("");
+      lines.push("Additional notes:");
+      lines.push(extraDetails);
+    }
+  }
+
+  if (isCommercial) {
+    lines.push("=== Commercial details ===");
+    if (companyName) lines.push(`Company name: ${companyName}`);
+    if (companyAddress) lines.push(`Company address: ${companyAddress}`);
+    if (squareFeet) lines.push(`Square footage: ${squareFeet}`);
+    if (frequency) lines.push(`Frequency: ${frequency}`);
+    if (comBudget) lines.push(`Budget: ${comBudget}`);
+    if (comExtraDetails) {
+      lines.push("");
+      lines.push("Additional notes:");
+      lines.push(comExtraDetails);
+    }
+  }
+
+  // запасний варіант – коментар, який юзер написав у фінальному кроці
+  if (requestDoc.notes_customer) {
+    lines.push("");
+    lines.push("Customer notes (from final step):");
+    lines.push(requestDoc.notes_customer);
+  }
+
+  return lines.join("\n");
+}
+
+function buildDetailingComment(requestDoc) {
+  return `
+Status: ${requestDoc.status}
+Location type: ${requestDoc.location_type}
+Service date: ${requestDoc.service_date || "-"}
+Time window: ${requestDoc.time_window || "-"}
+Service address: ${requestDoc.service_address || "-"}
+Pickup address: ${requestDoc.pickup_address || "-"}
+Dropoff address: ${requestDoc.dropoff_address || "-"}
+Currency: ${requestDoc.currency}
+Subtotal: ${requestDoc.subtotal}
+Tax: ${requestDoc.tax}
+Total: ${requestDoc.total}
+
+Customer notes:
+${requestDoc.notes_customer || "-"}
+  `;
+}
+
 // ---- Хелпер для створення DEAL в Bitrix24 ----
 async function createBitrixDealFromRequest(requestDoc, userDoc) {
   if (!BITRIX_BASE_URL) {
@@ -163,82 +277,54 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
     const fullName =
       `${userDoc.first_name || ""} ${userDoc.last_name || ""}`.trim() ||
       userDoc.email ||
-      "Website client";
+      "New client";
 
-    // Категорія (Detailing / Cleaning)
-    let categoryLabel = "Detailing";
-    if (requestDoc.service_type === "cleaning") categoryLabel = "Cleaning";
-    if (requestDoc.service_type === "detailing") categoryLabel = "Detailing";
+    // 👇 тут вирішуємо, це Cleaning чи Detailing
+    const isCleaning = requestDoc.location_type === "cleaning";
 
-    // Дата сервісу (як є, або "-")
-    const serviceDateStr =
-      requestDoc.service_date instanceof Date
-        ? requestDoc.service_date.toISOString().slice(0, 10)
-        : requestDoc.service_date || "-";
+    const categoryId = isCleaning
+      ? BITRIX_CATEGORY_CLEANING
+      : BITRIX_CATEGORY_DETAILING;
 
-    // Дата заявки (created_at)
-    const createdAtStr =
-      requestDoc.created_at instanceof Date
-        ? requestDoc.created_at.toISOString().slice(0, 10)
-        : requestDoc.created_at || "-";
+    const titlePrefix = isCleaning ? "Cleaning" : "Detailing";
 
-    // 1) Готуємо/забезпечуємо контакт в Bitrix
+    // Для Cleaning сума в угоді не ставиться
+    const opportunity = isCleaning ? 0 : (requestDoc.total ?? 0);
+
+    // 🔗 створюємо/знаходимо контакт по email/phone
     const contactId = await ensureBitrixContact({
       fullName,
       email: userDoc.email,
       phone: userDoc.phone,
     });
 
-    // 2) Структурований коментар
-    const comments = `
-=== BOOKING ===
-Category: ${categoryLabel}
-Location type: ${requestDoc.location_type || "-"}
-Service date: ${serviceDateStr}
-Request created at: ${createdAtStr}
-Service address: ${requestDoc.service_address || "-"}
-Pickup address: ${requestDoc.pickup_address || "-"}
-Dropoff address: ${requestDoc.dropoff_address || "-"}
-Currency: ${requestDoc.currency || "USD"}
-Subtotal: ${requestDoc.subtotal ?? 0}
-Tax: ${requestDoc.tax ?? 0}
-Total: ${requestDoc.total ?? 0}
-
-=== CUSTOMER ===
-Name: ${fullName}
-Phone: ${userDoc.phone || "-"}
-Email: ${userDoc.email || "-"}
-
-=== NOTES ===
-${requestDoc.notes_customer || "-"}
-    `.trim();
-
-    // 3) Створюємо СДЕЛКУ
     const url = `${BITRIX_BASE_URL}crm.deal.add.json`;
 
     const payload = {
       fields: {
-        // 🔹 Заголовок: [Category] – [Name]
-        TITLE: `${categoryLabel} – ${fullName}`,
+        TITLE: `${titlePrefix} – ${fullName}`,
 
-        // Воронка + перша стадія
-        CATEGORY_ID: 0,      // якщо у тебе інша воронка – поміняєш
-        STAGE_ID: "NEW",     // перша стадія (колонка "New")
+        CATEGORY_ID: categoryId,
+        STAGE_ID: "NEW",
 
-        // Гроші
-        OPPORTUNITY: requestDoc.total ?? 0,
+        OPPORTUNITY: opportunity,
         CURRENCY_ID: requestDoc.currency || "USD",
 
-        // Прив'язка до контакту (щоб в CRM бачили телефон + email)
-        CONTACT_ID: contactId || undefined,
+        ...(contactId ? { CONTACT_ID: contactId } : {}),
 
-        // Коментар
-        COMMENTS: comments,
+        NAME: fullName,
+        PHONE: userDoc.phone
+          ? [{ VALUE: userDoc.phone, VALUE_TYPE: "WORK" }]
+          : [],
+        EMAIL: userDoc.email
+          ? [{ VALUE: userDoc.email, VALUE_TYPE: "WORK" }]
+          : [],
+
+        COMMENTS: isCleaning
+          ? buildCleaningComment(requestDoc)
+          : buildDetailingComment(requestDoc),
 
         SOURCE_ID: "WEB",
-      },
-      params: {
-        REGISTER_SONET_EVENT: "Y",
       },
     };
 
