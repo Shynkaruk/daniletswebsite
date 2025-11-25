@@ -46,6 +46,8 @@ const BITRIX_CATEGORY_CLEANING = Number(
   process.env.BITRIX_CATEGORY_CLEANING ?? 1
 );
 
+const BITRIX_DEAL_TYPE = process.env.BITRIX_DEAL_TYPE || "SERVICES";
+
 // 🆕 ID етапів "NEW" для кожної воронки
 // приклад значень: "NEW", "C1:NEW", "C2:NEW"
 // якщо не задано, підставляємо за замовчуванням
@@ -268,6 +270,22 @@ function buildCleaningComment(requestDoc, userDoc) {
 function buildDetailingComment(requestDoc, userDoc, vehicleDoc) {
   const lines = [];
 
+  // Розбираємо items_json (масив [{title, price, qty}])
+  let items = [];
+  try {
+    const parsed = JSON.parse(requestDoc.items_json || "[]");
+    if (Array.isArray(parsed)) items = parsed;
+  } catch {
+    items = [];
+  }
+
+  const mainService = items[0] || null;
+  const addons = items
+    .slice(1)
+    .filter((it) => it && typeof it.title === "string" && it.title !== "Tip");
+
+  const tipItem = items.find((it) => it && it.title === "Tip");
+
   lines.push("DETAILING BOOKING");
   lines.push("");
   lines.push("Main information:");
@@ -276,6 +294,33 @@ function buildDetailingComment(requestDoc, userDoc, vehicleDoc) {
   lines.push(`- Service date: ${requestDoc.service_date || "-"}`);
   lines.push(`- Time window: ${requestDoc.time_window || "-"}`);
   lines.push("");
+
+  // Type Services (основний пакет)
+  if (mainService) {
+    lines.push("Type services (main package):");
+    const price = mainService.price != null ? `, price: ${mainService.price}` : "";
+    const qty = mainService.qty != null ? `, qty: ${mainService.qty}` : "";
+    lines.push(`- ${mainService.title}${price}${qty}`);
+    lines.push("");
+  }
+
+  // Additional services (додаткові послуги)
+  if (addons.length) {
+    lines.push("Additional services:");
+    addons.forEach((svc) => {
+      const price = svc.price != null ? `, price: ${svc.price}` : "";
+      const qty = svc.qty != null ? `, qty: ${svc.qty}` : "";
+      lines.push(`- ${svc.title}${price}${qty}`);
+    });
+    lines.push("");
+  }
+
+  // Tip (якщо є)
+  if (tipItem) {
+    lines.push("Tip:");
+    lines.push(`- Amount: ${tipItem.price != null ? tipItem.price : ""}`);
+    lines.push("");
+  }
 
   // Локація
   lines.push("Location:");
@@ -323,7 +368,6 @@ function buildDetailingComment(requestDoc, userDoc, vehicleDoc) {
   return text || "Detailing booking from website";
 }
 
-
 // ---- Хелпер для створення DEAL в Bitrix24 ----
 async function createBitrixDealFromRequest(requestDoc, userDoc) {
   if (!BITRIX_BASE_URL) {
@@ -348,6 +392,8 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
     const titlePrefix = isCleaning ? "Cleaning" : "Detailing";
 
     const opportunity = isCleaning ? 0 : (requestDoc.total ?? 0);
+
+    // Стадія: для воронки C{CATEGORY_ID}:NEW, або просто NEW
     const stageId =
       categoryId && categoryId > 0 ? `C${categoryId}:NEW` : "NEW";
 
@@ -370,7 +416,6 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
       ? buildCleaningComment(requestDoc, userDoc)
       : buildDetailingComment(requestDoc, userDoc, vehicleDoc);
 
-    // ↓ щоб в логах бачити, що саме ми шлемо в COMMENTS
     console.log("Bitrix COMMENTS payload:\n", commentText);
 
     const url = `${BITRIX_BASE_URL}crm.deal.add.json`;
@@ -378,17 +423,25 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
     const payload = {
       fields: {
         TITLE: `${titlePrefix} – ${fullName}`,
+
         CATEGORY_ID: categoryId,
         STAGE_ID: stageId,
+
+        // 🆕 Тип сделки — Services
+        TYPE_ID: BITRIX_DEAL_TYPE, // в UI буде видно як тип "Services" (якщо так налаштовано в Bitrix)
+
         OPPORTUNITY: opportunity,
         CURRENCY_ID: requestDoc.currency || "USD",
+
         ...(contactId ? { CONTACT_ID: contactId } : {}),
+
         PHONE: userDoc.phone
           ? [{ VALUE: userDoc.phone, VALUE_TYPE: "WORK" }]
           : [],
         EMAIL: userDoc.email
           ? [{ VALUE: userDoc.email, VALUE_TYPE: "WORK" }]
           : [],
+
         COMMENTS: commentText,
         SOURCE_ID: "WEB",
       },
@@ -398,7 +451,11 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
     console.log("Bitrix Deal created:", data);
 
     if (data && data.error) {
-      console.error("Bitrix deal error (body):", data.error, data.error_description);
+      console.error(
+        "Bitrix deal error (body):",
+        data.error,
+        data.error_description
+      );
     }
 
     return data;
@@ -409,8 +466,6 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
     );
   }
 }
-
-
 
 // ====================== OTP ======================
 
