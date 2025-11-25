@@ -279,7 +279,9 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
       userDoc.email ||
       "New client";
 
-    // 👇 тут вирішуємо, це Cleaning чи Detailing
+    // 🧠 Чітке правило:
+    //  - Cleaning: location_type === "cleaning"
+    //  - усе інше (mobile / shop / pickup) — Detailing
     const isCleaning = requestDoc.location_type === "cleaning";
 
     const categoryId = isCleaning
@@ -288,30 +290,84 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
 
     const titlePrefix = isCleaning ? "Cleaning" : "Detailing";
 
-    // Для Cleaning сума в угоді не ставиться
-    const opportunity = isCleaning ? 0 : (requestDoc.total ?? 0);
+    // ================== COMMENTS (структуровано) ==================
+    const sections = [];
 
-    // 🔗 створюємо/знаходимо контакт по email/phone
-    const contactId = await ensureBitrixContact({
-      fullName,
-      email: userDoc.email,
-      phone: userDoc.phone,
-    });
+    const pushSection = (title, lines) => {
+      const filtered = (lines || []).filter(Boolean);
+      if (!filtered.length) return;
+      sections.push(
+        `<b>${title}</b>`,
+        ...filtered.map((l) => `• ${l}`),
+        "" // порожній рядок як відступ між блоками
+      );
+    };
 
+    // 1) Тип бронювання
+    pushSection("Booking", [
+      titlePrefix,
+      requestDoc.location_type && `Location type: ${requestDoc.location_type}`,
+    ]);
+
+    // 2) Деталі сервісу
+    pushSection("Service details", [
+      requestDoc.service_date && `Service date: ${requestDoc.service_date}`,
+      requestDoc.time_window && `Time window: ${requestDoc.time_window}`,
+      requestDoc.service_address &&
+        `Service address: ${requestDoc.service_address}`,
+      requestDoc.pickup_address &&
+        `Pickup address: ${requestDoc.pickup_address}`,
+      requestDoc.dropoff_address &&
+        `Dropoff address: ${requestDoc.dropoff_address}`,
+    ]);
+
+    // 3) Фінанси — тільки для Detailing (для Cleaning взагалі нічого не шлемо)
+    if (!isCleaning) {
+      const hasMoney =
+        requestDoc.currency ||
+        requestDoc.subtotal != null ||
+        requestDoc.tax != null ||
+        requestDoc.total != null;
+
+      if (hasMoney) {
+        pushSection("Payment", [
+          requestDoc.currency && `Currency: ${requestDoc.currency}`,
+          requestDoc.subtotal != null &&
+            `Subtotal: $${Number(requestDoc.subtotal).toFixed(2)}`,
+          requestDoc.tax != null &&
+            `Tax: $${Number(requestDoc.tax).toFixed(2)}`,
+          requestDoc.total != null &&
+            `Total: $${Number(requestDoc.total).toFixed(2)}`,
+        });
+      }
+    }
+
+    // 4) Customer notes (те, що ми зібрали на фронті + будь-які нотатки)
+    const cleanedNotes = (requestDoc.notes_customer || "").trim();
+    if (cleanedNotes) {
+      sections.push("<b>Customer notes</b>", cleanedNotes, "");
+    }
+
+    const comments = sections.join("\n").trim();
+
+    // ================== PAYLOAD в Bitrix ==================
     const url = `${BITRIX_BASE_URL}crm.deal.add.json`;
 
     const payload = {
       fields: {
-        TITLE: `${titlePrefix} – ${fullName}`,
+        // Назва угоди — можна залишити просту, без зайвих "аналітик"
+        TITLE: `New Booking – ${titlePrefix}`,
 
         CATEGORY_ID: categoryId,
         STAGE_ID: "NEW",
 
-        OPPORTUNITY: opportunity,
+        // Opportunity:
+        //  - Cleaning → 0
+        //  - Detailing → total (якщо є)
+        OPPORTUNITY: isCleaning ? 0 : requestDoc.total ?? 0,
         CURRENCY_ID: requestDoc.currency || "USD",
 
-        ...(contactId ? { CONTACT_ID: contactId } : {}),
-
+        // контактні дані (Bitrix сам підхопить email/phone)
         NAME: fullName,
         PHONE: userDoc.phone
           ? [{ VALUE: userDoc.phone, VALUE_TYPE: "WORK" }]
@@ -320,10 +376,7 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
           ? [{ VALUE: userDoc.email, VALUE_TYPE: "WORK" }]
           : [],
 
-        COMMENTS: isCleaning
-          ? buildCleaningComment(requestDoc)
-          : buildDetailingComment(requestDoc),
-
+        COMMENTS: comments,
         SOURCE_ID: "WEB",
       },
     };
