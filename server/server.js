@@ -37,6 +37,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "dev_secret_change_me";
 const TOKEN_EXPIRES = process.env.TOKEN_EXPIRES || "7d";
 
 const BITRIX_BASE_URL = process.env.BITRIX_BASE_URL || "";
+
 // 🆕 ID воронок у Bitrix (ставиш свої значення з CRM)
 const BITRIX_CATEGORY_DETAILING = Number(
   process.env.BITRIX_CATEGORY_DETAILING ?? 0
@@ -44,6 +45,14 @@ const BITRIX_CATEGORY_DETAILING = Number(
 const BITRIX_CATEGORY_CLEANING = Number(
   process.env.BITRIX_CATEGORY_CLEANING ?? 1
 );
+
+// 🆕 ID етапів "NEW" для кожної воронки
+// приклад значень: "NEW", "C1:NEW", "C2:NEW"
+// якщо не задано, підставляємо за замовчуванням
+const BITRIX_STAGE_DETAILING_NEW =
+  process.env.BITRIX_STAGE_DETAILING_NEW || null;
+const BITRIX_STAGE_CLEANING_NEW =
+  process.env.BITRIX_STAGE_CLEANING_NEW || null;
 
 app.set("trust proxy", true);
 
@@ -100,8 +109,8 @@ function generateOtpCode() {
   return String(Math.floor(100000 + Math.random() * 900000)); // 6 цифр
 }
 
-// ---- Хелпер для створення DEAL в Bitrix24 ----
-// ---- Хелпери для Bitrix24 ----
+// ====================== Bitrix helpers ======================
+
 async function ensureBitrixContact({ fullName, email, phone }) {
   if (!BITRIX_BASE_URL) return null;
 
@@ -116,9 +125,9 @@ async function ensureBitrixContact({ fullName, email, phone }) {
       };
 
       if (email) {
-        listPayload.filter["EMAIL"] = email;
+        listPayload.filter.EMAIL = email;
       } else if (phone) {
-        listPayload.filter["PHONE"] = phone;
+        listPayload.filter.PHONE = phone;
       }
 
       const listUrl = `${BITRIX_BASE_URL}crm.contact.list.json`;
@@ -134,7 +143,7 @@ async function ensureBitrixContact({ fullName, email, phone }) {
       const addUrl = `${BITRIX_BASE_URL}crm.contact.add.json`;
       const addPayload = {
         fields: {
-          NAME: fullName || (email || phone || "Website client"),
+          NAME: fullName || email || phone || "Website client",
           TYPE_ID: "CLIENT",
           SOURCE_ID: "WEB",
           OPENED: "Y",
@@ -255,14 +264,16 @@ function buildCleaningComment(requestDoc, userDoc) {
   lines.push(`---`);
   lines.push(``);
   lines.push(`### **👤 Customer Information**`);
-  if (userDoc.first_name || userDoc.last_name)
-    lines.push(`**Name:** ${userDoc.first_name || ""} ${userDoc.last_name || ""}`);
+  if (userDoc.first_name || userDoc.last_name) {
+    lines.push(
+      `**Name:** ${userDoc.first_name || ""} ${userDoc.last_name || ""}`.trim()
+    );
+  }
   if (userDoc.email) lines.push(`**Email:** ${userDoc.email}`);
   if (userDoc.phone) lines.push(`**Phone:** ${userDoc.phone}`);
 
   return lines.join("\n");
 }
-
 
 function buildDetailingComment(requestDoc, userDoc, vehicleDoc) {
   const lines = [];
@@ -278,9 +289,12 @@ function buildDetailingComment(requestDoc, userDoc, vehicleDoc) {
 
   // LOCATION
   lines.push(`### **📍 Location**`);
-  if (requestDoc.service_address) lines.push(`**Service address:** ${requestDoc.service_address}`);
-  if (requestDoc.pickup_address) lines.push(`**Pickup:** ${requestDoc.pickup_address}`);
-  if (requestDoc.dropoff_address) lines.push(`**Dropoff:** ${requestDoc.dropoff_address}`);
+  if (requestDoc.service_address)
+    lines.push(`**Service address:** ${requestDoc.service_address}`);
+  if (requestDoc.pickup_address)
+    lines.push(`**Pickup:** ${requestDoc.pickup_address}`);
+  if (requestDoc.dropoff_address)
+    lines.push(`**Dropoff:** ${requestDoc.dropoff_address}`);
   lines.push(``);
 
   // VEHICLE
@@ -318,8 +332,11 @@ function buildDetailingComment(requestDoc, userDoc, vehicleDoc) {
   lines.push(`---`);
   lines.push(``);
   lines.push(`### **👤 Customer Information**`);
-  if (userDoc.first_name || userDoc.last_name)
-    lines.push(`**Name:** ${userDoc.first_name || ""} ${userDoc.last_name || ""}`);
+  if (userDoc.first_name || userDoc.last_name) {
+    lines.push(
+      `**Name:** ${userDoc.first_name || ""} ${userDoc.last_name || ""}`.trim()
+    );
+  }
   if (userDoc.email) lines.push(`**Email:** ${userDoc.email}`);
   if (userDoc.phone) lines.push(`**Phone:** ${userDoc.phone}`);
 
@@ -339,7 +356,7 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
       userDoc.email ||
       "New client";
 
-    // ✅ Визначаємо Cleaning / Detailing по service_type
+    // Визначаємо Cleaning / Detailing
     const isCleaning = requestDoc.service_type
       ? requestDoc.service_type === "cleaning"
       : requestDoc.location_type === "cleaning";
@@ -350,15 +367,21 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
 
     const titlePrefix = isCleaning ? "Cleaning" : "Detailing";
 
-    // Для Cleaning сума в угоді не ставиться
-    const opportunity = isCleaning ? 0 : (requestDoc.total ?? 0);
+    // Для Cleaning сума = 0, для Detailing беремо total (як число)
+    const opportunity = isCleaning
+      ? 0
+      : Number(requestDoc.total ?? 0) || 0;
 
-    // 🔗 Контакт
-    const contactId = await ensureBitrixContact({
-      fullName,
-      email: userDoc.email,
-      phone: userDoc.phone,
-    });
+    // Коректний STAGE_ID для конкретної воронки
+    const stageId = isCleaning
+      ? BITRIX_STAGE_CLEANING_NEW ||
+        (BITRIX_CATEGORY_CLEANING > 0
+          ? `C${BITRIX_CATEGORY_CLEANING}:NEW`
+          : "NEW")
+      : BITRIX_STAGE_DETAILING_NEW ||
+        (BITRIX_CATEGORY_DETAILING > 0
+          ? `C${BITRIX_CATEGORY_DETAILING}:NEW`
+          : "NEW");
 
     // 🔎 Підтягнемо авто для Detailing (якщо є)
     let vehicleDoc = null;
@@ -377,12 +400,14 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
         TITLE: `${titlePrefix} – ${fullName}`,
 
         CATEGORY_ID: categoryId,
-        STAGE_ID: "NEW",
+        STAGE_ID: stageId,
 
         OPPORTUNITY: opportunity,
         CURRENCY_ID: requestDoc.currency || "USD",
 
-        ...(contactId ? { CONTACT_ID: contactId } : {}),
+        ...(contactId
+          ? { CONTACT_ID: contactId }
+          : {}),
 
         NAME: fullName,
         PHONE: userDoc.phone
@@ -392,7 +417,6 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
           ? [{ VALUE: userDoc.email, VALUE_TYPE: "WORK" }]
           : [],
 
-        // ✅ Тут уже використовуємо нові, структуровані коментарі
         COMMENTS: isCleaning
           ? buildCleaningComment(requestDoc, userDoc)
           : buildDetailingComment(requestDoc, userDoc, vehicleDoc),
@@ -400,6 +424,19 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
         SOURCE_ID: "WEB",
       },
     };
+
+    // 🔗 Контакт (важливо робити до payload, бо CONTACT_ID залежить від contactId)
+    const contactId = await ensureBitrixContact({
+      fullName,
+      email: userDoc.email,
+      phone: userDoc.phone,
+    });
+
+    if (contactId) {
+      payload.fields.CONTACT_ID = contactId;
+    }
+
+    console.log("Bitrix deal payload:", JSON.stringify(payload, null, 2));
 
     const { data } = await axios.post(url, payload);
     console.log("Bitrix Deal created:", data);
@@ -409,7 +446,7 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
   }
 }
 
-
+// ====================== OTP ======================
 
 // Уніфікований ендпоінт для відправки OTP
 // body: { email, purpose: "verify" | "reset" }
@@ -462,7 +499,6 @@ app.post("/api/auth/otp/verify", async (req, res) => {
     const normalizedPurpose = purpose === "reset" ? "reset" : "signup";
 
     if (normalizedPurpose === "signup") {
-      // це по суті те саме, що /api/auth/verify-email-otp
       const otp = await OtpCode.findOne({
         email,
         code,
@@ -503,8 +539,6 @@ app.post("/api/auth/otp/verify", async (req, res) => {
     }
 
     if (normalizedPurpose === "reset") {
-      // тут тільки перевіряємо код, НЕ відмічаємо used,
-      // щоб потім /api/auth/reset-password ще зміг його використати
       const otp = await OtpCode.findOne({
         email,
         code,
@@ -517,7 +551,6 @@ app.post("/api/auth/otp/verify", async (req, res) => {
         return res.status(400).json({ error: "Invalid or expired code" });
       }
 
-      // просто кажемо фронту "окей, код правильний"
       return res.json({ ok: true });
     }
 
@@ -630,12 +663,11 @@ app.post("/api/auth/request-reset-otp", async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      // Щоб не палити, що юзер відсутній — просто OK
       return res.json({ ok: true });
     }
 
     const code = generateOtpCode();
-    const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 хв
+    const expires = new Date(Date.now() + 10 * 60 * 1000);
 
     await OtpCode.create({
       email,
@@ -654,7 +686,6 @@ app.post("/api/auth/request-reset-otp", async (req, res) => {
 });
 
 // POST /api/auth/verify-email-otp
-// body: { email, code }
 app.post("/api/auth/verify-email-otp", async (req, res) => {
   const { email, code } = req.body || {};
   if (!email || !code) {
@@ -704,7 +735,6 @@ app.post("/api/auth/verify-email-otp", async (req, res) => {
 });
 
 // POST /api/auth/reset-password
-// body: { email, code, new_password }
 app.post("/api/auth/reset-password", async (req, res) => {
   const { email, code, new_password } = req.body || {};
   if (!email || !code || !new_password) {
@@ -719,18 +749,16 @@ app.post("/api/auth/reset-password", async (req, res) => {
       code,
       purpose: "reset",
       used: false,
-      expires_at: { $gt: new Date() }, // ще не протух
+      expires_at: { $gt: new Date() },
     });
 
     if (!otp) {
       return res.status(400).json({ error: "Invalid or expired code" });
     }
 
-    // помічаємо код використаним
     otp.used = true;
     await otp.save();
 
-    // оновлюємо пароль
     const hash = bcrypt.hashSync(new_password, 10);
     const user = await User.findOneAndUpdate(
       { email },
@@ -740,7 +768,6 @@ app.post("/api/auth/reset-password", async (req, res) => {
 
     if (!user) return res.status(404).json({ error: "user not found" });
 
-    // Можна одразу залогінити
     const packed = {
       id: user._id.toString(),
       email: user.email,
@@ -758,7 +785,7 @@ app.post("/api/auth/reset-password", async (req, res) => {
   }
 });
 
-// login (повертає user + JWT)
+// login
 app.post("/api/auth/login", async (req, res) => {
   const { email, password } = req.body || {};
   try {
@@ -798,7 +825,6 @@ app.get("/api/auth/me", auth, async (req, res) => {
 
 // ====================== CONTENT BLOCKS ======================
 
-// GET відкриті
 app.get("/api/content", async (req, res) => {
   const { page, lang = "en" } = req.query;
 
@@ -841,7 +867,6 @@ app.get("/api/content/by-key/:key", async (req, res) => {
   }
 });
 
-// Записні — лише admin
 app.post("/api/content", auth, requireAdmin, async (req, res) => {
   const {
     key,
@@ -928,7 +953,6 @@ app.delete("/api/content/:id", auth, requireAdmin, async (req, res) => {
 
 // ====================== CARDS ======================
 
-// GET відкриті
 app.get("/api/cards", async (req, res) => {
   const { type, published, slug, slug_in } = req.query;
 
@@ -937,12 +961,10 @@ app.get("/api/cards", async (req, res) => {
     if (type) filter.type = type;
     if (published != null) filter.published = !!Number(published);
 
-    // 🔹 фільтр по одному slug
     if (slug) {
       filter.slug = slug;
     }
 
-    // 🔹 кілька slug через кому: ?slug_in=detailing,detailing_addon
     if (slug_in) {
       const list = String(slug_in)
         .split(",")
@@ -969,7 +991,6 @@ app.get("/api/cards", async (req, res) => {
   }
 });
 
-// Запис/оновлення/видалення — лише admin
 app.post("/api/cards", auth, requireAdmin, async (req, res) => {
   const {
     type,
@@ -1066,6 +1087,7 @@ app.delete("/api/cards/:id", auth, requireAdmin, async (req, res) => {
 });
 
 // ====================== UPLOADS (тільки admin) ======================
+
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
   filename: (_req, file, cb) => {
@@ -1089,6 +1111,7 @@ app.post(
 );
 
 // ====================== PROFILE ======================
+
 app.get("/api/me/profile", auth, async (req, res) => {
   const userDoc = await User.findById(req.user.uid).lean();
   if (!userDoc) return res.status(404).json({ error: "not found" });
@@ -1119,7 +1142,8 @@ app.put("/api/me/profile", auth, async (req, res) => {
   res.json(u);
 });
 
-// ====================== VEHICLES (тільки свої) ======================
+// ====================== VEHICLES ======================
+
 app.get("/api/me/vehicles", auth, async (req, res) => {
   const rows = await Vehicle.find({ user_id: req.user.uid })
     .sort({ _id: -1 })
@@ -1192,7 +1216,6 @@ app.delete("/api/me/vehicles/:id", auth, async (req, res) => {
 
 // ====================== PAYMENT METHODS ======================
 
-// GET /api/me/payment-methods
 app.get("/api/me/payment-methods", auth, async (req, res) => {
   const rows = await UserPaymentMethod.find({ user_id: req.user.uid })
     .sort({ is_default: -1, _id: -1 })
@@ -1207,7 +1230,6 @@ app.get("/api/me/payment-methods", auth, async (req, res) => {
   res.json(normalized);
 });
 
-// POST /api/me/payment-methods
 app.post("/api/me/payment-methods", auth, async (req, res) => {
   const { brand, last4, exp_month, exp_year, is_default } = req.body || {};
   if (!brand || !last4 || !exp_month || !exp_year) {
@@ -1242,7 +1264,6 @@ app.post("/api/me/payment-methods", auth, async (req, res) => {
   }
 });
 
-// PUT /api/me/payment-methods/:id
 app.put("/api/me/payment-methods/:id", auth, async (req, res) => {
   const id = req.params.id;
   const { brand, last4, exp_month, exp_year, is_default } = req.body || {};
@@ -1282,7 +1303,6 @@ app.put("/api/me/payment-methods/:id", auth, async (req, res) => {
   }
 });
 
-// DELETE /api/me/payment-methods/:id
 app.delete("/api/me/payment-methods/:id", auth, async (req, res) => {
   const id = req.params.id;
   const owner = await UserPaymentMethod.findById(id);
@@ -1296,7 +1316,6 @@ app.delete("/api/me/payment-methods/:id", auth, async (req, res) => {
 
 // ====================== REQUESTS (юзер) ======================
 
-// GET /api/requests
 app.get("/api/requests", auth, async (req, res) => {
   const rows = await RequestModel.find({ user_id: req.user.uid })
     .sort({ created_at: -1 })
@@ -1310,7 +1329,6 @@ app.get("/api/requests", auth, async (req, res) => {
   res.json(normalized);
 });
 
-// GET /api/requests/:id
 app.get("/api/requests/:id", auth, async (req, res) => {
   const id = req.params.id;
   const row = await RequestModel.findOne({
@@ -1324,7 +1342,6 @@ app.get("/api/requests/:id", auth, async (req, res) => {
   res.json(row);
 });
 
-// POST /api/requests
 app.post("/api/requests", auth, async (req, res) => {
   const {
     vehicle_id,
@@ -1370,7 +1387,6 @@ app.post("/api/requests", auth, async (req, res) => {
       updated_at: new Date(),
     });
 
-    // --- Bitrix: створюємо DEAL у CRM ---
     try {
       const userDoc = await User.findById(req.user.uid).lean();
       if (userDoc) {
@@ -1390,7 +1406,6 @@ app.post("/api/requests", auth, async (req, res) => {
   }
 });
 
-// PUT /api/requests/:id
 app.put("/api/requests/:id", auth, async (req, res) => {
   const id = req.params.id;
   const exists = await RequestModel.findOne({ _id: id, user_id: req.user.uid });
@@ -1443,7 +1458,6 @@ app.put("/api/requests/:id", auth, async (req, res) => {
   res.json(row);
 });
 
-// DELETE /api/requests/:id
 app.delete("/api/requests/:id", auth, async (req, res) => {
   const id = req.params.id;
   const exists = await RequestModel.findOne({ _id: id, user_id: req.user.uid });
@@ -1455,7 +1469,6 @@ app.delete("/api/requests/:id", auth, async (req, res) => {
 
 // ====================== ADMIN: REQUESTS ======================
 
-// список усіх заявок з фільтрами
 app.get("/api/admin/requests", auth, requireAdmin, async (req, res) => {
   const { status } = req.query;
   const filter = {};
@@ -1495,7 +1508,6 @@ app.get("/api/admin/requests", auth, requireAdmin, async (req, res) => {
   }
 });
 
-// отримати одну заявку
 app.get("/api/admin/requests/:id", auth, requireAdmin, async (req, res) => {
   const id = req.params.id;
   try {
@@ -1511,7 +1523,6 @@ app.get("/api/admin/requests/:id", auth, requireAdmin, async (req, res) => {
   }
 });
 
-// створити нову (адмін від імені користувача)
 app.post("/api/admin/requests", auth, requireAdmin, async (req, res) => {
   const { user_id, ...rest } = req.body || {};
   if (!user_id) return res.status(400).json({ error: "user_id required" });
@@ -1566,7 +1577,6 @@ app.post("/api/admin/requests", auth, requireAdmin, async (req, res) => {
   }
 });
 
-// оновити будь-яку
 app.put("/api/admin/requests/:id", auth, requireAdmin, async (req, res) => {
   const id = req.params.id;
   const {
@@ -1628,7 +1638,6 @@ app.put("/api/admin/requests/:id", auth, requireAdmin, async (req, res) => {
   }
 });
 
-// видалити
 app.delete("/api/admin/requests/:id", auth, requireAdmin, async (req, res) => {
   const id = req.params.id;
   try {
@@ -1643,7 +1652,7 @@ app.delete("/api/admin/requests/:id", auth, requireAdmin, async (req, res) => {
 // ---- запуск ----
 initDb()
   .then(async () => {
-    await seedAdmin(); // 🟢 створюємо адміна, якщо немає
+    await seedAdmin();
 
     app.listen(PORT, HOST, () => {
       console.log(
