@@ -37,6 +37,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "dev_secret_change_me";
 const TOKEN_EXPIRES = process.env.TOKEN_EXPIRES || "7d";
 
 const BITRIX_BASE_URL = process.env.BITRIX_BASE_URL || "";
+console.log("BITRIX_BASE_URL =", BITRIX_BASE_URL);
 
 app.set("trust proxy", true);
 
