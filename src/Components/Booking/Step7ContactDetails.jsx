@@ -20,27 +20,36 @@ const Step7ContactDetails = ({
   onNext,
   onBack,
   progressActive = 6,
-  user = null,             // <--- Додаємо (передаватимемо з Booking.jsx)
+  user = null,
+  // 🔹 додаємо керований стейт дати з Booking.jsx
+  serviceDate,
+  setServiceDate,
 }) => {
   if (!visible) return null;
 
   const isLoggedIn = !!user;
-
-  // показувати форму чи картку
   const [enterNew, setEnterNew] = useState(false);
 
-  // Якщо юзер залогінений і НЕ натиснув "Enter new details" → показуємо картку
+  // показувати форму чи картку
   const showAccountCard = isLoggedIn && !enterNew;
 
+  // можна рухатися далі тільки якщо заповнені контакти + вибрана дата
+  const hasDate = !!serviceDate;
+  const canProceed = canContinueContact && hasDate;
+
   const handleUseAccount = () => {
-    // дані вже підставлені з useEffect у Booking.jsx
+    if (!canProceed) return; // захист від випадкового кліку
+    onNext();
+  };
+
+  const handleContinueNew = () => {
+    if (!canProceed) return;
     onNext();
   };
 
   return (
     <div className="w-full max-w-full min-w-0 text-left">
       <div className="bg-white/90 backdrop-blur rounded-[24px] p-4 sm:p-5 shadow space-y-4">
-
         {/* HEADER */}
         <div className="flex items-center gap-3">
           <button
@@ -68,10 +77,25 @@ const Step7ContactDetails = ({
           ))}
         </div>
 
+        {/* 🔹 БЛОК ВИБОРУ ДАТИ (обовʼязковий для всіх) */}
+        <div className="space-y-2">
+          <p className="text-[15px] font-semibold text-[#18181B]">
+            Preferred service date
+          </p>
+          <DatePicker
+            value={serviceDate}
+            onChange={setServiceDate}
+          />
+          {!hasDate && (
+            <p className="text-[12px] text-red-500">
+              Please select the date for your detailing service.
+            </p>
+          )}
+        </div>
+
         {/* ======= КАРТКА ЗАЛОГІНЕНОГО КОРИСТУВАЧА ======= */}
         {showAccountCard && (
           <div className="space-y-4">
-
             <div className="w-full rounded-[20px] border border-[#E5E7EB] bg-white p-4 flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-[#F4F4F5] flex items-center justify-center text-[20px] font-bold text-[#18181B]">
                 {firstName?.[0] || "U"}
@@ -87,7 +111,13 @@ const Step7ContactDetails = ({
 
             <button
               onClick={handleUseAccount}
-              className="w-full h-[52px] rounded-[88px] font-semibold text-black shadow"
+              disabled={!canProceed}
+              className={`w-full h-[52px] rounded-[88px] font-semibold text-black shadow
+                ${
+                  !canProceed
+                    ? "opacity-60 cursor-not-allowed"
+                    : ""
+                }`}
               style={{ background: GOLD_GRADIENT }}
             >
               Use this account
@@ -138,10 +168,14 @@ const Step7ContactDetails = ({
             </div>
 
             <button
-              onClick={onNext}
-              disabled={!canContinueContact}
+              onClick={handleContinueNew}
+              disabled={!canProceed}
               className={`w-full h-[52px] rounded-[88px] font-semibold text-black shadow inline-flex items-center justify-center gap-2
-                ${!canContinueContact ? "opacity-60 cursor-not-allowed" : ""}`}
+                ${
+                  !canProceed
+                    ? "opacity-60 cursor-not-allowed"
+                    : ""
+                }`}
               style={{ background: GOLD_GRADIENT }}
             >
               Continue <span className="text-lg">›</span>

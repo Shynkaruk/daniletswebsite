@@ -95,6 +95,64 @@ function generateOtpCode() {
 }
 
 // ---- Хелпер для створення DEAL в Bitrix24 ----
+// ---- Хелпери для Bitrix24 ----
+async function ensureBitrixContact({ fullName, email, phone }) {
+  if (!BITRIX_BASE_URL) return null;
+
+  try {
+    let contactId = null;
+
+    // 1) Спробувати знайти контакт по email або телефону
+    if (email || phone) {
+      const listPayload = {
+        filter: {},
+        select: ["ID"],
+      };
+
+      if (email) {
+        listPayload.filter["EMAIL"] = email;
+      } else if (phone) {
+        listPayload.filter["PHONE"] = phone;
+      }
+
+      const listUrl = `${BITRIX_BASE_URL}crm.contact.list.json`;
+      const listRes = await axios.post(listUrl, listPayload);
+      const found = listRes.data?.result?.[0];
+      if (found?.ID) {
+        contactId = found.ID;
+      }
+    }
+
+    // 2) Якщо не знайшли – створюємо нового контакта
+    if (!contactId) {
+      const addUrl = `${BITRIX_BASE_URL}crm.contact.add.json`;
+      const addPayload = {
+        fields: {
+          NAME: fullName || (email || phone || "Website client"),
+          TYPE_ID: "CLIENT",
+          SOURCE_ID: "WEB",
+          OPENED: "Y",
+          PHONE: phone
+            ? [{ VALUE: phone, VALUE_TYPE: "WORK" }]
+            : [],
+          EMAIL: email
+            ? [{ VALUE: email, VALUE_TYPE: "WORK" }]
+            : [],
+        },
+      };
+
+      const addRes = await axios.post(addUrl, addPayload);
+      contactId = addRes.data?.result || null;
+    }
+
+    return contactId;
+  } catch (err) {
+    console.error("Bitrix contact error:", err.response?.data || err.message);
+    return null;
+  }
+}
+
+// ---- Хелпер для створення DEAL в Bitrix24 ----
 async function createBitrixDealFromRequest(requestDoc, userDoc) {
   if (!BITRIX_BASE_URL) {
     console.warn("BITRIX_BASE_URL not set, skipping Bitrix deal creation");
@@ -104,50 +162,83 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
   try {
     const fullName =
       `${userDoc.first_name || ""} ${userDoc.last_name || ""}`.trim() ||
-      userDoc.email;
+      userDoc.email ||
+      "Website client";
 
-    // створюємо СДЕЛКУ
+    // Категорія (Detailing / Cleaning)
+    let categoryLabel = "Detailing";
+    if (requestDoc.service_type === "cleaning") categoryLabel = "Cleaning";
+    if (requestDoc.service_type === "detailing") categoryLabel = "Detailing";
+
+    // Дата сервісу (як є, або "-")
+    const serviceDateStr =
+      requestDoc.service_date instanceof Date
+        ? requestDoc.service_date.toISOString().slice(0, 10)
+        : requestDoc.service_date || "-";
+
+    // Дата заявки (created_at)
+    const createdAtStr =
+      requestDoc.created_at instanceof Date
+        ? requestDoc.created_at.toISOString().slice(0, 10)
+        : requestDoc.created_at || "-";
+
+    // 1) Готуємо/забезпечуємо контакт в Bitrix
+    const contactId = await ensureBitrixContact({
+      fullName,
+      email: userDoc.email,
+      phone: userDoc.phone,
+    });
+
+    // 2) Структурований коментар
+    const comments = `
+=== BOOKING ===
+Category: ${categoryLabel}
+Location type: ${requestDoc.location_type || "-"}
+Service date: ${serviceDateStr}
+Request created at: ${createdAtStr}
+Service address: ${requestDoc.service_address || "-"}
+Pickup address: ${requestDoc.pickup_address || "-"}
+Dropoff address: ${requestDoc.dropoff_address || "-"}
+Currency: ${requestDoc.currency || "USD"}
+Subtotal: ${requestDoc.subtotal ?? 0}
+Tax: ${requestDoc.tax ?? 0}
+Total: ${requestDoc.total ?? 0}
+
+=== CUSTOMER ===
+Name: ${fullName}
+Phone: ${userDoc.phone || "-"}
+Email: ${userDoc.email || "-"}
+
+=== NOTES ===
+${requestDoc.notes_customer || "-"}
+    `.trim();
+
+    // 3) Створюємо СДЕЛКУ
     const url = `${BITRIX_BASE_URL}crm.deal.add.json`;
 
     const payload = {
       fields: {
-        TITLE: `New Booking – ${requestDoc.location_type || "service"}`,
+        // 🔹 Заголовок: [Category] – [Name]
+        TITLE: `${categoryLabel} – ${fullName}`,
 
-        // воронка + перша стадія
-        CATEGORY_ID: 0, // ID твоєї воронки (якщо інший – поміняєш тут)
-        STAGE_ID: "NEW", // перша стадія (колонка "New")
+        // Воронка + перша стадія
+        CATEGORY_ID: 0,      // якщо у тебе інша воронка – поміняєш
+        STAGE_ID: "NEW",     // перша стадія (колонка "New")
 
-        // гроші
+        // Гроші
         OPPORTUNITY: requestDoc.total ?? 0,
         CURRENCY_ID: requestDoc.currency || "USD",
 
-        // контактні дані
-        NAME: fullName,
-        PHONE: userDoc.phone
-          ? [{ VALUE: userDoc.phone, VALUE_TYPE: "WORK" }]
-          : [],
-        EMAIL: userDoc.email
-          ? [{ VALUE: userDoc.email, VALUE_TYPE: "WORK" }]
-          : [],
+        // Прив'язка до контакту (щоб в CRM бачили телефон + email)
+        CONTACT_ID: contactId || undefined,
 
-        // коментар — тут є і дата детінлінгу
-        COMMENTS: `
-Status: ${requestDoc.status}
-Location type: ${requestDoc.location_type}
-Service date: ${requestDoc.service_date || "-"}
-Time window: ${requestDoc.time_window || "-"}
-Service address: ${requestDoc.service_address || "-"}
-Pickup address: ${requestDoc.pickup_address || "-"}
-Dropoff address: ${requestDoc.dropoff_address || "-"}
-Currency: ${requestDoc.currency}
-Subtotal: ${requestDoc.subtotal}
-Tax: ${requestDoc.tax}
-Total: ${requestDoc.total}
+        // Коментар
+        COMMENTS: comments,
 
-Customer notes:
-${requestDoc.notes_customer || "-"}
-        `,
         SOURCE_ID: "WEB",
+      },
+      params: {
+        REGISTER_SONET_EVENT: "Y",
       },
     };
 
@@ -158,6 +249,7 @@ ${requestDoc.notes_customer || "-"}
     console.error("Bitrix deal error:", err.response?.data || err.message);
   }
 }
+
 
 // Уніфікований ендпоінт для відправки OTP
 // body: { email, purpose: "verify" | "reset" }
@@ -1080,6 +1172,7 @@ app.post("/api/requests", auth, async (req, res) => {
     location_type = "shop",
     service_date,
     time_window,
+    service_type,
     service_address,
     pickup_address,
     dropoff_address,
@@ -1091,6 +1184,10 @@ app.post("/api/requests", auth, async (req, res) => {
     notes_customer,
   } = req.body || {};
 
+  if (!service_date) {
+    return res.status(400).json({ error: "service_date required" });
+  }
+
   try {
     const doc = await RequestModel.create({
       user_id: req.user.uid,
@@ -1098,6 +1195,7 @@ app.post("/api/requests", auth, async (req, res) => {
       status,
       location_type,
       service_date: service_date || null,
+      service_type: service_type || null,
       time_window: time_window || null,
       service_address: service_address || null,
       pickup_address: pickup_address || null,

@@ -113,7 +113,7 @@ const Booking = () => {
   const navigate = useNavigate();
 
   const tabs = CATEGORY_TABS.map((t) => t.label);
-  const [active, setActive] = useState(tabs[0]); // default: Cleaning
+  const [active, setActive] = useState(tabs[0]); // default: Detailing
   const activeKey = useMemo(
     () => CATEGORY_TABS.find((t) => t.label === active)?.key || "",
     [active]
@@ -310,37 +310,36 @@ const Booking = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeKey]);
 
-useEffect(() => {
-  let ignore = false;
+  useEffect(() => {
+    let ignore = false;
 
-  (async () => {
-    setLoadingAddons(true);
-    try {
-      // Add-ons потрібні тільки для Detailing
-      if (activeKey !== "detailing") {
-        if (!ignore) setAddonsDb([]);
-        return;
+    (async () => {
+      setLoadingAddons(true);
+      try {
+        // Add-ons потрібні тільки для Detailing
+        if (activeKey !== "detailing") {
+          if (!ignore) setAddonsDb([]);
+          return;
+        }
+
+        const ad = await cardsApi.list({
+          type: "service",
+          published: 1,
+          slug: "detailing_addon", // 🔑 наш slug для додаткових послуг
+        });
+
+        if (!ignore) {
+          setAddonsDb(Array.isArray(ad) ? ad : []);
+        }
+      } finally {
+        if (!ignore) setLoadingAddons(false);
       }
+    })();
 
-      const ad = await cardsApi.list({
-        type: "service",
-        published: 1,
-        slug: "detailing_addon", // 🔑 наш slug для додаткових послуг
-      });
-
-      if (!ignore) {
-        setAddonsDb(Array.isArray(ad) ? ad : []);
-      }
-    } finally {
-      if (!ignore) setLoadingAddons(false);
-    }
-  })();
-
-  return () => {
-    ignore = true;
-  };
-}, [activeKey]);
-
+    return () => {
+      ignore = true;
+    };
+  }, [activeKey]);
 
   const [selectedAddOns, setSelectedAddOns] = useState(new Set());
 
@@ -364,11 +363,17 @@ useEffect(() => {
   const [phone, setPhone] = useState("");
   const [birthday, setBirthday] = useState("");
   const [email, setEmail] = useState("");
+  const [serviceDate, setServiceDate] = useState(null);
 
   const isEmail = (v) => /\S+@\S+\.\S+/.test(v);
   const isPhone = (v) => v.replace(/[^\d]/g, "").length >= 7;
+
   const canContinueContact =
-    firstName.trim() && lastName.trim() && isPhone(phone) && isEmail(email);
+    firstName.trim() &&
+    lastName.trim() &&
+    isPhone(phone) &&
+    isEmail(email) &&
+    !!serviceDate; // 🔹 тепер дата обов'язкова для всіх
 
   /** ---------- STEP 8: Checkout / Submit ---------- */
   const [receiptOnly, setReceiptOnly] = useState(false);
@@ -539,7 +544,7 @@ useEffect(() => {
     if (!canContinueContact) {
       openInfoModal(
         "Contact details incomplete",
-        "Please fill in all required contact fields (name, phone, email) before submitting."
+        "Please fill in all required contact fields (name, phone, email, service date) before submitting."
       );
       return;
     }
@@ -570,6 +575,7 @@ useEffect(() => {
         "Booked via website",
         `Category: ${activeKey}`,
         selectedServiceObj ? `Service: ${selectedServiceObj.title}` : null,
+        serviceDate ? `Service date: ${serviceDate}` : null,
       ];
 
       if (activeKey === "detailing") {
@@ -627,8 +633,9 @@ useEffect(() => {
       const payload = {
         vehicle_id,
         status: "new",
+        service_type: activeKey, // 🔹 важливо для CRM: "detailing" або "cleaning"
         location_type: loc.location_type,
-        service_date: null,
+        service_date: serviceDate || null,
         time_window: null,
         service_address: loc.service_address,
         pickup_address: loc.pickup_address,
@@ -833,6 +840,8 @@ useEffect(() => {
             onBack={() => (isCleaning ? setStep(2) : setStep(6))}
             progressActive={isCleaning ? 4 : 6}
             user={user}
+            serviceDate={serviceDate}
+            setServiceDate={setServiceDate}
           />
 
           {/* STEP 8: Checkout / Submit */}

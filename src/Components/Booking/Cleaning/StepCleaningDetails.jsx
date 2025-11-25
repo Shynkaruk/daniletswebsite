@@ -1,10 +1,9 @@
 // src/Components/Booking/StepCleaningDetails.jsx
 import React from "react";
 import { FiChevronLeft } from "react-icons/fi";
-import DatePicker from "../DatePicker";
 
 const GOLD_GRADIENT =
-  "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#45.99%,#E1C07B 77.51%)";
+  "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
 
 const AREAS_OPTIONS = [
   "Kitchen",
@@ -79,8 +78,6 @@ const StepCleaningDetails = ({
   setKitchenTasks,
   resBudget,
   setResBudget,
-  dueDate,
-  setDueDate,
   extraDetails,
   setExtraDetails,
 
@@ -118,8 +115,7 @@ const StepCleaningDetails = ({
       !!bathrooms &&
       areas.length > 0 &&
       generalTasks.length > 0 &&
-      !!resBudget &&
-      !!dueDate;
+      !!resBudget; // 🔹 дату прибрали
   } else if (isCommercial) {
     canContinue =
       !!propertyType &&
@@ -331,7 +327,7 @@ const StepCleaningDetails = ({
               </div>
             </section>
 
-            {/* Budget + date + notes (Residential) */}
+            {/* Budget + notes (без дати) */}
             <section className="bg-white rounded-[20px] border border-[#E5E7EB] p-4 space-y-4">
               <div className="space-y-2">
                 <div className="text-sm text-[#6B7280] font-medium">
@@ -341,18 +337,6 @@ const StepCleaningDetails = ({
                   value={resBudget}
                   onChange={(e) => setResBudget(e.target.value)}
                   className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-sm text-[#6B7280] font-medium">
-                  By what date does the service need to be done? *
-                </div>
-                <DatePicker
-                  value={dueDate}
-                  onChange={setDueDate}
-                  disablePast={true}
-                  displayFormat="MM.DD.YYYY" // 11.21.2025 формат
                 />
               </div>
 
@@ -451,7 +435,6 @@ const StepCleaningDetails = ({
                   onChange={(e) => setComBudget(e.target.value)}
                   className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none w-full"
                 >
-                  {/* поле пусте до вибору, без placeholder тексту */}
                   <option value=""></option>
                   <option value="Below $1,000">Below $1,000</option>
                   <option value="Between $1,000-$3,000">
