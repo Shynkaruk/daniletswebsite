@@ -298,9 +298,7 @@ function buildDetailingComment(requestDoc, userDoc, vehicleDoc) {
   // Type Services (основний пакет)
   if (mainService) {
     lines.push("Type services (main package):");
-    const price = mainService.price != null ? `, price: ${mainService.price}` : "";
-    const qty = mainService.qty != null ? `, qty: ${mainService.qty}` : "";
-    lines.push(`- ${mainService.title}${price}${qty}`);
+    lines.push(`- ${mainService.title}`);
     lines.push("");
   }
 
@@ -308,9 +306,7 @@ function buildDetailingComment(requestDoc, userDoc, vehicleDoc) {
   if (addons.length) {
     lines.push("Additional services:");
     addons.forEach((svc) => {
-      const price = svc.price != null ? `, price: ${svc.price}` : "";
-      const qty = svc.qty != null ? `, qty: ${svc.qty}` : "";
-      lines.push(`- ${svc.title}${price}${qty}`);
+      lines.push(`- ${svc.title}`);
     });
     lines.push("");
   }
@@ -318,7 +314,9 @@ function buildDetailingComment(requestDoc, userDoc, vehicleDoc) {
   // Tip (якщо є)
   if (tipItem) {
     lines.push("Tip:");
-    lines.push(`- Amount: ${tipItem.price != null ? tipItem.price : ""}`);
+    lines.push(
+      `- Amount: ${tipItem.price != null ? tipItem.price : ""}`
+    );
     lines.push("");
   }
 
@@ -359,7 +357,9 @@ function buildDetailingComment(requestDoc, userDoc, vehicleDoc) {
 
   // Клієнт
   lines.push("Customer information:");
-  const nameLine = `${userDoc.first_name || ""} ${userDoc.last_name || ""}`.trim();
+  const nameLine = `${userDoc.first_name || ""} ${
+    userDoc.last_name || ""
+  }`.trim();
   if (nameLine) lines.push(`- Name: ${nameLine}`);
   if (userDoc.email) lines.push(`- Email: ${userDoc.email}`);
   if (userDoc.phone) lines.push(`- Phone: ${userDoc.phone}`);
@@ -367,6 +367,7 @@ function buildDetailingComment(requestDoc, userDoc, vehicleDoc) {
   const text = lines.join("\n").trim();
   return text || "Detailing booking from website";
 }
+
 
 // ---- Хелпер для створення DEAL в Bitrix24 ----
 async function createBitrixDealFromRequest(requestDoc, userDoc) {
@@ -393,7 +394,7 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
 
     const opportunity = isCleaning ? 0 : (requestDoc.total ?? 0);
 
-    // Стадія: для воронки C{CATEGORY_ID}:NEW, або просто NEW
+    // Стадія воронки
     const stageId =
       categoryId && categoryId > 0 ? `C${categoryId}:NEW` : "NEW";
 
@@ -403,6 +404,7 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
       phone: userDoc.phone,
     });
 
+    // Авто (для Detailing)
     let vehicleDoc = null;
     if (!isCleaning && requestDoc.vehicle_id) {
       try {
@@ -427,8 +429,8 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
         CATEGORY_ID: categoryId,
         STAGE_ID: stageId,
 
-        // 🆕 Тип сделки — Services
-        TYPE_ID: BITRIX_DEAL_TYPE, // в UI буде видно як тип "Services" (якщо так налаштовано в Bitrix)
+        // Тип сделки — Services
+        TYPE_ID: BITRIX_DEAL_TYPE,
 
         OPPORTUNITY: opportunity,
         CURRENCY_ID: requestDoc.currency || "USD",
@@ -450,12 +452,57 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
     const { data } = await axios.post(url, payload);
     console.log("Bitrix Deal created:", data);
 
-    if (data && data.error) {
-      console.error(
-        "Bitrix deal error (body):",
-        data.error,
-        data.error_description
-      );
+    const dealId = data?.result;
+
+    if (!dealId) {
+      console.error("No dealId returned from Bitrix:", data);
+      return data;
+    }
+
+    // 🆕 Далі додаємо товари/послуги в угоду (тільки для Detailing)
+    if (!isCleaning) {
+      let items = [];
+      try {
+        const parsed = JSON.parse(requestDoc.items_json || "[]");
+        if (Array.isArray(parsed)) items = parsed;
+      } catch {
+        items = [];
+      }
+
+      const rows = items
+        .filter(
+          (it) =>
+            it &&
+            typeof it.title === "string" &&
+            it.title.trim() &&
+            it.title !== "Tip" // Tip не кидаємо в товари, тільки в коментар / total
+        )
+        .map((it) => ({
+          PRODUCT_NAME: it.title,
+          PRICE: Number(it.price) || 0,
+          QUANTITY:
+            it.qty != null && !Number.isNaN(Number(it.qty))
+              ? Number(it.qty)
+              : 1,
+        }));
+
+      if (rows.length) {
+        try {
+          const prodUrl = `${BITRIX_BASE_URL}crm.deal.productrows.set.json`;
+          const prodPayload = {
+            id: dealId,
+            rows,
+          };
+
+          const prodRes = await axios.post(prodUrl, prodPayload);
+          console.log("Bitrix product rows set:", prodRes.data);
+        } catch (e) {
+          console.error(
+            "Bitrix productrows.set error:",
+            e.response?.data || e.message
+          );
+        }
+      }
     }
 
     return data;
@@ -466,6 +513,7 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
     );
   }
 }
+
 
 // ====================== OTP ======================
 
