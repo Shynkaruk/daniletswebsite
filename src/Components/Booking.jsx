@@ -671,6 +671,7 @@ const Booking = () => {
       const payload = {
         vehicle_id,
         status: "new",
+        service_type: activeKey,         
         location_type: loc.location_type,
         service_date: serviceDate || null,
         time_window: null,
@@ -684,6 +685,7 @@ const Booking = () => {
         total: isCleaning ? 0 : total,
         notes_customer: notes,
       };
+
 
       const saved = await reqApi.saveMine(payload);
 

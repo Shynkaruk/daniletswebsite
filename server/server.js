@@ -356,7 +356,9 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
       userDoc.email ||
       "New client";
 
-    // Визначаємо Cleaning / Detailing
+    // ✅ Визначаємо Cleaning / Detailing:
+    // якщо service_type прийшов з фронта – використовуємо його
+    // інакше – фолбек по location_type
     const isCleaning = requestDoc.service_type
       ? requestDoc.service_type === "cleaning"
       : requestDoc.location_type === "cleaning";
@@ -367,21 +369,19 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
 
     const titlePrefix = isCleaning ? "Cleaning" : "Detailing";
 
-    // Для Cleaning сума = 0, для Detailing беремо total (як число)
-    const opportunity = isCleaning
-      ? 0
-      : Number(requestDoc.total ?? 0) || 0;
+    // Для Cleaning сума в угоді не ставиться
+    const opportunity = isCleaning ? 0 : (requestDoc.total ?? 0);
 
-    // Коректний STAGE_ID для конкретної воронки
-    const stageId = isCleaning
-      ? BITRIX_STAGE_CLEANING_NEW ||
-        (BITRIX_CATEGORY_CLEANING > 0
-          ? `C${BITRIX_CATEGORY_CLEANING}:NEW`
-          : "NEW")
-      : BITRIX_STAGE_DETAILING_NEW ||
-        (BITRIX_CATEGORY_DETAILING > 0
-          ? `C${BITRIX_CATEGORY_DETAILING}:NEW`
-          : "NEW");
+    // ✅ Правильний STAGE_ID для різних воронок
+    const stageId =
+      categoryId && categoryId > 0 ? `C${categoryId}:NEW` : "NEW";
+
+    // 🔗 Контакт
+    const contactId = await ensureBitrixContact({
+      fullName,
+      email: userDoc.email,
+      phone: userDoc.phone,
+    });
 
     // 🔎 Підтягнемо авто для Detailing (якщо є)
     let vehicleDoc = null;
@@ -405,9 +405,7 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
         OPPORTUNITY: opportunity,
         CURRENCY_ID: requestDoc.currency || "USD",
 
-        ...(contactId
-          ? { CONTACT_ID: contactId }
-          : {}),
+        ...(contactId ? { CONTACT_ID: contactId } : {}),
 
         NAME: fullName,
         PHONE: userDoc.phone
@@ -417,6 +415,7 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
           ? [{ VALUE: userDoc.email, VALUE_TYPE: "WORK" }]
           : [],
 
+        // Коментарі різні для Cleaning / Detailing
         COMMENTS: isCleaning
           ? buildCleaningComment(requestDoc, userDoc)
           : buildDetailingComment(requestDoc, userDoc, vehicleDoc),
@@ -425,26 +424,23 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
       },
     };
 
-    // 🔗 Контакт (важливо робити до payload, бо CONTACT_ID залежить від contactId)
-    const contactId = await ensureBitrixContact({
-      fullName,
-      email: userDoc.email,
-      phone: userDoc.phone,
-    });
-
-    if (contactId) {
-      payload.fields.CONTACT_ID = contactId;
-    }
-
-    console.log("Bitrix deal payload:", JSON.stringify(payload, null, 2));
-
     const { data } = await axios.post(url, payload);
     console.log("Bitrix Deal created:", data);
+
+    // Якщо Bitrix повернув помилку в тілі – теж залогуй
+    if (data && data.error) {
+      console.error("Bitrix deal error (body):", data.error);
+    }
+
     return data;
   } catch (err) {
-    console.error("Bitrix deal error:", err.response?.data || err.message);
+    console.error(
+      "Bitrix deal error:",
+      err.response?.data || err.message || err
+    );
   }
 }
+
 
 // ====================== OTP ======================
 
