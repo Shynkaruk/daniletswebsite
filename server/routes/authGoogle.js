@@ -1,21 +1,27 @@
-// server/routes/authGoogle.js
+// routes/authGoogle.js
 import express from "express";
 import { google } from "googleapis";
 import jwt from "jsonwebtoken";
-import { User } from "../db.js";
+import { User } from "../db.js"; // адаптуй якщо в тебе інший експорт
 
 const router = express.Router();
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI =
-  process.env.GOOGLE_REDIRECT_URI || "http://localhost:5173";
+// ВАЖЛИВО: має збігатися з тим, що використовує @react-oauth/google
+// за замовчуванням це window.location.origin (локал: http://localhost:5173)
+const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
 
 const oauth2Client = new google.auth.OAuth2(
   CLIENT_ID,
   CLIENT_SECRET,
   REDIRECT_URI
 );
+
+const { tokens } = await oauth2Client.getToken({
+  code,
+  redirect_uri: REDIRECT_URI,
+});
 
 // helper: створення нашого JWT
 function signAppToken(user) {
@@ -33,6 +39,7 @@ function signAppToken(user) {
 /**
  * POST /api/auth/google-code
  * Тіло: { code }
+ * Фронт: auth.googleCode(code)
  */
 router.post("/google-code", async (req, res) => {
   try {
@@ -41,12 +48,14 @@ router.post("/google-code", async (req, res) => {
       return res.status(400).json({ error: "Missing code" });
     }
 
+    // Обмінюємо code -> tokens
     const { tokens } = await oauth2Client.getToken({
       code,
       redirect_uri: REDIRECT_URI,
     });
     oauth2Client.setCredentials(tokens);
 
+    // Тягнемо профіль
     const oauth2 = google.oauth2({ auth: oauth2Client, version: "v2" });
     const { data } = await oauth2.userinfo.get();
 
@@ -59,7 +68,8 @@ router.post("/google-code", async (req, res) => {
       return res.status(400).json({ error: "No email from Google" });
     }
 
-    let user = await User.findOne({ email });
+    // Знаходимо або створюємо юзера
+    let user = await User.findOne({ email }); // якщо в тебе Sequelize – адаптуй
 
     if (!user) {
       const [first_name, ...rest] = fullName.split(" ");
@@ -73,6 +83,7 @@ router.post("/google-code", async (req, res) => {
         avatar: picture,
       });
     } else if (!user.google_id) {
+      // можна прив'язати google_id, якщо ще не збережений
       user.google_id = googleId;
       await user.save();
     }
@@ -92,7 +103,7 @@ router.post("/google-code", async (req, res) => {
 /**
  * POST /api/auth/google
  * Тіло: { id_token }
- * (на майбутнє, якщо захочеш використовувати One Tap)
+ * Це варіант, якщо ти будеш використовувати не "auth-code", а id_token (One-tap)
  */
 router.post("/google", async (req, res) => {
   try {

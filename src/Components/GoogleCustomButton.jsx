@@ -1,4 +1,3 @@
-// GoogleCustomButton.jsx
 import { FaGoogle } from "react-icons/fa";
 import { useGoogleLogin } from "@react-oauth/google";
 import { auth } from "../lib/api";
@@ -6,12 +5,12 @@ import { auth } from "../lib/api";
 export default function GoogleCustomButton({ onDone }) {
   const login = useGoogleLogin({
     flow: "auth-code",
+    authorizationParams: {
+      redirect_uri: window.location.origin, // 👈 ПРАВИЛЬНО ТУТ
+    },
     onSuccess: async ({ code }) => {
       try {
-        // відправляємо code на бекенд
         const { user } = await auth.googleCode(code);
-
-        // завершуємо авторизацію в додатку
         onDone?.(user);
       } catch (e) {
         console.error(e);
