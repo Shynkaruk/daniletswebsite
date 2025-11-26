@@ -10,7 +10,7 @@ export default function GoogleCustomButton({ onDone }) {
     },
     onSuccess: async ({ code }) => {
       try {
-        const { user } = await auth.googleCode(code); // POST /api/auth/google-code
+        const { user } = await auth.googleCode(code, window.location.origin);
         onDone?.(user);
       } catch (e) {
         console.error(e);

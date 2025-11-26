@@ -7,12 +7,12 @@ const router = express.Router();
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI; // 👈 з env
+const REDIRECT_ENV = process.env.GOOGLE_REDIRECT_URI; // значення з env
 
 const oauth2Client = new google.auth.OAuth2(
   CLIENT_ID,
   CLIENT_SECRET,
-  REDIRECT_URI
+  REDIRECT_ENV
 );
 
 function signAppToken(user) {
@@ -30,12 +30,18 @@ function signAppToken(user) {
 // --------- POST /api/auth/google-code ---------
 router.post("/google-code", async (req, res) => {
   try {
-    const { code } = req.body;
-    if (!code) return res.status(400).json({ error: "Missing code" });
+    const { code, redirect_uri } = req.body;
+
+    if (!code) {
+      return res.status(400).json({ error: "Missing code" });
+    }
+
+    // redirect_uri беремо з фронта, якщо є; інакше — з env
+    const redirectUri = redirect_uri || REDIRECT_ENV;
 
     const { tokens } = await oauth2Client.getToken({
       code,
-      redirect_uri: REDIRECT_URI, // 👈 той самий, що в env + Google Cloud
+      redirect_uri: redirectUri,
     });
     oauth2Client.setCredentials(tokens);
 
