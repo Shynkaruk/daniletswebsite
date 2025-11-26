@@ -1,16 +1,14 @@
+// src/components/GoogleCustomButton.jsx
 import { FaGoogle } from "react-icons/fa";
 import { useGoogleLogin } from "@react-oauth/google";
-import { auth } from "../lib/api"; // твій API-клієнт
+import { auth } from "../lib/api";
 
 export default function GoogleCustomButton({ onDone }) {
   const login = useGoogleLogin({
     flow: "auth-code",
-    authorizationParams: {
-      redirect_uri: window.location.origin, // 👈 на хостингу => https://coral-app-... або https://danilets.com
-    },
     onSuccess: async ({ code }) => {
       try {
-        const { user } = await auth.googleCode(code, window.location.origin);
+        const { user } = await auth.googleCode(code); // тільки code
         onDone?.(user);
       } catch (e) {
         console.error(e);
@@ -24,7 +22,8 @@ export default function GoogleCustomButton({ onDone }) {
     <button
       type="button"
       onClick={() => login()}
-      className="h-11 w-full rounded-[12px] bg-[#F4F4F5] font-semibold flex items-center justify-center gap-2 text-[#18181B]"
+      className="h-11 w-full rounded-[12px] bg-[#F4F4F5] font-semibold
+                 flex items-center justify-center gap-2 text-[#18181B]"
     >
       <FaGoogle />
       Google

@@ -1,3 +1,4 @@
+// server/routes/authGoogle.js
 import express from "express";
 import { google } from "googleapis";
 import jwt from "jsonwebtoken";
@@ -7,12 +8,14 @@ const router = express.Router();
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_ENV = process.env.GOOGLE_REDIRECT_URI; // значення з env
+
+// === ГОЛОВНЕ: для flow "auth-code" з @react-oauth/google використовуємо "postmessage"
+const REDIRECT_URI = "postmessage";
 
 const oauth2Client = new google.auth.OAuth2(
   CLIENT_ID,
   CLIENT_SECRET,
-  REDIRECT_ENV
+  REDIRECT_URI
 );
 
 function signAppToken(user) {
@@ -30,19 +33,13 @@ function signAppToken(user) {
 // --------- POST /api/auth/google-code ---------
 router.post("/google-code", async (req, res) => {
   try {
-    const { code, redirect_uri } = req.body;
-
+    const { code } = req.body;
     if (!code) {
       return res.status(400).json({ error: "Missing code" });
     }
 
-    // redirect_uri беремо з фронта, якщо є; інакше — з env
-    const redirectUri = redirect_uri || REDIRECT_ENV;
-
-    const { tokens } = await oauth2Client.getToken({
-      code,
-      redirect_uri: redirectUri,
-    });
+    // 👇 БІЛЬШЕ НЕ ПЕРЕДАЄМО redirect_uri, достатньо того, що в OAuth2Client
+    const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
 
     const oauth2 = google.oauth2({ auth: oauth2Client, version: "v2" });

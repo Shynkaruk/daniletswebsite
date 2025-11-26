@@ -131,14 +131,11 @@ export const auth = {
   },
 
   // Google OAuth (через /api/auth/google-code)
-  async googleCode(code, redirectUri) {
+  async googleCode(code) {
     const data = await sendJsonNoAutoLogout(
       `${API}/api/auth/google-code`,
       "POST",
-      {
-        code,
-        redirect_uri: redirectUri, // 👈 передаємо на бекенд поточний origin
-      }
+      { code }          // 👈 тільки code
     );
     if (data.token) setToken(data.token);
     if (data.user) setUser(data.user);

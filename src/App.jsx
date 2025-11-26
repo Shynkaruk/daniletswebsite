@@ -1,23 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Main from './Components/Main.jsx';
-import MainMobile from './Components/MainMobile.jsx';
-import AboutUs from './Components/AboutUs.jsx';
-import ContactForm from './Components/ContactForm.jsx';
-import Newsletter from './Components/Newsletter.jsx';
-import PrivacyPolicy from './Components/PrivacyPolicy.jsx';
-import Cleaning from './Components/Services/Cleaning/CleaningPage.jsx';
-import Booking from './Components/Booking.jsx';
-import DetailingPage from './Components/Services/Detailing/DetailingPage.jsx';
-import AdminRequests from './Accounts/AdminRequests.jsx'
-import Account from './Accounts/Account.jsx'
-import { GoogleOAuthProvider } from "@react-oauth/google";
-import ContactPage from './Components/ContactPage.jsx';
-import ScrollToTop from './ScrollToTop.jsx';
+// App.jsx
+import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+
+import Main from "./Components/Main.jsx";
+import MainMobile from "./Components/MainMobile.jsx";
+import AboutUs from "./Components/AboutUs.jsx";
+import ContactForm from "./Components/ContactForm.jsx";
+import Newsletter from "./Components/Newsletter.jsx";
+import PrivacyPolicy from "./Components/PrivacyPolicy.jsx";
+import Cleaning from "./Components/Services/Cleaning/CleaningPage.jsx";
+import Booking from "./Components/Booking.jsx";
+import DetailingPage from "./Components/Services/Detailing/DetailingPage.jsx";
+import AdminRequests from "./Accounts/AdminRequests.jsx";
+import Account from "./Accounts/Account.jsx";
+import ContactPage from "./Components/ContactPage.jsx";
+import ScrollToTop from "./ScrollToTop.jsx";
 
 const App = () => {
   const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' ? window.innerWidth <= 768 : false
+    typeof window !== "undefined" ? window.innerWidth <= 768 : false
   );
 
   useEffect(() => {
@@ -25,18 +26,17 @@ const App = () => {
       setIsMobile(window.innerWidth <= 768);
     };
 
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       handleResize();
-      window.addEventListener('resize', handleResize);
+      window.addEventListener("resize", handleResize);
     }
 
-    return () => window.removeEventListener('resize', handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return (
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
     <Router>
-      <ScrollToTop></ScrollToTop>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={isMobile ? <MainMobile /> : <Main />} />
         <Route path="/home" element={isMobile ? <MainMobile /> : <Main />} />
@@ -51,10 +51,9 @@ const App = () => {
         <Route path="/book-online" element={<Booking />} />
         <Route path="/admin" element={<AdminRequests />} />
         <Route path="/account" element={<Account />} />
-        <Route path='/comingsoon' element={<ContactPage></ContactPage>}></Route>
+        <Route path="/comingsoon" element={<ContactPage />} />
       </Routes>
     </Router>
-    </GoogleOAuthProvider>
   );
 };
 
