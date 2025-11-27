@@ -1,6 +1,8 @@
 // src/Components/Booking/Step8Checkout.jsx
 import React from "react";
 import { FiChevronLeft, FiEye, FiEyeOff } from "react-icons/fi";
+import { useLocation } from "react-router-dom";
+import ProgressBar from "./ProgressBar";
 
 const GOLD_GRADIENT =
   "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
@@ -52,15 +54,19 @@ const Step8Checkout = ({
 }) => {
   if (!visible) return null;
 
+  const location = useLocation();
+  const isCleaningFlow =
+    isCleaning || location.pathname.toLowerCase().includes("cleaning");
+
   const selectedAddOnsArray = Array.from(selectedAddOns || new Set());
 
-  // ===== CLEANING VARIANT: без карток, сум і pre-pay =====
-  if (isCleaning) {
+  // ===== CLEANING VARIANT =====
+  if (isCleaningFlow) {
     return (
       <div className="w-full max-w-full min-w-0 text-left space-y-4">
-        <div className="bg-white/90 backdrop-blur rounded-[24px] p-4 sm:p-5 shadow space-y-4">
+        <div className="bg:white/90 backdrop-blur rounded-[24px] p-4 sm:p-5 shadow space-y-4">
           {/* Header */}
-          <div className="flex items-center gap-3">
+          <div className="flex items:center gap-3">
             <button
               onClick={onBack}
               className="w-9 h-9 rounded-full bg-[#F2F2F2] inline-flex items-center justify-center"
@@ -73,18 +79,8 @@ const Step8Checkout = ({
             </h2>
           </div>
 
-          {/* Прогрес: повна полоска */}
-          <div className="flex items-center gap-2">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <span
-                key={i}
-                className="h-1 rounded-full flex-[1.2]"
-                style={{
-                  background: i < progressActive ? GOLD_GRADIENT : "#E5E7EB",
-                }}
-              />
-            ))}
-          </div>
+          {/* Прогрес: крок 3/3 */}
+          <ProgressBar activeCount={3} total={3} />
 
           <p className="text-sm text-[#4B5563]">
             No payment is required at this step. Submit your request and{" "}
@@ -177,18 +173,8 @@ const Step8Checkout = ({
           </button>
         </div>
 
-        {/* Прогрес */}
-        <div className="flex items-center gap-2">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <span
-              key={i}
-              className="h-1 rounded-full flex-[1.2]"
-              style={{
-                background: i < progressActive ? GOLD_GRADIENT : "#E5E7EB",
-              }}
-            />
-          ))}
-        </div>
+        {/* Прогрес для детайлінгу — 6 полосок */}
+        <ProgressBar activeCount={progressActive} total={6} />
 
         {/* PERSONAL INFO */}
         {!receiptOnly && (
@@ -226,7 +212,7 @@ const Step8Checkout = ({
               </div>
               <button
                 onClick={onEditPersonal}
-                className="mt-2 inline-flex items-center justify-center h-[40px] rounded-[12px] px-4 text-sm font-semibold text-black"
+                className="mt-2 inline-flex items-center justify-center h-[40px] rounded-[12px] px-4 text-sm font-semibold text:black"
                 style={{ background: GOLD_GRADIENT }}
               >
                 Change Personal Information
@@ -264,7 +250,7 @@ const Step8Checkout = ({
               </button>
             </div>
 
-            {/* PAYMENT PLACEHOLDER / ЗАГЛУШКА ОПЛАТИ */}
+            {/* PAYMENT PLACEHOLDER */}
             <div className="space-y-2">
               <div className="text-sm text-[#6B7280] font-medium">
                 Payment (coming soon)
@@ -381,7 +367,7 @@ const Step8Checkout = ({
             <span>SUBTOTAL</span>
             <span>${subTotal.toFixed(2)}</span>
           </div>
-          <div className="flex items-center justify-between text-[14px]">
+          <div className="flex items-center justify-between text:[14px]">
             <span>TAX (7%)</span>
             <span>${tax.toFixed(2)}</span>
           </div>

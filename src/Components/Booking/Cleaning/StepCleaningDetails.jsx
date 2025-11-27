@@ -1,6 +1,7 @@
 // src/Components/Booking/StepCleaningDetails.jsx
 import React from "react";
 import { FiChevronLeft } from "react-icons/fi";
+import ProgressBar from "./../ProgressBar";
 
 const GOLD_GRADIENT =
   "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
@@ -115,7 +116,7 @@ const StepCleaningDetails = ({
       !!bathrooms &&
       areas.length > 0 &&
       generalTasks.length > 0 &&
-      !!resBudget; // 🔹 дату прибрали
+      !!resBudget;
   } else if (isCommercial) {
     canContinue =
       !!propertyType &&
@@ -150,20 +151,8 @@ const StepCleaningDetails = ({
           </h2>
         </div>
 
-        {/* Прогрес */}
-        {renderProgress ? (
-          renderProgress(2)
-        ) : (
-          <div className="flex items-center gap-2">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <span
-                key={i}
-                className="h-1 rounded-full flex-[1.2]"
-                style={{ background: i < 2 ? GOLD_GRADIENT : "#E5E7EB" }}
-              />
-            ))}
-          </div>
-        )}
+        {/* Прогрес: Cleaning — 1/3 */}
+        {renderProgress ? renderProgress(1) : <ProgressBar activeCount={1} total={3} />}
 
         {/* Type: Residential / Commercial */}
         <section className="space-y-2 mt-1">
@@ -240,6 +229,7 @@ const StepCleaningDetails = ({
                   onChange={(e) => setBedrooms(e.target.value)}
                   type="number"
                   min="0"
+                  placeholder="Bedrooms"                // 🔹 підпис всередині бульки
                   className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none"
                 />
                 <input
@@ -247,6 +237,7 @@ const StepCleaningDetails = ({
                   onChange={(e) => setBathrooms(e.target.value)}
                   type="number"
                   min="0"
+                  placeholder="Bathrooms"              // 🔹 підпис всередині бульки
                   className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none"
                 />
               </div>
@@ -327,7 +318,7 @@ const StepCleaningDetails = ({
               </div>
             </section>
 
-            {/* Budget + notes (без дати) */}
+            {/* Budget + notes */}
             <section className="bg-white rounded-[20px] border border-[#E5E7EB] p-4 space-y-4">
               <div className="space-y-2">
                 <div className="text-sm text-[#6B7280] font-medium">

@@ -45,7 +45,7 @@ const PrivacyPolicy = () => {
     <div className="bg-[#F5F5F5] min-h-screen">
       {isMobile ? <Head title={selectedService} /> : <Head />}
 
-      <div className="w-full max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-10 pt-6 lg:pt-10">
+      <div className="w-full max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-10 pt-6 lg:pt-10 md:mt-20">
         {/* Навігація */}
         <nav className="text-gray-600 text-sm mb-4">
           <Link to="/" className="hover:text-yellow-600">
@@ -96,10 +96,6 @@ const PrivacyPolicy = () => {
               <h2 className="font-bold text-2xl sm:text-3xl lg:text-[48px]">
                 Terms and Conditions
               </h2>
-              <p className="text-sm">
-                Effective date: <strong>28.05.2025</strong>
-              </p>
-
               <h3 className="font-semibold text-xl mt-4">
                 1. Acceptance of Terms
               </h3>
@@ -266,10 +262,6 @@ const PrivacyPolicy = () => {
               <h2 className="font-bold text-2xl sm:text-3xl lg:text-[48px]">
                 Privacy Policy
               </h2>
-
-              <p className="text-sm">
-                Effective date: <strong>28.05.2025</strong>
-              </p>
 
               <p className="mt-4">
                 This Privacy Policy explains how Danilets (“we”, “our”, or “the

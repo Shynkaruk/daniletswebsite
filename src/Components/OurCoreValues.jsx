@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import IconGuard from "../assets/icons/icon-guard.svg";
 import ArrowUpRightIcon from "../assets/icons/arrows/arrow-up-right.svg";
 
@@ -23,14 +23,29 @@ const OurCoreValues = () => {
   const firstRow = coreValues.slice(0, 4);
   const secondRow = coreValues.slice(4);
 
+  const location = useLocation();
+
+  // 🔝 Скрол до верху:
+  // - якщо вже на /about-us → блокуємо перехід і просто скролимо
+  // - якщо з іншої сторінки → даємо Link перейти, а скрол зробить useEffect в AboutUs
+  const handleAboutClick = (e) => {
+    if (location.pathname === "/about-us") {
+      e.preventDefault();
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
-    <section className="bg-white mx-4 md:mx-8 xl:mx-16 rounded-[32px] py-10 md:py-14 px-4 md:px-8 xl:px-10">
+    <section className="bg-white mx-4 md:mx-8 xl:mx-16 rounded-[32px] py-10 md:py-14 px-4 md:px-8 xl:px-10 md:mt-15">
       {/* Верхній блок з заголовком + кнопкою справа */}
       <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-6 w-full">
         {/* Ліва частина */}
         <div className="max-w-[880px]">
           <h2 className="text-[40px] md:text-[56px] xl:text-[64px] font-semibold leading-[1.05] text-black">
-            Our Core Values
+            Core Values
           </h2>
 
           <p className="mt-4 text-[15px] md:text-[17px] xl:text-[18px] text-[#555] leading-relaxed">
@@ -46,6 +61,7 @@ const OurCoreValues = () => {
         {/* Права частина — кнопка About Us */}
         <Link
           to="/about-us"
+          onClick={handleAboutClick}
           className="
             bg-[#F4F4F4]
             px-8

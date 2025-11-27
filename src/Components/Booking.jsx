@@ -15,6 +15,7 @@ import Step6AddOns from "../Components/Booking/Step6AddOns";
 import Step7ContactDetails from "../Components/Booking/Step7ContactDetails";
 import Step8Checkout from "../Components/Booking/Step8Checkout";
 import StepCleaningDetails from "../Components/Booking/Cleaning/StepCleaningDetails";
+import Step7ContactCleaning from '../Components/Booking/Cleaning/Step7ContactCleaning'
 
 /** ======= Google Places loader (no external libs) ======= */
 function useGooglePlaces({
@@ -652,8 +653,7 @@ const Booking = () => {
           if (squareFeet) notesParts.push(`Square feet: ${squareFeet}`);
           if (frequency) notesParts.push(`Frequency: ${frequency}`);
           if (comBudget) notesParts.push(`Budget: ${comBudget}`);
-          if (comExtraDetails)
-            notesParts.push(`Details: ${comExtraDetails}`);
+          if (comExtraDetails) notesParts.push(`Details: ${comExtraDetails}`);
         }
       }
 
@@ -671,7 +671,7 @@ const Booking = () => {
       const payload = {
         vehicle_id,
         status: "new",
-        service_type: activeKey,         
+        service_type: activeKey,
         location_type: loc.location_type,
         service_date: serviceDate || null,
         time_window: null,
@@ -685,7 +685,6 @@ const Booking = () => {
         total: isCleaning ? 0 : total,
         notes_customer: notes,
       };
-
 
       const saved = await reqApi.saveMine(payload);
 
@@ -860,26 +859,46 @@ const Booking = () => {
           />
 
           {/* STEP 7: Contact Details (both flows) */}
-          <Step7ContactDetails
-            visible={step === 7}
-            firstName={firstName}
-            setFirstName={setFirstName}
-            lastName={lastName}
-            setLastName={setLastName}
-            phone={phone}
-            setPhone={setPhone}
-            birthday={birthday}
-            setBirthday={setBirthday}
-            email={email}
-            setEmail={setEmail}
-            canContinueContact={canContinueContact}
-            onNext={() => setStep(8)}
-            onBack={() => (isCleaning ? setStep(2) : setStep(6))}
-            progressActive={isCleaning ? 4 : 6}
-            user={user}
-            serviceDate={serviceDate}
-            setServiceDate={setServiceDate}
-          />
+          {isCleaning ? (
+            <Step7ContactCleaning
+              visible={step === 7}
+              firstName={firstName}
+              setFirstName={setFirstName}
+              lastName={lastName}
+              setLastName={setLastName}
+              phone={phone}
+              setPhone={setPhone}
+              email={email}
+              setEmail={setEmail}
+              canContinueContact={canContinueContact}
+              onNext={() => setStep(8)}
+              onBack={() => setStep(2)}
+              user={user}
+              serviceDate={serviceDate}
+              setServiceDate={setServiceDate}
+            />
+          ) : (
+            <Step7ContactDetails
+              visible={step === 7}
+              firstName={firstName}
+              setFirstName={setFirstName}
+              lastName={lastName}
+              setLastName={setLastName}
+              phone={phone}
+              setPhone={setPhone}
+              birthday={birthday}
+              setBirthday={setBirthday}
+              email={email}
+              setEmail={setEmail}
+              canContinueContact={canContinueContact}
+              onNext={() => setStep(8)}
+              onBack={() => setStep(6)}
+              progressActive={6}
+              user={user}
+              serviceDate={serviceDate}
+              setServiceDate={setServiceDate}
+            />
+          )}
 
           {/* STEP 8: Checkout / Submit */}
           <Step8Checkout

@@ -24,6 +24,7 @@ import {
 import googleCodeRouter from "./routes/authGoogle.js";
 import googleReviewsRouter from "./routes/reviews.js";
 import { sendOtpEmail } from "./email.js";
+import contactRouter from "./routes/contact.js";
 
 const app = express();
 
@@ -60,6 +61,7 @@ app.set("trust proxy", true);
 
 app.use(cors({ origin: "*", credentials: false }));
 app.use(express.json({ limit: "10mb" }));
+app.use("/api/contact", contactRouter);
 
 app.use("/api/reviews", googleReviewsRouter);
 

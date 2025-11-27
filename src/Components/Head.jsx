@@ -78,11 +78,11 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
             <div to="/" className="relative p-4 h-full flex flex-col">
               {/* Logo */}
               <Link to="/">
-              <img
-                src={logo}
-                alt="Logo"
-                className="absolute top-3 left-3 h-[24px] object-contain"
-              />
+                <img
+                  src={logo}
+                  alt="Logo"
+                  className="absolute top-3 left-3 h-[24px] object-contain"
+                />
               </Link>
 
               {/* Close */}
@@ -107,10 +107,12 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
 
                 {/* ===== Services with dropdown ===== */}
                 <details className="group">
-                  <summary className="text-[#A1A1A5] border border-[#A1A1A5] rounded-[44px] 
+                  <summary
+                    className="text-[#A1A1A5] border border-[#A1A1A5] rounded-[44px] 
   text-[14px] font-bold py-2 px-4 cursor-pointer list-none
   flex items-center justify-center relative
-  hover:bg-[rgba(245,218,147,0.8)] hover:text-black transition">
+  hover:bg-[rgba(245,218,147,0.8)] hover:text-black transition"
+                  >
                     <span>Services</span>
                     <span className="transition-transform group-open:rotate-180">
                       ▾
@@ -179,7 +181,11 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
 
                 <Link to="/book-online" onClick={toggleMenu}>
                   <button
-                    className="text-[14px] font-bold px-6 py-2 rounded-full w-full max-w-[275px]"
+                    className="
+    text-1xl font-bold px-5 py-[10px] rounded-full transition-all duration-200
+    hover:scale-[1.05]
+    hover:brightness-90
+  "
                     style={{
                       background:
                         "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)",
@@ -231,7 +237,7 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
       <div className="relative left-1/2 -translate-x-1/2 w-[min(1800px,calc(100vw-32px))]">
         <div className="bg-white h-[72px] xl:h-20 rounded-[48px] overflow-visible flex items-center justify-between px-4 sm:px-6 shadow-md">
           {/* Лого */}
-          <Link to='/' className="flex items-center shrink-0">
+          <Link to="/" className="flex items-center shrink-0">
             <img
               src={logo}
               alt="Logo"
@@ -350,8 +356,13 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
 
             <Link to="/book-online" className="shrink-0">
               <button
-                className="text-black font-bold rounded-full pointer-events-auto
-                           px-4 py-3 text-sm md:px-5 md:py-3 md:text-sm xl:px-6 xl:py-4 xl:text-base"
+                className="
+    text-black font-bold rounded-full pointer-events-auto
+    px-4 py-3 text-sm md:px-5 md:py-3 md:text-sm xl:px-6 xl:py-4 xl:text-base
+    transition-all duration-200
+    hover:scale-[1.05]
+    hover:brightness-90
+  "
                 style={{
                   background:
                     "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)",

@@ -101,7 +101,7 @@ const WhyDaniletsCleaning = () => {
 
 
       {/* ------- DESKTOP ------- */}
-      <div className="hidden md:grid md:grid-cols-12 md:gap-8 lg:gap-12 max-w-[1600px]">
+      <div className="hidden md:grid md:grid-cols-12 md:gap-8 lg:gap-12 max-w-[1600px] md:ml-5">
 
         {/* LEFT CARDS */}
         <div className="md:col-span-7">

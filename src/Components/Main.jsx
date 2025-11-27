@@ -14,7 +14,7 @@ import ActionMini from "./ActionMini.jsx";
 import FAQ from "./FAQ.jsx";
 import Footer from "./Footer.jsx";
 import StatsBlock from "./StatsBlock.jsx";
-import familyphoto from "./../assets/photo/family-photo.png";
+import familyphoto from "./../assets/photo/family-photo.jpg";
 
 const SLIDES = [
   {
@@ -83,7 +83,13 @@ const Main = () => {
           ))}
 
           {/* Темний overlay для контрасту тексту */}
-          <div className="absolute inset-0 bg-black/30" />
+<div
+  className={`
+    absolute inset-0 
+    transition-all duration-500
+    ${currentSlide.id === "family" ? "bg-black/55" : "bg-black/30"}
+  `}
+/>
         </div>
 
         {/* Контент поверх фону */}
@@ -119,8 +125,8 @@ const Main = () => {
                 "
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
-                Columbus&apos; trusted provider of premium services tailored
-                with precision and delivered with excellence.
+Columbus' trusted provider of premium auto detailing and commercial 
+cleaning services tailored with precision and delivered with excellence. 
               </p>
 
               {/* Learn More → посилання залежить від слайду */}
@@ -222,7 +228,6 @@ const Main = () => {
 
       <Services className="relative z-10 mt-[-100px]" />
       <StatsBlock />
-      <OurPortfolio />
       <OurCoreValues />
       <OurReviews />
       <ActionMini />

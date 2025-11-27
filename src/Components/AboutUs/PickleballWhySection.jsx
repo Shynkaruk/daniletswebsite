@@ -1,4 +1,3 @@
-// components/PickleballWhySection.jsx
 import React, { useRef, useState } from "react";
 
 // За замовчуванням (можеш замінити)
@@ -101,8 +100,8 @@ const cards = [
 ];
 
 const PickleballWhySection = ({
-  badgeIconSrc = DefaultBadgeIcon, // 🔁 твоя іконка для бейджа
-  cardIconSrc = DefaultCardIcon,   // 🔁 твоя іконка у картці
+  badgeIconSrc = DefaultBadgeIcon,
+  cardIconSrc = DefaultCardIcon,
 }) => {
   const trackRef = useRef(null);
 
@@ -265,9 +264,10 @@ const PickleballWhySection = ({
       {activeCard && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="relative bg-white rounded-2xl max-w-[900px] max-h-[90vh] overflow-y-auto p-8 text-black shadow-2xl">
+            {/* X справа */}
             <button
               onClick={() => setActiveCard(null)}
-              className="absolute top-3 right-3 text-2xl font-semibold text-gray-600 hover:text-black"
+              className="absolute top-3 right-3 text-2xl font-semibold text-gray-600 hover:text-black bg-white p-2 rounded-full shadow"
             >
               ✕
             </button>
@@ -276,11 +276,19 @@ const PickleballWhySection = ({
               {activeCard.title}
             </h2>
 
-            <p
-              className="text-[15px] sm:text-[16px] leading-relaxed whitespace-pre-line"
-            >
+            <p className="text-[15px] sm:text-[16px] leading-relaxed whitespace-pre-line">
               {activeCard.detailed}
             </p>
+
+            {/* Кнопка Close внизу справа */}
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setActiveCard(null)}
+                className="px-6 py-2 rounded-full border border-[#D4D4D8] text-sm md:text-[15px] hover:bg-[#F4F4F5] transition"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

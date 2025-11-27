@@ -7,8 +7,16 @@ import OurReviewsStrip from './AboutUs/OurReviewsStrip'
 import ContactSection from './ContactSection'
 import FAQ from './FAQ'
 import Footer from './Footer'
+import { useEffect } from 'react'
 
 const AboutUs = () => {
+      useEffect(() => {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }, []);
+
   return (
     <div className="relative">
       <MainAboutUs />

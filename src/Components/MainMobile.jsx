@@ -14,7 +14,7 @@ import ActionMini from "./ActionMini.jsx";
 import FAQ from "./FAQ.jsx";
 import Footer from "./Footer.jsx";
 import StatsBlock from "./StatsBlock.jsx";
-import familyphoto from "./../assets/photo/family-photo.png";
+import familyphoto from "./../assets/photo/family-photo.jpg";
 
 // СЛАЙДИ ДЛЯ МОБІЛЬНОЇ ВЕРСІЇ
 const SLIDES = [

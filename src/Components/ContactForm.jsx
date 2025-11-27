@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { apiSend } from "../lib/api";
 
 const ContactForm = ({ open, onClose }) => {
   const [form, setForm] = useState({
@@ -9,6 +10,11 @@ const ContactForm = ({ open, onClose }) => {
     service: "Danilets Cleaning",
     description: "",
   });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+
   const dialogRef = useRef(null);
 
   // ESC
@@ -21,21 +27,51 @@ const ContactForm = ({ open, onClose }) => {
   // Click outside
   useEffect(() => {
     const onClick = (e) => {
-      if (dialogRef.current && !dialogRef.current.contains(e.target)) onClose?.();
+      if (dialogRef.current && !dialogRef.current.contains(e.target)) {
+        onClose?.();
+      }
     };
     if (open) document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, [open, onClose]);
 
-  const services = [
-    "Danilets Detailing",
-    "Danilets Cleaning",
-  ];
+  const services = ["Danilets Detailing", "Danilets Cleaning"];
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    console.log("Contact form:", form);
-    onClose?.();
+    setError("");
+    setSuccess(false);
+
+    if (!form.email || !form.description) {
+      setError("Please enter your email and a message.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await apiSend("/api/contact", "POST", form);
+      setSuccess(true);
+
+      // очищаємо форму
+      setForm({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        service: "Danilets Cleaning",
+        description: "",
+      });
+
+      // закриваємо модалку через 1.5 сек
+      setTimeout(() => {
+        onClose?.();
+      }, 1500);
+    } catch (err) {
+      console.error(err);
+      setError(err?.error || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!open) return null;
@@ -55,7 +91,9 @@ const ContactForm = ({ open, onClose }) => {
           ✕
         </button>
 
-        <h2 className="mb-4 text-xl sm:text-2xl font-semibold text-black">Contact Us</h2>
+        <h2 className="mb-4 text-xl sm:text-2xl font-semibold text-black">
+          Contact Us
+        </h2>
 
         <form onSubmit={submit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -82,7 +120,9 @@ const ContactForm = ({ open, onClose }) => {
             placeholder="Email"
             className="w-full rounded-2xl bg-black/5 px-4 py-3 outline-none placeholder-[rgba(122,122,122,1)] text-black"
             value={form.email}
-            onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
+            onChange={(e) =>
+              setForm((s) => ({ ...s, email: e.target.value }))
+            }
           />
 
           <input
@@ -90,7 +130,9 @@ const ContactForm = ({ open, onClose }) => {
             placeholder="Phone number"
             className="w-full rounded-2xl bg-black/5 px-4 py-3 outline-none placeholder-[rgba(122,122,122,1)] text-black"
             value={form.phone}
-            onChange={(e) => setForm((s) => ({ ...s, phone: e.target.value }))}
+            onChange={(e) =>
+              setForm((s) => ({ ...s, phone: e.target.value }))
+            }
           />
 
           <select
@@ -124,15 +166,28 @@ const ContactForm = ({ open, onClose }) => {
             </p>
           </div>
 
+          {error && (
+            <div className="text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="text-sm text-green-600">
+              Your message has been sent. We&apos;ll contact you shortly.
+            </div>
+          )}
+
           <button
             type="submit"
-            className="w-full rounded-2xl px-5 py-3 text-[15px] font-semibold text-[#1d1d1f]"
+            disabled={loading}
+            className="w-full rounded-2xl px-5 py-3 text-[15px] font-semibold text-[#1d1d1f] disabled:opacity-70 disabled:cursor-not-allowed"
             style={{
               background:
                 "linear-gradient(135deg,#F5E7B9 0%,#E9CB7A 45%,#D6B15E 65%,#C79B47 100%)",
             }}
           >
-            Submit →
+            {loading ? "Sending..." : "Submit →"}
           </button>
         </form>
       </div>

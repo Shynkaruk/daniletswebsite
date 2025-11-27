@@ -92,15 +92,16 @@ export default function AuthModal({
           </div>
 
           {/* forms */}
-          {tab === "login" ? (
-            <LoginForm
-              onSuccess={(u) => {
-                onAuth?.(u);
-                onClose?.();
-                if (!onAuth) window.location.reload();
-              }}
-            />
-          ) : (
+{tab === "login" ? (
+  <LoginForm
+    onSuccess={(u) => {
+      onAuth?.(u);
+      onClose?.();
+      // після логіну завжди ведемо в акаунт
+      window.location.href = "/account";
+    }}
+  />
+) : (
             <SignupForm
               onSuccess={(u, email) => {
                 // користувач створений — запустили OTP
@@ -126,7 +127,7 @@ export default function AuthModal({
                 onDone={(user) => {
                   onAuth?.(user);
                   onClose?.();
-                  if (!onAuth) window.location.reload();
+                  window.location.href = "/account";
                 }}
               />
             </div>

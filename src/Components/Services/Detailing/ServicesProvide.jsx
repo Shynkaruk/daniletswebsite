@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from "react";
+// src/components/detailing/ServicesProvide.jsx
+import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import carRed from "../../../assets/icons/carred.svg";
+import arrowRightIcon from "../../../assets/icons/arrows/arrow_right_black.svg";
 
 const services = [
   {
@@ -143,36 +146,25 @@ Consultation available to determine the best solution for your needs.
 ];
 
 const ServicesProvide = () => {
-  const [activeService, setActiveService] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalService, setModalService] = useState(null);
 
-  const openModal = (service) => setActiveService(service);
-  const closeModal = () => setActiveService(null);
+  const openModal = (service) => {
+    setModalService(service);
+    setModalOpen(true);
+  };
 
-  // Лочимо скрол сторінки на мобайлі, коли модалка відкрита
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const isMobile = window.innerWidth <= 768;
-
-    if (activeService && isMobile) {
-      const prev = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = prev || "";
-      };
-    }
-
-    if (!activeService && isMobile) {
-      document.body.style.overflow = "";
-    }
-  }, [activeService]);
+  const closeModal = () => {
+    setModalService(null);
+    setModalOpen(false);
+  };
 
   return (
     <section className="relative w-[95%] max-w-[1792px] mx-auto bg-white rounded-[32px] py-10 px-4 md:px-10 shadow-md">
       {/* Заголовок */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
         <h2 className="text-[28px] sm:text-[36px] md:text-[48px] font-bold text-black">
-          Services We
-          <br /> Provide
+          Services We Provide
         </h2>
       </div>
 
@@ -213,99 +205,85 @@ const ServicesProvide = () => {
                   "linear-gradient(107.27deg, #8B3434 -27.97%, #A84E4E -12.13%, #F29292 22.69%, #FF9E9E 45.99%, #E17B7B 77.51%)",
                 fontFamily: "Manrope, sans-serif",
               }}
+              type="button"
             >
               <span>Learn More</span>
 
-              {/* мобайл: svg-стрілка */}
               <span className="inline md:hidden">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M7 17L17 7" />
-                  <path d="M9 7H17V15" />
-                </svg>
+                <img
+                  src={arrowRightIcon}
+                  alt="arrow"
+                  className="w-[18px] h-[18px] object-contain"
+                />
               </span>
 
-              {/* ПК: залишається як було */}
-              <span className="hidden md:inline text-lg">↗</span>
+              <span className="hidden md:inline">
+                <img
+                  src={arrowRightIcon}
+                  alt="arrow"
+                  className="w-[20px] h-[20px] object-contain"
+                />
+              </span>
             </button>
           </div>
         ))}
       </div>
 
-      {/* Модалка */}
-      {activeService && (
-        <div
-          // мобайл: перекриваємо весь екран (включно з Head), фон затемнений + blur
-          // ПК: top на 100px як і було раніше
-          className="fixed left-0 right-0 bottom-0 top-0 md:top-[100px] z-[999] flex items-start justify-center bg-black/50 backdrop-blur-sm px-4 pt-20 md:pt-6"
-          onClick={closeModal}
-        >
-          <div
-            className="bg-white rounded-[24px] max-w-[720px] w-full max-h-[80vh] overflow-y-auto p-6 md:p-8 relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={closeModal}
-              className="absolute top-4 right-4 text-[#71717A] hover:text-black text-xl"
-            >
-              ✕
-            </button>
-
-            <h3
-              className="text-[22px] md:text-[26px] font-bold mb-4 text-black"
-              style={{ fontFamily: "Manrope, sans-serif" }}
-            >
-              {activeService.title}
-            </h3>
-
-            {activeService.id === 6 && activeService.items ? (
-              <div className="space-y-5">
-                {activeService.items.map((item) => (
-                  <div key={item.title}>
-                    <p
-                      className="font-bold text-[15px] md:text-[16px] mb-1"
-                      style={{ fontFamily: "Manrope, sans-serif" }}
-                    >
-                      {item.title}:
-                    </p>
-                    <p
-                      className="text-[14px] md:text-[15px] text-[#3F3F46]"
-                      style={{ fontFamily: "Manrope, sans-serif" }}
-                    >
-                      {item.description}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p
-                className="text-[14px] md:text-[15px] text-[#3F3F46] whitespace-pre-line leading-relaxed"
-                style={{ fontFamily: "Manrope, sans-serif" }}
-              >
-                {activeService.detailedDescription}
-              </p>
-            )}
-
-            <div className="mt-6 flex justify-end">
+      {/* Модалка через портал у body */}
+      {modalOpen &&
+        modalService &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[99999] px-4">
+            <div className="bg-white rounded-[24px] max-w-xl w-full p-6 shadow-xl relative">
               <button
                 onClick={closeModal}
-                className="px-6 py-2 rounded-full border border-[#D4D4D8] text-sm md:text-[15px] hover:bg-[#F4F4F5] transition"
+                className="absolute top-4 right-4 text-[20px] font-bold text-gray-500 hover:text-black"
               >
-                Close
+                ✕
               </button>
+
+              <div className="text-[16px] leading-relaxed text-[#333] space-y-4">
+                <h3 className="font-bold text-[20px]">{modalService.title}</h3>
+
+                {modalService.id === 6 && modalService.items ? (
+                  <div className="space-y-4">
+                    {modalService.items.map((item) => (
+                      <div key={item.title}>
+                        <p className="font-bold text-[16px] mb-1">
+                          {item.title}
+                        </p>
+                        <p className="text-[16px] leading-[1.55]">
+                          {item.description}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  modalService.detailedDescription &&
+                  modalService.detailedDescription
+                    .trim()
+                    .split(/\n\s*\n/)
+                    .map((paragraph, idx) => (
+                      <p key={idx} className="text-[16px] leading-[1.55]">
+                        {paragraph.trim()}
+                      </p>
+                    ))
+                )}
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={closeModal}
+                  className="px-6 py-2 rounded-full border border-[#D4D4D8] text-sm md:text-[15px] hover:bg-[#F4F4F5] transition"
+                >
+                  Close
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </section>
   );
 };

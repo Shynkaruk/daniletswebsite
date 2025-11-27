@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useLocation, Link } from "react-router-dom";
+import { apiSend } from "../lib/api";
 
 import iconSay from "../assets/icons/icon_say.svg";
 import iconArrow from "../assets/icons/icon_arrow.svg";
@@ -14,6 +15,7 @@ const ContactSection = () => {
 
   const isDetailingPage = location.pathname.startsWith("/services/detailing");
   const isCleaningPage = location.pathname.startsWith("/services/cleaning");
+  const isAboutPage = location.pathname === "/about-us";
 
   const theme = isDetailingPage
     ? {
@@ -45,7 +47,6 @@ const ContactSection = () => {
         iconWarning: iconWarning,
       };
 
-  // 👇 різний текст для різних маршрутів
   const descriptionText = isDetailingPage
     ? "Interested in our detailing services? Fill out your information and let us know what your vehicle needs. We’ll get back to you promptly."
     : isCleaningPage
@@ -60,7 +61,15 @@ const ContactSection = () => {
     message: "",
   });
 
-  const [errors, setErrors] = useState({ contact: "" });
+  const [errors, setErrors] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    email: "",
+    message: "",
+    contact: "",
+  });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
 
@@ -72,39 +81,108 @@ const ContactSection = () => {
       [name]: value,
     }));
 
-    setErrors((prev) => ({ ...prev, contact: "" }));
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+      contact: "",
+    }));
     setSent(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setSent(false);
 
-    const newErrors = {};
+    const newErrors = {
+      firstName: "",
+      lastName: "",
+      phone: "",
+      email: "",
+      message: "",
+      contact: "",
+    };
 
-    if (!formData.phone.trim() && !formData.email.trim()) {
-      newErrors.contact = "Please provide at least a phone number or email.";
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "First name is required.";
+    }
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "Last name is required.";
+    }
+    if (!formData.phone.trim()) {
+      newErrors.phone = "Phone number is required.";
+    }
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required.";
+    }
+    if (!formData.message.trim()) {
+      newErrors.message = "Message is required.";
     }
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors((prev) => ({ ...prev, ...newErrors }));
+    const hasError = Object.values({
+      firstName: newErrors.firstName,
+      lastName: newErrors.lastName,
+      phone: newErrors.phone,
+      email: newErrors.email,
+      message: newErrors.message,
+    }).some(Boolean);
+
+    if (hasError) {
+      newErrors.contact = "Please fill out all fields before submitting.";
+      setErrors(newErrors);
       return;
     }
 
-    setIsSubmitting(true);
+    const service = isDetailingPage
+      ? "Danilets Detailing"
+      : isCleaningPage
+      ? "Danilets Cleaning"
+      : "General";
 
-    setTimeout(() => {
-      console.log("Form submitted:", formData);
-      setIsSubmitting(false);
+    const payload = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      phone: formData.phone,
+      service,
+      description: formData.message,
+    };
+
+    try {
+      setIsSubmitting(true);
+      await apiSend("/api/contact", "POST", payload);
       setSent(true);
-    }, 500);
+
+      setFormData({
+        firstName: "",
+        lastName: "",
+        phone: "",
+        email: "",
+        message: "",
+      });
+      setErrors({
+        firstName: "",
+        lastName: "",
+        phone: "",
+        email: "",
+        message: "",
+        contact: "",
+      });
+    } catch (err) {
+      console.error(err);
+      setErrors((prev) => ({
+        ...prev,
+        contact: err?.error || "Something went wrong. Please try again.",
+      }));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const inputBase =
     "h-12 px-4 rounded-[20px] bg-[#efefef] text-[15px] placeholder:text-[#a0a0a0] focus:outline-none";
 
   return (
-    <section className="px-5 md:px-10 lg:px-20 py-10 lg:py-16 md:-mt-15">
+    <section className="px-5 md:px-10 lg:px-20 py-10 lg:py-16">
       <div className="mx-auto max-w-[1440px]">
         <div className="lg:grid lg:grid-cols-12 lg:gap-12 items-center">
           {/* LEFT SIDE */}
@@ -125,16 +203,15 @@ const ContactSection = () => {
               Danilets Difference
             </h2>
 
-            {/* 27 — TEXT ЗАЛЕЖНО ВІД МАРШРУТУ */}
             <p className="mt-4 text-[15px] leading-6 text-[#6b6b6b] max-w-[520px]">
               {descriptionText}
             </p>
 
             <Link
-              to="/about-us"
-              className="mt-6 inline-flex items-center gap-2 px-5 py-3 rounded-full bg-white border border-neutral-300 shadow-sm text-base font-semibold text-black hover:bg-neutral-100 transition"
+              to={isAboutPage ? "/" : "/about-us"}
+              className="mt-6 inline-flex items-center gap-2 px-5 py-3 rounded-full bg.white bg-white border border-neutral-300 shadow-sm text-base font-semibold text.black text-black hover:bg-neutral-100 transition"
             >
-              About Us
+              {isAboutPage ? "Home" : "About Us"}
               <img src={iconArrow} alt="" className="w-4 h-4" />
             </Link>
           </div>
@@ -157,7 +234,9 @@ const ContactSection = () => {
                   placeholder="First Name"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className={inputBase}
+                  className={`${inputBase} ${
+                    errors.firstName ? "border border-red-500" : ""
+                  }`}
                 />
 
                 <input
@@ -166,7 +245,9 @@ const ContactSection = () => {
                   placeholder="Last Name"
                   value={formData.lastName}
                   onChange={handleChange}
-                  className={inputBase}
+                  className={`${inputBase} ${
+                    errors.lastName ? "border border-red-500" : ""
+                  }`}
                 />
 
                 <input
@@ -175,8 +256,8 @@ const ContactSection = () => {
                   placeholder="Phone Number"
                   value={formData.phone}
                   onChange={handleChange}
-                  className={`${inputBase} lg:col-span-2 ${
-                    errors.contact ? "border border-red-500" : ""
+                  className={`${inputBase} ${
+                    errors.phone ? "border border-red-500" : ""
                   }`}
                 />
 
@@ -187,7 +268,7 @@ const ContactSection = () => {
                   value={formData.email}
                   onChange={handleChange}
                   className={`${inputBase} lg:col-span-2 ${
-                    errors.contact ? "border border-red-500" : ""
+                    errors.email ? "border border-red-500" : ""
                   }`}
                 />
 
@@ -202,7 +283,9 @@ const ContactSection = () => {
                   placeholder="Message"
                   value={formData.message}
                   onChange={handleChange}
-                  className="lg:col-span-2 min-h-[96px] px-4 py-3 rounded-[20px] bg-[#efefef] text-[15px] placeholder:text-[#a0a0a0] focus:outline-none resize-none"
+                  className={`lg:col-span-2 min-h-[96px] px-4 py-3 rounded-[20px] bg-[#efefef] text-[15px] placeholder:text-[#a0a0a0] focus:outline-none resize-none ${
+                    errors.message ? "border border-red-500" : ""
+                  }`}
                 />
 
                 <div
@@ -237,7 +320,6 @@ const ContactSection = () => {
               </form>
             </div>
           </div>
-
         </div>
       </div>
     </section>

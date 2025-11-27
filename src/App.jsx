@@ -13,7 +13,6 @@ import Booking from "./Components/Booking.jsx";
 import DetailingPage from "./Components/Services/Detailing/DetailingPage.jsx";
 import AdminRequests from "./Accounts/AdminRequests.jsx";
 import Account from "./Accounts/Account.jsx";
-import ContactPage from "./Components/ContactPage.jsx";
 import ScrollToTop from "./ScrollToTop.jsx";
 
 const App = () => {
@@ -51,7 +50,6 @@ const App = () => {
         <Route path="/book-online" element={<Booking />} />
         <Route path="/admin" element={<AdminRequests />} />
         <Route path="/account" element={<Account />} />
-        <Route path="/comingsoon" element={<ContactPage />} />
       </Routes>
     </Router>
   );

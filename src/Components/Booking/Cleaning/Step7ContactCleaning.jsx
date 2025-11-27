@@ -1,14 +1,11 @@
-// src/Components/Booking/Step7ContactDetails.jsx
 import React, { useState } from "react";
 import { FiChevronLeft } from "react-icons/fi";
-import { useLocation } from "react-router-dom";
-import DatePicker from "./DatePicker";
-import ProgressBar from "./ProgressBar";
+import DatePicker from "./../DatePicker";
 
 const GOLD_GRADIENT =
   "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
 
-const Step7ContactDetails = ({
+const Step7ContactCleaning = ({
   visible,
   firstName,
   setFirstName,
@@ -21,55 +18,28 @@ const Step7ContactDetails = ({
   canContinueContact,
   onNext,
   onBack,
-  progressActive = 6,
   user = null,
   serviceDate,
   setServiceDate,
-  // якщо захочеш передавати явно з Booking:
-  isCleaning = false,
 }) => {
   if (!visible) return null;
-
-  const location = useLocation();
-  const path = location.pathname.toLowerCase();
-
-  // Cleaning рахуємо по URL або по пропсу isCleaning
-  const isCleaningFlow =
-    isCleaning ||
-    path.includes("cleaning") ||
-    path.includes("/services/cleaning");
 
   const isLoggedIn = !!user;
   const [enterNew, setEnterNew] = useState(false);
 
   const showAccountCard = isLoggedIn && !enterNew;
-
   const hasDate = !!serviceDate;
   const canProceed = canContinueContact && hasDate;
-
-  const handleUseAccount = () => {
-    if (!canProceed) return;
-    onNext();
-  };
-
-  const handleContinueNew = () => {
-    if (!canProceed) return;
-    onNext();
-  };
-
-  // 👇 тут головне — різна кількість полосок
-  const progressActiveCount = isCleaningFlow ? 2 : progressActive;
-  const progressTotal = isCleaningFlow ? 3 : 6;
 
   return (
     <div className="w-full max-w-full min-w-0 text-left">
       <div className="bg-white/90 backdrop-blur rounded-[24px] p-4 sm:p-5 shadow space-y-4">
+        
         {/* HEADER */}
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}
             className="w-9 h-9 rounded-full bg-[#F2F2F2] inline-flex items-center justify-center"
-            aria-label="Back"
           >
             <FiChevronLeft className="text-[18px] text-[#18181B]" />
           </button>
@@ -78,11 +48,18 @@ const Step7ContactDetails = ({
           </h2>
         </div>
 
-        {/* PROGRESS */}
-        <ProgressBar
-          activeCount={progressActiveCount}
-          total={progressTotal}
-        />
+        {/* PROGRESS — ОБОВʼЯЗКОВО 3 СМУЖКИ */}
+        <div className="flex items-center gap-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <span
+              key={i}
+              className="h-1 rounded-full flex-[1.2]"
+              style={{
+                background: i < 2 ? GOLD_GRADIENT : "#E5E7EB",
+              }}
+            />
+          ))}
+        </div>
 
         {/* DATE PICKER */}
         <div className="space-y-2">
@@ -90,9 +67,10 @@ const Step7ContactDetails = ({
             Preferred service date
           </p>
           <DatePicker value={serviceDate} onChange={setServiceDate} />
+
           {!hasDate && (
             <p className="text-[12px] text-red-500">
-              Please select the date for your service.
+              Please select the date for your cleaning service.
             </p>
           )}
         </div>
@@ -104,20 +82,16 @@ const Step7ContactDetails = ({
               <div className="w-12 h-12 rounded-full bg-[#F4F4F5] flex items-center justify-center text-[20px] font-bold text-[#18181B]">
                 {firstName?.[0] || "U"}
               </div>
-
               <div className="flex flex-col">
-                <span className="text-[16px] font-semibold text-[#18181B]">
-                  {firstName} {lastName}
-                </span>
+                <span className="text-[16px] font-semibold">{firstName} {lastName}</span>
                 <span className="text-[14px] text-[#4B5563]">{email}</span>
               </div>
             </div>
 
             <button
-              onClick={handleUseAccount}
+              onClick={onNext}
               disabled={!canProceed}
-              className={`w-full h-[52px] rounded-[88px] font-semibold text-black shadow
-                ${!canProceed ? "opacity-60 cursor-not-allowed" : ""}`}
+              className="w-full h-[52px] rounded-[88px] font-semibold text-black shadow disabled:opacity-60"
               style={{ background: GOLD_GRADIENT }}
             >
               Use this account
@@ -125,14 +99,14 @@ const Step7ContactDetails = ({
 
             <button
               onClick={() => setEnterNew(true)}
-              className="w-full h-[52px] rounded-[88px] font-semibold text-[#18181B] border border-[#D4D4D8]"
+              className="w-full h-[52px] rounded-[88px] border border-[#D4D4D8] font-semibold"
             >
               Enter new details
             </button>
           </div>
         )}
 
-        {/* NEW DETAILS FORM */}
+        {/* MANUAL FORM */}
         {!showAccountCard && (
           <>
             <div className="space-y-3">
@@ -140,38 +114,36 @@ const Step7ContactDetails = ({
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder="First name"
-                className="w-full h-[56px] rounded-[16px] bg-[#F4F4F5] px-4 text-[16px] outline-none"
+                className="w-full h-[56px] rounded-[16px] bg-[#F4F4F5] px-4"
               />
 
               <input
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder="Last name"
-                className="w-full h-[56px] rounded-[16px] bg-[#F4F4F5] px-4 text-[16px] outline-none"
+                className="w-full h-[56px] rounded-[16px] bg-[#F4F4F5] px-4"
               />
 
               <input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                type="tel"
-                placeholder="Phone number"
-                className="w-full h-[56px] rounded-[16px] bg-[#F4F4F5] px-4 text-[16px] outline-none"
+                placeholder="Phone"
+                className="w-full h-[56px] rounded-[16px] bg-[#F4F4F5] px-4"
               />
 
               <input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                type="email"
                 placeholder="Email"
-                className="w-full h-[56px] rounded-[16px] bg-[#F4F4F5] px-4 text-[16px] outline-none"
+                type="email"
+                className="w-full h-[56px] rounded-[16px] bg-[#F4F4F5] px-4"
               />
             </div>
 
             <button
-              onClick={handleContinueNew}
+              onClick={onNext}
               disabled={!canProceed}
-              className={`w-full h-[52px] rounded-[88px] font-semibold text-black shadow inline-flex items-center justify-center gap-2
-                ${!canProceed ? "opacity-60 cursor-not-allowed" : ""}`}
+              className="w-full h-[52px] rounded-[88px] text-black font-semibold shadow disabled:opacity-60"
               style={{ background: GOLD_GRADIENT }}
             >
               Continue <span className="text-lg">›</span>
@@ -183,4 +155,4 @@ const Step7ContactDetails = ({
   );
 };
 
-export default Step7ContactDetails;
+export default Step7ContactCleaning;

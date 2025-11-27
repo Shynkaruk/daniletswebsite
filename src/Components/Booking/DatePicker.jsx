@@ -23,10 +23,11 @@ function formatISO(date) {
   return `${y}-${m}-${d}`;
 }
 
+// 🔹 Показуємо у форматі MM.DD.YYYY: 11.21.2025
 function formatDisplay(value) {
   if (!value) return "";
   const [y, m, d] = value.split("-");
-  return `${d}.${m}.${y}`;
+  return `${m}.${d}.${y}`;
 }
 
 const DatePicker = ({
@@ -34,7 +35,8 @@ const DatePicker = ({
   value,
   onChange,
   placeholder = "Select date",
-  disablePast = false,
+  // 🔹 За замовчуванням блокуємо минулі дати
+  disablePast = true,
   disableFuture = false,
 }) => {
   const [open, setOpen] = useState(false);
@@ -67,7 +69,7 @@ const DatePicker = ({
   const isDisabled = (date) => {
     if (!date) return true;
     const d = startOfDay(date);
-    if (disablePast && d < today) return true;
+    if (disablePast && d < today) return true;   // 🔹 блокуємо минуле
     if (disableFuture && d > today) return true;
     return false;
   };
@@ -179,8 +181,7 @@ const DatePicker = ({
                 "w-8 h-8 rounded-full flex items-center justify-center text-[13px]";
 
               if (isSelected) {
-                classes +=
-                  " text-black font-semibold shadow";
+                classes += " text-black font-semibold shadow";
               } else if (disabled) {
                 classes += " text-[#D1D5DB] cursor-not-allowed";
               } else {

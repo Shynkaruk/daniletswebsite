@@ -1,5 +1,6 @@
 // src/components/cleaning/ServicesProvideCleaning.jsx
 import React, { useState } from "react";
+import arrowRightIcon from "../../../assets/icons/arrows/arrow_right_black.svg";
 
 // ДАНІ ЧОТИРЬОХ СЕРВІСІВ
 const cleaningServices = [
@@ -66,12 +67,11 @@ const ServicesProvideCleaning = () => {
   return (
     <section className="w-full bg-[#F5F5F7] pt-16 md:pt-28 pb-10 md:pb-16">
       <div className="w-[min(1600px,100%)] mx-auto px-4 md:px-8">
-
         {/* Контейнер із картками */}
         <div className="relative z-10 -mt-10 md:-mt-60 bg-white rounded-[32px] px-4 py-6 md:px-10 md:py-10 shadow-sm">
-        <h2 className="text-[28px] sm:text-[36px] md:text-[48px] font-bold text-black">
-          Services We<br /> Provide
-        </h2>
+          <h2 className="text-[28px] sm:text-[36px] md:text-[48px] font-bold text-black">
+            Services We Provide
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
             {cleaningServices.map((service) => (
               <button
@@ -105,7 +105,6 @@ const ServicesProvideCleaning = () => {
                   </p>
                 </div>
 
-                {/* Кнопка Learn More як у Detailing */}
                 <div
                   className="
                     mt-auto flex items-center justify-between
@@ -122,7 +121,21 @@ const ServicesProvideCleaning = () => {
                   }}
                 >
                   <span>Learn More</span>
-                  <span className="text-lg">↗</span>
+                  <span className="inline md:hidden">
+                    <img
+                      src={arrowRightIcon}
+                      alt="arrow"
+                      className="w-[18px] h-[18px] object-contain"
+                    />
+                  </span>
+
+                  <span className="hidden md:inline">
+                    <img
+                      src={arrowRightIcon}
+                      alt="arrow"
+                      className="w-[20px] h-[20px] object-contain"
+                    />
+                  </span>
                 </div>
               </button>
             ))}
@@ -142,9 +155,7 @@ const ServicesProvideCleaning = () => {
             </button>
 
             <div className="text-[16px] leading-relaxed text-[#333] space-y-4">
-              <h3 className="font-bold text-[20px]">
-                Service {modalService.id}: {modalService.title}
-              </h3>
+              <h3 className="font-bold text-[20px]">{modalService.title}</h3>
 
               {modalService.detailed
                 .trim()
