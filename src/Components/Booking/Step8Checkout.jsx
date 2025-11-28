@@ -52,9 +52,9 @@ const Step8Checkout = ({
   onAddMoreServices,
   progressActive = 6,
 }) => {
+  const location = useLocation();
   if (!visible) return null;
 
-  const location = useLocation();
   const isCleaningFlow =
     isCleaning || location.pathname.toLowerCase().includes("cleaning");
 
