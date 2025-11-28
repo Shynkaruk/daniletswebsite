@@ -25,6 +25,7 @@ import googleCodeRouter from "./routes/authGoogle.js";
 import googleReviewsRouter from "./routes/reviews.js";
 import { sendOtpEmail } from "./email.js";
 import contactRouter from "./routes/contact.js";
+import whopRouter from "./routes/whop.js";
 
 const app = express();
 
@@ -70,6 +71,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use("/api/contact", contactRouter);
 
 app.use("/api/reviews", googleReviewsRouter);
+app.use("/api/whop", whopRouter);
 
 // директорії з урахуванням __dirname (щоб не зламалось у контейнері)
 const UPLOADS_DIR = path.join(__dirname, "uploads");

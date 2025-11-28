@@ -60,6 +60,40 @@ const Step8Checkout = ({
 
   const selectedAddOnsArray = Array.from(selectedAddOns || new Set());
 
+  // 🔹 ДЕТАЙЛІНГ: сабміт + створення Whop-checkout
+  const handleSubmitWithPayment = async () => {
+    if (submitting) return;
+
+    // 1) Зберігаємо заявку у твою систему
+    await submitRequest();
+
+    // 2) Створюємо checkout в Whop під КОНКРЕТНИЙ depositAmount
+    try {
+      const res = await fetch("/api/whop/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: depositAmount,
+          currency: "usd",
+          firstName,
+          lastName,
+          email,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data?.checkoutUrl || data?.url) {
+        // редірект на Whop-чекаут (там вже Apple Pay / Google Pay)
+        window.location.href = data.checkoutUrl || data.url;
+      } else {
+        console.error("Whop checkout error:", data);
+      }
+    } catch (err) {
+      console.error("Whop checkout request failed", err);
+    }
+  };
+
   // ===== CLEANING VARIANT =====
   if (isCleaningFlow) {
     return (
@@ -129,6 +163,7 @@ const Step8Checkout = ({
             </button>
           </div>
 
+          {/* ❗️Cleaning: тільки submit без оплати */}
           <button
             onClick={submitRequest}
             disabled={submitting}
@@ -144,7 +179,7 @@ const Step8Checkout = ({
     );
   }
 
-  // ===== DETAILING VARIANT (Checkout з заглушкою оплати) =====
+  // ===== DETAILING VARIANT (з Whop оплатою) =====
   return (
     <div className="w-full max-w-full min-w-0 text-left space-y-4">
       <div className="bg-white/90 backdrop-blur rounded-[24px] p-4 sm:p-5 shadow space-y-4">
@@ -250,19 +285,21 @@ const Step8Checkout = ({
               </button>
             </div>
 
-            {/* PAYMENT PLACEHOLDER */}
+            {/* PAYMENT (через Whop, редірект) */}
             <div className="space-y-2">
-              <div className="text-sm text-[#6B7280] font-medium">
-                Payment (coming soon)
-              </div>
+              <div className="text-sm text-[#6B7280] font-medium">Payment</div>
               <p className="text-xs text-[#6B7280]">
-                Online card payment is not enabled yet. Your card will{" "}
-                <span className="font-semibold">not be charged</span>{" "}
-                automatically. After you submit your request, our team will
-                contact you to confirm the deposit and send a payment link or
-                options.
+                Pay your{" "}
+                <span className="font-semibold">
+                  booking deposit (${depositAmount.toFixed(2)})
+                </span>{" "}
+                securely via card, Apple Pay / Google Pay or other supported
+                methods. After successful payment we&apos;ll confirm your
+                booking and contact you with details.
               </p>
-              <div className="grid gap-2 opacity-60 pointer-events-none">
+
+              {/* Старі поля картки залишаємо як “мок”, але вимикаємо */}
+              <div className="grid gap-2 opacity-40 pointer-events-none mt-2">
                 <input
                   value={cardName}
                   onChange={(e) => setCardName(e.target.value)}
@@ -288,35 +325,35 @@ const Step8Checkout = ({
                   className="h-[44px] rounded-[12px] bg-[#F4F4F5] px-3"
                 />
               </div>
-            </div>
 
-            {/* TIPS */}
-            <div className="space-y-2">
-              <div className="text-sm text-[#6B7280] font-medium">
-                Select tip amount (optional)
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {TIP_PRESETS.map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => setTip(v)}
-                    className={`h-[36px] px-4 rounded-full border ${
-                      tip === v ? "border-transparent" : "border-[#E5E7EB]"
-                    }`}
-                    style={{
-                      background: tip === v ? GOLD_GRADIENT : "#ffffff",
-                    }}
-                  >
-                    ${v}
-                  </button>
-                ))}
-                <input
-                  inputMode="numeric"
-                  placeholder="Custom"
-                  className="h-[36px] w-[100px] rounded-full border border-[#E5E7EB] px-3"
-                  onChange={(e) => setTip(+e.target.value || 0)}
-                />
+              {/* TIPS */}
+              <div className="space-y-2 mt-3">
+                <div className="text-sm text-[#6B7280] font-medium">
+                  Select tip amount (optional)
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {TIP_PRESETS.map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setTip(v)}
+                      className={`h-[36px] px-4 rounded-full border ${
+                        tip === v ? "border-transparent" : "border-[#E5E7EB]"
+                      }`}
+                      style={{
+                        background: tip === v ? GOLD_GRADIENT : "#ffffff",
+                      }}
+                    >
+                      ${v}
+                    </button>
+                  ))}
+                  <input
+                    inputMode="numeric"
+                    placeholder="Custom"
+                    className="h-[36px] w-[100px] rounded-full border border-[#E5E7EB] px-3"
+                    onChange={(e) => setTip(+e.target.value || 0)}
+                  />
+                </div>
               </div>
             </div>
           </>
@@ -337,9 +374,7 @@ const Step8Checkout = ({
           {/* Main service */}
           <div className="flex items-center justify-between text-[15px]">
             <span>{selectedServiceObj?.title || "—"}</span>
-            <span>
-              ${(Number(selectedServiceObj?.price) || 0).toFixed(2)}
-            </span>
+            <span>${(Number(selectedServiceObj?.price) || 0).toFixed(2)}</span>
           </div>
 
           {/* Add-ons */}
@@ -401,8 +436,9 @@ const Step8Checkout = ({
           </div>
         </div>
 
+        {/* Головна кнопка: сабміт + редірект на Whop */}
         <button
-          onClick={submitRequest}
+          onClick={handleSubmitWithPayment}
           disabled={submitting}
           type="button"
           className="w-full h-[52px] rounded-[88px] font-semibold text-black shadow inline-flex items-center justify-center gap-2 disabled:opacity-60"
