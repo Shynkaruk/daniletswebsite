@@ -1,76 +1,40 @@
-// server/routes/whop.js
 import express from "express";
-import Whop from "@whop/sdk";
+import axios from "axios";
 
 const router = express.Router();
 
-// Ініціалізуємо клієнт Whop
-const whopClient = new Whop({
-  apiKey: process.env.WHOP_API_KEY,
-});
-
-// POST /api/whop/checkout
 router.post("/checkout", async (req, res) => {
   try {
-    const { amount, currency = "usd", firstName, lastName, email } = req.body;
+    const { amount, currency, email, firstName, lastName } = req.body;
 
-    if (!amount) {
-      return res.status(400).json({ error: "Amount is required" });
-    }
-
-    if (!process.env.WHOP_COMPANY_ID) {
-      console.error("Missing WHOP_COMPANY_ID env");
-      return res
-        .status(500)
-        .json({ error: "Server config error: WHOP_COMPANY_ID is missing" });
-    }
-
-    if (!process.env.WHOP_REDIRECT_URL) {
-      console.error("Missing WHOP_REDIRECT_URL env");
-      return res
-        .status(500)
-        .json({ error: "Server config error: WHOP_REDIRECT_URL is missing" });
-    }
-
-    // Створюємо checkout-конфігурацію з ДИНАМІЧНОЮ ціною
-    const checkoutConfiguration = await whopClient.checkoutConfigurations.create(
+    const response = await axios.post(
+      "https://api.whop.com/api/v2/charges",
       {
-        mode: "payment",
-        plan: {
-          company_id: process.env.WHOP_COMPANY_ID,
-          currency,
-          initial_price: Number(amount), // наш депозит
-        },
+        amount: Math.round(amount * 100) / 100,
+        currency: currency || "usd",
+        customer_email: email,
         metadata: {
-          type: "detailing_deposit",
-          deposit_amount: Number(amount),
-          customer_email: email || null,
-          customer_name: `${firstName || ""} ${lastName || ""}`.trim(),
+          firstName,
+          lastName,
         },
         redirect_url: process.env.WHOP_REDIRECT_URL,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.WHOP_API_KEY}`,
+          "Content-Type": "application/json",
+        },
       }
     );
 
-    // purchase_url повертається типу `/checkout/ch_xxx?...`
-    const purchasePath = checkoutConfiguration.purchase_url;
-    const checkoutUrl = purchasePath.startsWith("http")
-      ? purchasePath
-      : `https://whop.com${purchasePath}`;
-
     return res.json({
-      checkoutId: checkoutConfiguration.id,
-      checkoutUrl,
+      checkoutUrl: response.data.url,
     });
   } catch (err) {
-    // максимум логів у консолі DigitalOcean
-    console.error(
-      "Whop checkout error:",
-      err?.response?.data || err?.message || err
-    );
-
+    console.error("WHOP ERROR:", err.response?.data || err);
     return res.status(500).json({
       error: "Failed to create checkout",
-      details: err?.response?.data || null,
+      details: err.response?.data || null,
     });
   }
 });
