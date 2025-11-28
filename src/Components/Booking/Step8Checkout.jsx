@@ -2,11 +2,24 @@
 import React from "react";
 import { FiChevronLeft, FiEye, FiEyeOff } from "react-icons/fi";
 import { useLocation } from "react-router-dom";
-import { useStripe, useElements, PaymentElement } from "@stripe/react-stripe-js";
+import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
 import ProgressBar from "./ProgressBar";
 
 const GOLD_GRADIENT =
   "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
+
+const CARD_ELEMENT_OPTIONS = {
+  style: {
+    base: {
+      fontSize: "16px",
+      color: "#18181B",
+      "::placeholder": { color: "#9CA3AF" },
+    },
+    invalid: {
+      color: "#EF4444",
+    },
+  },
+};
 
 const Step8Checkout = ({
   visible,
@@ -64,7 +77,7 @@ const Step8Checkout = ({
 
   const selectedAddOnsArray = Array.from(selectedAddOns || new Set());
 
-  // ===== ДЕТАЙЛІНГ: сабміт + оплата через STRIPE =====
+  // ===== ДЕТАЙЛІНГ: сабміт + оплата через STRIPE (CardElement) =====
   const handleSubmitWithPayment = async () => {
     if (submitting) return;
     if (!stripe || !elements) {
@@ -94,15 +107,26 @@ const Step8Checkout = ({
 
       const clientSecret = data.clientSecret;
 
-      // 2) Підтверджуємо оплату через PaymentElement (карта / Apple / Google Pay)
-      const { error, paymentIntent } = await stripe.confirmPayment({
-        elements,
+      // 2) Беремо CardElement
+      const cardElement = elements.getElement(CardElement);
+      if (!cardElement) {
+        console.error("CardElement not found");
+        return;
+      }
+
+      // 3) Підтверджуємо оплату
+      const { error, paymentIntent } = await stripe.confirmCardPayment(
         clientSecret,
-        confirmParams: {
-          receipt_email: email,
-        },
-        redirect: "if_required", // якщо потрібен редірект 3DS
-      });
+        {
+          payment_method: {
+            card: cardElement,
+            billing_details: {
+              email,
+              name: `${firstName || ""} ${lastName || ""}`.trim(),
+            },
+          },
+        }
+      );
 
       if (error) {
         console.error("Stripe payment error:", error);
@@ -110,7 +134,7 @@ const Step8Checkout = ({
       }
 
       if (paymentIntent && paymentIntent.status === "succeeded") {
-        // 3) Після успішної оплати — зберігаємо заявку в твою систему
+        // 4) Після успішної оплати — зберігаємо заявку
         await submitRequest();
       }
     } catch (err) {
@@ -137,7 +161,6 @@ const Step8Checkout = ({
             </h2>
           </div>
 
-          {/* Прогрес: крок 3/3 */}
           <ProgressBar activeCount={3} total={3} />
 
           <p className="text-sm text-[#4B5563]">
@@ -146,7 +169,6 @@ const Step8Checkout = ({
             confirm the details and final price.
           </p>
 
-          {/* PERSONAL INFO SUMMARY */}
           <div className="space-y-2">
             <div className="text-sm text-[#6B7280] font-medium">
               Your personal information
@@ -187,7 +209,6 @@ const Step8Checkout = ({
             </button>
           </div>
 
-          {/* Cleaning: тільки submit без оплати */}
           <button
             onClick={submitRequest}
             disabled={submitting}
@@ -203,7 +224,7 @@ const Step8Checkout = ({
     );
   }
 
-  // ===== DETAILING VARIANT (з Stripe оплатою) =====
+  // ===== DETAILING VARIANT =====
   return (
     <div className="w-full max-w-full min-w-0 text-left space-y-4">
       <div className="bg-white/90 backdrop-blur rounded-[24px] p-4 sm:p-5 shadow space-y-4">
@@ -221,7 +242,6 @@ const Step8Checkout = ({
             </h2>
           </div>
 
-          {/* Toggle receipt-only */}
           <button
             onClick={() => setReceiptOnly((v) => !v)}
             className="inline-flex items-center gap-2 text-[14px] text-[#18181B]"
@@ -232,12 +252,11 @@ const Step8Checkout = ({
           </button>
         </div>
 
-        {/* Прогрес для детайлінгу — 6 полосок */}
         <ProgressBar activeCount={progressActive} total={6} />
 
-        {/* PERSONAL INFO */}
         {!receiptOnly && (
           <>
+            {/* PERSONAL INFO */}
             <div className="space-y-2">
               <div className="text-sm text-[#6B7280] font-medium">
                 Your personal information
@@ -309,7 +328,7 @@ const Step8Checkout = ({
               </button>
             </div>
 
-            {/* PAYMENT (Stripe Payment Element) */}
+            {/* PAYMENT (CardElement) */}
             <div className="space-y-2">
               <div className="text-sm text-[#6B7280] font-medium">Payment</div>
               <p className="text-xs text-[#6B7280]">
@@ -317,18 +336,15 @@ const Step8Checkout = ({
                 <span className="font-semibold">
                   booking deposit (${depositAmount.toFixed(2)})
                 </span>{" "}
-                securely via card, Apple Pay / Google Pay or other supported
-                methods using the secure payment form below. After successful
-                payment we&apos;ll confirm your booking and contact you with
-                details.
+                securely via card or digital wallet. After successful payment
+                we&apos;ll confirm your booking and contact you with details.
               </p>
 
-              {/* Stripe PaymentElement замість Whop/мок-полів */}
-              <div className="mt-3">
-                <PaymentElement />
+              <div className="mt-3 rounded-[12px] border border-[#E5E7EB] px-3 py-2 bg-[#F4F4F5]">
+                <CardElement options={CARD_ELEMENT_OPTIONS} />
               </div>
 
-              {/* TIPS */}
+              {/* Tips */}
               <div className="space-y-2 mt-3">
                 <div className="text-sm text-[#6B7280] font-medium">
                   Select tip amount (optional)
@@ -373,13 +389,11 @@ const Step8Checkout = ({
             List of services you have selected
           </div>
 
-          {/* Main service */}
           <div className="flex items-center justify-between text-[15px]">
             <span>{selectedServiceObj?.title || "—"}</span>
             <span>${(Number(selectedServiceObj?.price) || 0).toFixed(2)}</span>
           </div>
 
-          {/* Add-ons */}
           {addonsDb.map((ad) =>
             selectedAddOnsArray.includes(ad.id) ? (
               <div
@@ -438,7 +452,6 @@ const Step8Checkout = ({
           </div>
         </div>
 
-        {/* Головна кнопка: сабміт + оплата через Stripe */}
         <button
           onClick={handleSubmitWithPayment}
           disabled={submitting || !stripe || !elements}
