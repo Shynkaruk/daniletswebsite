@@ -31,10 +31,14 @@ router.post("/checkout", async (req, res) => {
       checkoutUrl: response.data.url,
     });
   } catch (err) {
-    console.error("WHOP ERROR:", err.response?.data || err);
+    console.error("Whop createCheckout ERROR:");
+    console.error("message:", err?.message);
+    console.error("response data:", err?.response?.data);
+    console.error("response status:", err?.response?.status);
+
     return res.status(500).json({
       error: "Failed to create checkout",
-      details: err.response?.data || null,
+      details: err?.response?.data || err?.message || null,
     });
   }
 });
