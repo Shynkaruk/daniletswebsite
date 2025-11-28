@@ -2,6 +2,7 @@
 import React from "react";
 import { FiChevronLeft, FiEye, FiEyeOff } from "react-icons/fi";
 import { useLocation } from "react-router-dom";
+import { useStripe, useElements, PaymentElement } from "@stripe/react-stripe-js";
 import ProgressBar from "./ProgressBar";
 
 const GOLD_GRADIENT =
@@ -53,6 +54,9 @@ const Step8Checkout = ({
   progressActive = 6,
 }) => {
   const location = useLocation();
+  const stripe = useStripe();
+  const elements = useElements();
+
   if (!visible) return null;
 
   const isCleaningFlow =
@@ -60,16 +64,17 @@ const Step8Checkout = ({
 
   const selectedAddOnsArray = Array.from(selectedAddOns || new Set());
 
-  // 🔹 ДЕТАЙЛІНГ: сабміт + створення Whop-checkout
+  // ===== ДЕТАЙЛІНГ: сабміт + оплата через STRIPE =====
   const handleSubmitWithPayment = async () => {
     if (submitting) return;
+    if (!stripe || !elements) {
+      console.error("Stripe is not ready yet");
+      return;
+    }
 
-    // 1) Зберігаємо заявку у твою систему
-    await submitRequest();
-
-    // 2) Створюємо checkout в Whop під КОНКРЕТНИЙ depositAmount
     try {
-      const res = await fetch("/api/whop/checkout", {
+      // 1) Створюємо PaymentIntent під конкретний депозит
+      const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -82,15 +87,34 @@ const Step8Checkout = ({
       });
 
       const data = await res.json();
+      if (!res.ok || !data?.clientSecret) {
+        console.error("Stripe init error:", data);
+        return;
+      }
 
-      if (data?.checkoutUrl || data?.url) {
-        // редірект на Whop-чекаут (там вже Apple Pay / Google Pay)
-        window.location.href = data.checkoutUrl || data.url;
-      } else {
-        console.error("Whop checkout error:", data);
+      const clientSecret = data.clientSecret;
+
+      // 2) Підтверджуємо оплату через PaymentElement (карта / Apple / Google Pay)
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        clientSecret,
+        confirmParams: {
+          receipt_email: email,
+        },
+        redirect: "if_required", // якщо потрібен редірект 3DS
+      });
+
+      if (error) {
+        console.error("Stripe payment error:", error);
+        return;
+      }
+
+      if (paymentIntent && paymentIntent.status === "succeeded") {
+        // 3) Після успішної оплати — зберігаємо заявку в твою систему
+        await submitRequest();
       }
     } catch (err) {
-      console.error("Whop checkout request failed", err);
+      console.error("Stripe checkout request failed", err);
     }
   };
 
@@ -163,7 +187,7 @@ const Step8Checkout = ({
             </button>
           </div>
 
-          {/* ❗️Cleaning: тільки submit без оплати */}
+          {/* Cleaning: тільки submit без оплати */}
           <button
             onClick={submitRequest}
             disabled={submitting}
@@ -179,7 +203,7 @@ const Step8Checkout = ({
     );
   }
 
-  // ===== DETAILING VARIANT (з Whop оплатою) =====
+  // ===== DETAILING VARIANT (з Stripe оплатою) =====
   return (
     <div className="w-full max-w-full min-w-0 text-left space-y-4">
       <div className="bg-white/90 backdrop-blur rounded-[24px] p-4 sm:p-5 shadow space-y-4">
@@ -285,7 +309,7 @@ const Step8Checkout = ({
               </button>
             </div>
 
-            {/* PAYMENT (через Whop, редірект) */}
+            {/* PAYMENT (Stripe Payment Element) */}
             <div className="space-y-2">
               <div className="text-sm text-[#6B7280] font-medium">Payment</div>
               <p className="text-xs text-[#6B7280]">
@@ -294,36 +318,14 @@ const Step8Checkout = ({
                   booking deposit (${depositAmount.toFixed(2)})
                 </span>{" "}
                 securely via card, Apple Pay / Google Pay or other supported
-                methods. After successful payment we&apos;ll confirm your
-                booking and contact you with details.
+                methods using the secure payment form below. After successful
+                payment we&apos;ll confirm your booking and contact you with
+                details.
               </p>
 
-              {/* Старі поля картки залишаємо як “мок”, але вимикаємо */}
-              <div className="grid gap-2 opacity-40 pointer-events-none mt-2">
-                <input
-                  value={cardName}
-                  onChange={(e) => setCardName(e.target.value)}
-                  placeholder="Name on card"
-                  className="h-[44px] rounded-[12px] bg-[#F4F4F5] px-3"
-                />
-                <input
-                  value={cardCvv}
-                  onChange={(e) => setCardCvv(e.target.value)}
-                  placeholder="CVC"
-                  className="h-[44px] rounded-[12px] bg-[#F4F4F5] px-3"
-                />
-                <input
-                  value={cardExpiry}
-                  onChange={(e) => setCardExpiry(e.target.value)}
-                  placeholder="MM/YY"
-                  className="h-[44px] rounded-[12px] bg-[#F4F4F5] px-3"
-                />
-                <input
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(e.target.value)}
-                  placeholder="1234 1234 1234 1234"
-                  className="h-[44px] rounded-[12px] bg-[#F4F4F5] px-3"
-                />
+              {/* Stripe PaymentElement замість Whop/мок-полів */}
+              <div className="mt-3">
+                <PaymentElement />
               </div>
 
               {/* TIPS */}
@@ -403,7 +405,7 @@ const Step8Checkout = ({
             <span>${subTotal.toFixed(2)}</span>
           </div>
           <div className="flex items-center justify-between text:[14px]">
-            <span>TAX (7%)</span>
+            <span>TAX (10%)</span>
             <span>${tax.toFixed(2)}</span>
           </div>
           <div className="flex items-center justify-between text-[14px]">
@@ -436,17 +438,17 @@ const Step8Checkout = ({
           </div>
         </div>
 
-        {/* Головна кнопка: сабміт + редірект на Whop */}
+        {/* Головна кнопка: сабміт + оплата через Stripe */}
         <button
           onClick={handleSubmitWithPayment}
-          disabled={submitting}
+          disabled={submitting || !stripe || !elements}
           type="button"
           className="w-full h-[52px] rounded-[88px] font-semibold text-black shadow inline-flex items-center justify-center gap-2 disabled:opacity-60"
           style={{ background: GOLD_GRADIENT }}
         >
           {submitting
             ? "Submitting..."
-            : `Submit Request & Confirm Deposit ($${depositAmount})`}
+            : `Submit Request & Pay Deposit ($${depositAmount})`}
           <span className="text-lg">›</span>
         </button>
 
