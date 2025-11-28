@@ -57,6 +57,12 @@ const BITRIX_STAGE_DETAILING_NEW =
 const BITRIX_STAGE_CLEANING_NEW =
   process.env.BITRIX_STAGE_CLEANING_NEW || null;
 
+app.use(
+  "/.well-known",
+  express.static(path.join(__dirname, ".well-known"))
+);
+
+
 app.set("trust proxy", true);
 
 app.use(cors({ origin: "*", credentials: false }));

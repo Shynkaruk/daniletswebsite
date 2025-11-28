@@ -180,17 +180,6 @@ const Booking = () => {
   };
 
   const onSearch = async () => {
-    const target = selected || predictions[0];
-    if (!target) return;
-    const details = target.place_id?.startsWith("fallback-")
-      ? {
-          formatted_address: target.description,
-          geometry: null,
-          place_id: target.place_id,
-        }
-      : await getPlaceDetails(target.place_id);
-
-    console.log("Search result:", details || target);
     setStep(2);
   };
 

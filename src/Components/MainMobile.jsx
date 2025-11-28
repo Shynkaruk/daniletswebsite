@@ -114,8 +114,8 @@ const MainMobile = () => {
                 className="text-[20px] text-[rgba(230,230,235,1)] max-w-[85%]"
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
-                Columbus&apos; trusted provider of premium services tailored with
-                precision and delivered with excellence.
+Columbus' trusted provider of premium auto detailing and commercial 
+cleaning services tailored with precision and delivered with excellence.
               </p>
 
               {/* Learn More — веде на різні сторінки залежно від слайду */}

@@ -11,16 +11,12 @@ const services = [
     shortDescription:
       "Comprehensive detailing services for dealership inventory. Fast turnaround, consistent quality, volume pricing. Keep your lot looking showroom-ready.",
     detailedDescription: `
-Professional detailing services designed specifically for automotive dealerships. We understand the importance of presentation in vehicle sales—first impressions matter.
-
-Our team provides fast, efficient, and consistent detailing for your entire inventory, from trade-ins to premium vehicles.
-
-Services include but are not limited to:
-• Full exterior wash and wax  
-• Interior cleaning and conditioning  
-• Final inspection prep
-
-Volume pricing available. We work with your schedule to ensure vehicles are ready when you need them.
+Professional detailing services designed specifically for automotive dealerships. We understand 
+the importance of presentation in vehicle sales—first impressions matter. Our team provides 
+fast, efficient, and consistent detailing for your entire inventory, from trade-ins to premium 
+vehicles. Services include but are not limited to full exterior wash and wax, interior cleaning and 
+conditioning, and final inspection prep. Volume pricing available. We work with your schedule to 
+ensure vehicles are ready when you need them.
     `,
   },
   {
@@ -29,16 +25,12 @@ Volume pricing available. We work with your schedule to ensure vehicles are read
     shortDescription:
       "Professional fleet detailing for businesses. Maintain your company's image with clean, well-maintained vehicles. Scheduled service, competitive rates.",
     detailedDescription: `
-Keep your company fleet looking professional with our specialized fleet detailing services.
-
-Whether you have delivery vehicles, company cars, or commercial trucks, we provide consistent, reliable detailing that maintains your brand image on the road.
-
-Services include:
-• Exterior wash and protection  
-• Interior cleaning and sanitization  
-• Scheduled maintenance programs
-
-We offer flexible scheduling and on-site service options. Your vehicles represent your business—let us help you make the right impression.
+Keep your company fleet looking professional with our specialized fleet detailing services. 
+Whether you have delivery vehicles, company cars, or commercial trucks, we provide 
+consistent, reliable detailing that maintains your brand image on the road. Services include 
+exterior wash and protection, interior cleaning and sanitization, and scheduled maintenance 
+programs. We offer flexible scheduling and on-site service options. Your vehicles represent your 
+business—let us help you make the right impression.
     `,
   },
   {
@@ -47,25 +39,13 @@ We offer flexible scheduling and on-site service options. Your vehicles represen
     shortDescription:
       "Complete interior and exterior detailing for all vehicle types. Meticulous cleaning, conditioning, and protection. Transform your vehicle inside and out.",
     detailedDescription: `
-Our comprehensive interior and exterior detailing service covers every aspect of your vehicle.
-
-Exterior services include:
-• Hand washing  
-• Clay bar treatment  
-• Paint correction  
-• Trim restoration  
-• Wax application  
-• Wheel and tire cleaning  
-• Glass polishing
-
-Interior services include:
-• Deep vacuuming  
-• Seat and carpet shampooing  
-• Leather conditioning  
-• Thorough plastic cleaning and protection  
-• Glass cleaning
-
-We use professional-grade products and techniques to restore your vehicle to like-new condition. Perfect for personal vehicles, luxury cars, or any vehicle deserving premium care.
+Our comprehensive interior and exterior detailing service covers every aspect of your vehicle. 
+Exterior services include hand washing, clay bar treatment, paint correction, trim restoration, 
+wax application, wheel and tire cleaning, and glass polishing. Interior services include deep 
+vacuuming, seat and carpet shampooing, leather conditioning, thorough plastic cleaning, plastic 
+protection, and glass cleaning. We use professional-grade products and techniques to restore 
+your vehicle to like-new condition. Perfect for personal vehicles, luxury cars, or any vehicle 
+deserving premium care. 
     `,
   },
   {
@@ -74,18 +54,12 @@ We use professional-grade products and techniques to restore your vehicle to lik
     shortDescription:
       "Professional ceramic coating application with up to 5-year protection. Superior gloss, hydrophobic properties, and lasting paint protection.",
     detailedDescription: `
-Protect your investment with professional ceramic coating application.
-
-Our team applies premium Gtechniq ceramic coatings that create a durable, glass-like protective layer chemically bonded to your vehicle's paint.
-
-Benefits include:
-• Superior UV protection  
-• Resistance to environmental contaminants  
-• Enhanced gloss and depth  
-• Hydrophobic water-beading properties  
-• Easier maintenance
-
-Complimentary add-on services include Exo, glass coating, and wheel coating. This is the ultimate protection for your vehicle's finish.
+Protect your investment with professional ceramic coating application. Our team applies 
+premium Gtechniq ceramic coatings that create a durable, glass-like protective layer chemically 
+bonded to your vehicle's paint. Benefits include superior UV protection, resistance to 
+environmental contaminants, enhanced gloss and depth, hydrophobic water-beading properties, 
+and easier maintenance. Complimentary add-on services include Exo, glass coating and wheel 
+coating. This is the ultimate protection for your vehicle's finish. 
     `,
   },
   {
@@ -94,15 +68,12 @@ Complimentary add-on services include Exo, glass coating, and wheel coating. Thi
     shortDescription:
       "Paint protection film and vehicle wrap services through our trusted partner. Protect your paint or transform your vehicle's appearance.",
     detailedDescription: `
-Protect your vehicle's paint or completely transform its appearance with professional wrap and paint protection film (PPF) services.
-
-Through our trusted partner network, we offer:
-• Clear PPF for invisible protection against rock chips, scratches, and road debris  
-• Full or partial vehicle wraps in any color or finish
-
-Wraps offer unlimited customization options for personal style or business branding. Expert installation with warranty coverage.
-
-Consultation available to determine the best solution for your needs.
+Protect your vehicle's paint or completely transform its appearance with professional wrap and 
+paint protection film (PPF) services. Through our trusted partner network, we offer clear PPF for 
+invisible protection against rock chips, scratches, and road debris, as well as full or partial 
+vehicle wraps in any color or finish. Wraps offer unlimited customization options for personal 
+style or business branding. Expert installation with warranty coverage. Consultation available to 
+determine the best solution for your needs.
     `,
   },
   {
@@ -235,7 +206,7 @@ const ServicesProvide = () => {
         typeof document !== "undefined" &&
         createPortal(
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[99999] px-4">
-            <div className="bg-white rounded-[24px] max-w-xl w-full p-6 shadow-xl relative">
+            <div className="bg-white rounded-[24px] max-w-xl w-full p-6 shadow-xl relative max-h-[90vh] overflow-y-auto">
               <button
                 onClick={closeModal}
                 className="absolute top-4 right-4 text-[20px] font-bold text-gray-500 hover:text-black"

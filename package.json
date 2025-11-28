@@ -16,6 +16,7 @@
   "dependencies": {
     "@react-oauth/google": "^0.12.2",
     "@tailwindcss/vite": "^4.1.8",
+    "@whop/checkout": "^0.0.44",
     "axios": "^1.13.2",
     "google-auth-library": "^10.4.1",
     "googleapis": "^166.0.0",

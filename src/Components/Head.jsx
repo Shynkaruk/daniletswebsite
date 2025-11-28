@@ -387,13 +387,50 @@ const Head = () => {
   const [authTab, setAuthTab] = useState("login"); // "login" | "signup"
   const [isSocialOpen, setIsSocialOpen] = useState(false);
 
+  // стан показу шапки
+  const [showHeader, setShowHeader] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentY =
+        window.scrollY !== undefined ? window.scrollY : window.pageYOffset || 0;
+
+      const diff = currentY - lastScrollY.current;
+      const isScrollingDown = diff > 0;
+      const isScrollingUp = diff < 0;
+
+      // біля самого верху — завжди показуємо
+      if (currentY < 80) {
+        setShowHeader(true);
+      } else if (isScrollingDown && currentY > 80) {
+        // скролимо вниз — ховаємо
+        setShowHeader(false);
+      } else if (isScrollingUp) {
+        // скролимо вверх — показуємо
+        setShowHeader(true);
+      }
+
+      lastScrollY.current = currentY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const showAuth = (tab = "login") => {
     setAuthTab(tab);
     setIsAuthOpen(true);
   };
 
   return (
-    <header className="fixed top-4 left-0 w-full z-[200] font-sans">
+    <header
+      className={`
+        fixed left-0 w-full z-[200] font-sans
+        transition-all duration-300 ease-out
+        ${showHeader ? "top-4" : "-top-24"}
+      `}
+    >
       {/* один фіксований wrapper; усередині — адаптивні хедери */}
       <MobileHead
         onOpenContact={() => setIsContactOpen(true)}
@@ -426,3 +463,4 @@ const Head = () => {
 };
 
 export default Head;
+
