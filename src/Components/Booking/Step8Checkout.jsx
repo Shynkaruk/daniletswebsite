@@ -2,24 +2,11 @@
 import React from "react";
 import { FiChevronLeft, FiEye, FiEyeOff } from "react-icons/fi";
 import { useLocation } from "react-router-dom";
-import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
+import { useStripe } from "@stripe/react-stripe-js";
 import ProgressBar from "./ProgressBar";
 
 const GOLD_GRADIENT =
   "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
-
-const CARD_ELEMENT_OPTIONS = {
-  style: {
-    base: {
-      fontSize: "16px",
-      color: "#18181B",
-      "::placeholder": { color: "#9CA3AF" },
-    },
-    invalid: {
-      color: "#EF4444",
-    },
-  },
-};
 
 const Step8Checkout = ({
   visible,
@@ -36,14 +23,6 @@ const Step8Checkout = ({
   vehicleYear,
   vehicleMake,
   vehicleModel,
-  cardName,
-  setCardName,
-  cardCvv,
-  setCardCvv,
-  cardExpiry,
-  setCardExpiry,
-  cardNumber,
-  setCardNumber,
   TIP_PRESETS,
   tip,
   setTip,
@@ -68,7 +47,6 @@ const Step8Checkout = ({
 }) => {
   const location = useLocation();
   const stripe = useStripe();
-  const elements = useElements();
 
   if (!visible) return null;
 
@@ -77,17 +55,17 @@ const Step8Checkout = ({
 
   const selectedAddOnsArray = Array.from(selectedAddOns || new Set());
 
-  // ===== ДЕТАЙЛІНГ: сабміт + оплата через STRIPE (CardElement) =====
-  const handleSubmitWithPayment = async () => {
+  // ===== ДЕТАЙЛІНГ: Submit → Stripe Checkout page =====
+  const handleSubmitWithStripeCheckout = async () => {
     if (submitting) return;
-    if (!stripe || !elements) {
-      console.error("Stripe is not ready yet");
+    if (!stripe) {
+      console.error("Stripe is not ready");
       return;
     }
 
     try {
-      // 1) Створюємо PaymentIntent під конкретний депозит
-      const res = await fetch("/api/checkout", {
+      // 1) Створюємо Checkout Session на бекенді
+      const res = await fetch("/api/checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -100,45 +78,21 @@ const Step8Checkout = ({
       });
 
       const data = await res.json();
-      if (!res.ok || !data?.clientSecret) {
-        console.error("Stripe init error:", data);
+      if (!res.ok || !data?.sessionId) {
+        console.error("Create checkout session error:", data);
         return;
       }
 
-      const clientSecret = data.clientSecret;
+      const sessionId = data.sessionId;
 
-      // 2) Беремо CardElement
-      const cardElement = elements.getElement(CardElement);
-      if (!cardElement) {
-        console.error("CardElement not found");
-        return;
-      }
-
-      // 3) Підтверджуємо оплату
-      const { error, paymentIntent } = await stripe.confirmCardPayment(
-        clientSecret,
-        {
-          payment_method: {
-            card: cardElement,
-            billing_details: {
-              email,
-              name: `${firstName || ""} ${lastName || ""}`.trim(),
-            },
-          },
-        }
-      );
+      // 2) Редірект на Stripe Checkout (карта / Apple Pay / Google Pay)
+      const { error } = await stripe.redirectToCheckout({ sessionId });
 
       if (error) {
-        console.error("Stripe payment error:", error);
-        return;
-      }
-
-      if (paymentIntent && paymentIntent.status === "succeeded") {
-        // 4) Після успішної оплати — зберігаємо заявку
-        await submitRequest();
+        console.error("Stripe redirectToCheckout error:", error);
       }
     } catch (err) {
-      console.error("Stripe checkout request failed", err);
+      console.error("Checkout session request failed:", err);
     }
   };
 
@@ -147,7 +101,6 @@ const Step8Checkout = ({
     return (
       <div className="w-full max-w-full min-w-0 text-left space-y-4">
         <div className="bg:white/90 backdrop-blur rounded-[24px] p-4 sm:p-5 shadow space-y-4">
-          {/* Header */}
           <div className="flex items:center gap-3">
             <button
               onClick={onBack}
@@ -224,7 +177,7 @@ const Step8Checkout = ({
     );
   }
 
-  // ===== DETAILING VARIANT =====
+  // ===== DETAILING VARIANT (Redirect to Stripe Checkout) =====
   return (
     <div className="w-full max-w-full min-w-0 text-left space-y-4">
       <div className="bg-white/90 backdrop-blur rounded-[24px] p-4 sm:p-5 shadow space-y-4">
@@ -328,21 +281,18 @@ const Step8Checkout = ({
               </button>
             </div>
 
-            {/* PAYMENT (CardElement) */}
+            {/* Info про оплату */}
             <div className="space-y-2">
               <div className="text-sm text-[#6B7280] font-medium">Payment</div>
               <p className="text-xs text-[#6B7280]">
-                Pay your{" "}
+                After clicking the button below you&apos;ll be redirected to a
+                secure Stripe payment page where you can pay your{" "}
                 <span className="font-semibold">
                   booking deposit (${depositAmount.toFixed(2)})
                 </span>{" "}
-                securely via card or digital wallet. After successful payment
-                we&apos;ll confirm your booking and contact you with details.
+                using a card, Apple Pay or Google Pay. You&apos;ll also have the
+                option to save your card for future visits.
               </p>
-
-              <div className="mt-3 rounded-[12px] border border-[#E5E7EB] px-3 py-2 bg-[#F4F4F5]">
-                <CardElement options={CARD_ELEMENT_OPTIONS} />
-              </div>
 
               {/* Tips */}
               <div className="space-y-2 mt-3">
@@ -452,16 +402,17 @@ const Step8Checkout = ({
           </div>
         </div>
 
+        {/* Головна кнопка: редірект на Stripe Checkout */}
         <button
-          onClick={handleSubmitWithPayment}
-          disabled={submitting || !stripe || !elements}
+          onClick={handleSubmitWithStripeCheckout}
+          disabled={submitting || !stripe}
           type="button"
           className="w-full h-[52px] rounded-[88px] font-semibold text-black shadow inline-flex items-center justify-center gap-2 disabled:opacity-60"
           style={{ background: GOLD_GRADIENT }}
         >
           {submitting
-            ? "Submitting..."
-            : `Submit Request & Pay Deposit ($${depositAmount})`}
+            ? "Processing..."
+            : `Submit Request & Go to Payment ($${depositAmount})`}
           <span className="text-lg">›</span>
         </button>
 

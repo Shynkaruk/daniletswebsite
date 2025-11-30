@@ -14,6 +14,7 @@ import DetailingPage from "./Components/Services/Detailing/DetailingPage.jsx";
 import AdminRequests from "./Accounts/AdminRequests.jsx";
 import Account from "./Accounts/Account.jsx";
 import ScrollToTop from "./ScrollToTop.jsx";
+import BookingSuccess from "./Components/payments/BookingSuccess.jsx";
 
 const App = () => {
   const [isMobile, setIsMobile] = useState(
@@ -50,6 +51,7 @@ const App = () => {
         <Route path="/book-online" element={<Booking />} />
         <Route path="/admin" element={<AdminRequests />} />
         <Route path="/account" element={<Account />} />
+        <Route path="/booking/success" element={<BookingSuccess/>}/>
       </Routes>
     </Router>
   );
