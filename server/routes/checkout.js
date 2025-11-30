@@ -4,50 +4,27 @@ import Stripe from "stripe";
 
 const router = express.Router();
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+// === Stripe ініціалізація ===
+const stripeSecret = process.env.STRIPE_SECRET_KEY;
+if (!stripeSecret) {
+  throw new Error("STRIPE_SECRET_KEY is not set in environment variables");
+}
+
+const stripe = new Stripe(stripeSecret, {
   apiVersion: "2023-10-16",
 });
 
-router.post("/checkout", async (req, res) => {
-  try {
-    const { amount, currency, email, firstName, lastName } = req.body;
+// 🟢 Формуємо FRONTEND_URL з протоколом
+const rawFrontendUrl = process.env.FRONTEND_URL;
+const FRONTEND_URL =
+  rawFrontendUrl && rawFrontendUrl.startsWith("http")
+    ? rawFrontendUrl
+    : rawFrontendUrl
+    ? `https://${rawFrontendUrl}`
+    : "http://localhost:5173";
 
-    if (!amount || !email) {
-      return res.status(400).json({
-        error: "Amount and email are required",
-      });
-    }
-
-    const amountInCents = Math.round(Number(amount) * 100);
-
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amountInCents,
-      currency: currency || "usd",
-      receipt_email: email,
-      automatic_payment_methods: {
-        enabled: true,
-      },
-      metadata: {
-        firstName,
-        lastName,
-      },
-      description: "Danilets booking deposit",
-    });
-
-    res.json({
-      clientSecret: paymentIntent.client_secret,
-    });
-  } catch (err) {
-    console.error("Stripe paymentIntent ERROR:", err);
-    res.status(500).json({
-      error: "Failed to create payment",
-      details: err.message,
-    });
-  }
-});
-
-
-// === НОВИЙ РОУТ: створення Stripe Checkout Session ===
+// === POST /api/checkout-session ===
+// створює Stripe Checkout Session і повертає session.url
 router.post("/checkout-session", async (req, res) => {
   try {
     const { amount, currency, email, firstName, lastName } = req.body;
@@ -63,11 +40,10 @@ router.post("/checkout-session", async (req, res) => {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       currency: currency || "usd",
-      customer_email: email, // Stripe підв’яже карту до цього email
-      payment_method_types: ["card"], // Apple Pay / Google Pay теж включаються сюди
+      customer_email: email,
+      payment_method_types: ["card"], // Apple Pay / Google Pay теж тут
       payment_intent_data: {
-        // 👉 зберегти карту для майбутніх оплат (off-session)
-        setup_future_usage: "off_session",
+        setup_future_usage: "off_session", // зберегти карту для майбутніх оплат
         metadata: {
           firstName: firstName || "",
           lastName: lastName || "",
@@ -87,13 +63,12 @@ router.post("/checkout-session", async (req, res) => {
           quantity: 1,
         },
       ],
-      // після успішної оплати
-      success_url: `${process.env.FRONTEND_URL}/booking/success?session_id={CHECKOUT_SESSION_ID}`,
-      // якщо відмінив оплату
-      cancel_url: `${process.env.FRONTEND_URL}/booking/cancel`,
+      success_url: `${FRONTEND_URL}/booking/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${FRONTEND_URL}/book-online`,
     });
 
-    res.json({ sessionId: session.id });
+    // 🔥 новий підхід: повертаємо URL, а не sessionId
+    res.json({ url: session.url });
   } catch (err) {
     console.error("Stripe Checkout Session ERROR:", err);
     res.status(500).json({
@@ -103,6 +78,8 @@ router.post("/checkout-session", async (req, res) => {
   }
 });
 
+// === GET /api/checkout-session/:id ===
+// для сторінки /booking/success — перевірити статус
 router.get("/checkout-session/:id", async (req, res) => {
   try {
     const session = await stripe.checkout.sessions.retrieve(req.params.id, {
@@ -115,6 +92,5 @@ router.get("/checkout-session/:id", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
 
 export default router;

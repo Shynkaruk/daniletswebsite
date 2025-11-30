@@ -2,7 +2,6 @@
 import React from "react";
 import { FiChevronLeft, FiEye, FiEyeOff } from "react-icons/fi";
 import { useLocation } from "react-router-dom";
-import { useStripe } from "@stripe/react-stripe-js";
 import ProgressBar from "./ProgressBar";
 
 const GOLD_GRADIENT =
@@ -46,7 +45,6 @@ const Step8Checkout = ({
   progressActive = 6,
 }) => {
   const location = useLocation();
-  const stripe = useStripe();
 
   if (!visible) return null;
 
@@ -55,16 +53,11 @@ const Step8Checkout = ({
 
   const selectedAddOnsArray = Array.from(selectedAddOns || new Set());
 
-  // ===== ДЕТАЙЛІНГ: Submit → Stripe Checkout page =====
+  // ===== DETAILING: Submit → створити Checkout Session → редірект на Stripe =====
   const handleSubmitWithStripeCheckout = async () => {
     if (submitting) return;
-    if (!stripe) {
-      console.error("Stripe is not ready");
-      return;
-    }
 
     try {
-      // 1) Створюємо Checkout Session на бекенді
       const res = await fetch("/api/checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -78,19 +71,14 @@ const Step8Checkout = ({
       });
 
       const data = await res.json();
-      if (!res.ok || !data?.sessionId) {
+
+      if (!res.ok || !data?.url) {
         console.error("Create checkout session error:", data);
         return;
       }
 
-      const sessionId = data.sessionId;
-
-      // 2) Редірект на Stripe Checkout (карта / Apple Pay / Google Pay)
-      const { error } = await stripe.redirectToCheckout({ sessionId });
-
-      if (error) {
-        console.error("Stripe redirectToCheckout error:", error);
-      }
+      // 🔥 Редірект на Stripe Checkout (карта / Apple Pay / Google Pay)
+      window.location.href = data.url;
     } catch (err) {
       console.error("Checkout session request failed:", err);
     }
@@ -101,6 +89,7 @@ const Step8Checkout = ({
     return (
       <div className="w-full max-w-full min-w-0 text-left space-y-4">
         <div className="bg:white/90 backdrop-blur rounded-[24px] p-4 sm:p-5 shadow space-y-4">
+          {/* Header */}
           <div className="flex items:center gap-3">
             <button
               onClick={onBack}
@@ -281,7 +270,7 @@ const Step8Checkout = ({
               </button>
             </div>
 
-            {/* Info про оплату */}
+            {/* PAYMENT INFO + TIPS */}
             <div className="space-y-2">
               <div className="text-sm text-[#6B7280] font-medium">Payment</div>
               <p className="text-xs text-[#6B7280]">
@@ -294,7 +283,6 @@ const Step8Checkout = ({
                 option to save your card for future visits.
               </p>
 
-              {/* Tips */}
               <div className="space-y-2 mt-3">
                 <div className="text-sm text-[#6B7280] font-medium">
                   Select tip amount (optional)
@@ -402,10 +390,9 @@ const Step8Checkout = ({
           </div>
         </div>
 
-        {/* Головна кнопка: редірект на Stripe Checkout */}
         <button
           onClick={handleSubmitWithStripeCheckout}
-          disabled={submitting || !stripe}
+          disabled={submitting}
           type="button"
           className="w-full h-[52px] rounded-[88px] font-semibold text-black shadow inline-flex items-center justify-center gap-2 disabled:opacity-60"
           style={{ background: GOLD_GRADIENT }}
