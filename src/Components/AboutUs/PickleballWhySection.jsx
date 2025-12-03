@@ -143,9 +143,7 @@ const PickleballWhySection = ({
     if (!el) return;
     const firstCard = el.querySelector("article");
     const gap = parseInt(
-      getComputedStyle(el).columnGap ||
-        getComputedStyle(el).gap ||
-        "16",
+      getComputedStyle(el).columnGap || getComputedStyle(el).gap || "16",
       10
     );
     const step = firstCard
@@ -260,10 +258,17 @@ const PickleballWhySection = ({
         </div>
       </section>
 
-      {/* Pop-up для Learn More по таймлайну */}
       {activeCard && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="relative bg-white rounded-2xl max-w-[900px] max-h-[90vh] overflow-y-auto p-8 text-black shadow-2xl">
+          <div
+            className="
+        relative bg-white rounded-2xl max-w-[900px] max-h-[90vh]
+        overflow-y-auto text-black shadow-2xl
+        p-6 sm:p-8      /* базові паддінги */
+        pt-14 sm:pt-8   /* на мобілці більше зверху під кнопку */
+        pr-14 sm:pr-8   /* на мобілці більше справа під кнопку */
+      "
+          >
             {/* X справа */}
             <button
               onClick={() => setActiveCard(null)}
