@@ -51,8 +51,8 @@ const Detailing = () => {
             className="mt-4 text-xl md:hidden max-w-md"
             style={{ color: "#A1A1A5" }}
           >
-            Deep interior clean, safe exterior care, and protection — for a car
-            that looks its best, every time
+Precision detailing for dealerships, fleets, and vehicle owners who demand excellence. From 
+commercial work to ceramic coatings—we deliver perfection in every detail. 
           </p>
 
           <p

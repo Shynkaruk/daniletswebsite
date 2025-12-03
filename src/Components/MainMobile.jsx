@@ -3,9 +3,6 @@ import Head from "./Head.jsx";
 import Services from "./Services.jsx";
 import { Link } from "react-router-dom";
 
-import bg_detaling from "../assets/photo/bg2_mobile_detailing.png";
-import bg_cleaining from "../assets/photo/cleaningn_bg.png";
-
 import diamondicon from "../assets/icons/diamond-icon.svg";
 import OurPortfolio from "./OurPortfolio.jsx";
 import OurCoreValues from "./OurCoreValues.jsx";
@@ -14,39 +11,57 @@ import ActionMini from "./ActionMini.jsx";
 import FAQ from "./FAQ.jsx";
 import Footer from "./Footer.jsx";
 import StatsBlock from "./StatsBlock.jsx";
-import familyphoto from "./../assets/photo/family-photo.jpg";
 
-// СЛАЙДИ ДЛЯ МОБІЛЬНОЇ ВЕРСІЇ
+// 📌 СЛАЙДИ ДЛЯ МОБІЛЬНОЇ ВЕРСІЇ — ПІДКЛЮЧЕНО З public/Top_of_Page
+// ❗ Шляхи відносно public, тому без import
+
 const SLIDES = [
   {
-    id: "family",
-    image: familyphoto,
-    alt: "Danilets family",
+    id: "top1",
+    image: "/Top_of_Page/1.jpg",
+    alt: "Danilets slide 1",
     link: "/about-us",
   },
   {
-    id: "detailing",
-    image: bg_detaling,
-    alt: "Danilets Detailing",
+    id: "top2",
+    image: "/Top_of_Page/2.jpg",
+    alt: "Danilets slide 2",
     link: "/detailing",
   },
   {
-    id: "cleaning",
-    image: bg_cleaining,
-    alt: "Danilets Cleaning",
+    id: "top3",
+    image: "/Top_of_Page/3.jpg",
+    alt: "Danilets slide 3",
     link: "/cleaning",
+  },
+  {
+    id: "top4",
+    image: "/Top_of_Page/4.jpg",
+    alt: "Danilets slide 4",
+    link: "/detailing",
+  },
+  {
+    id: "top5",
+    image: "/Top_of_Page/5.jpg",
+    alt: "Danilets slide 5",
+    link: "/cleaning",
+  },
+  {
+    id: "top6",
+    image: "/Top_of_Page/6.jpg",
+    alt: "Danilets slide 6",
+    link: "/about-us",
   },
 ];
 
 const MainMobile = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // AUTO ROTATION — 5 seconds
+  // AUTO ROTATION — 5s
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % SLIDES.length);
     }, 5000);
-
     return () => clearInterval(interval);
   }, []);
 
@@ -65,16 +80,8 @@ const MainMobile = () => {
       <Head />
 
       {/* HERO */}
-      <main
-        className="relative min-h-[100dvh] overflow-hidden"
-        style={{
-          background:
-            currentSlide.id === "detailing"
-              ? "linear-gradient(90deg, #1C1C1C 46.13%)"
-              : "transparent",
-        }}
-      >
-        {/* Фонова карусель */}
+      <main className="relative min-h-[100dvh] overflow-hidden">
+        {/* 🔥 Фонова карусель */}
         <div className="absolute inset-0">
           {SLIDES.map((slide, index) => (
             <img
@@ -82,43 +89,45 @@ const MainMobile = () => {
               src={slide.image}
               alt={slide.alt}
               className={`
+                absolute inset-0
+                w-full h-full
                 object-cover
-                absolute
                 transition-opacity duration-700
                 ${index === currentImageIndex ? "opacity-100" : "opacity-0"}
-                ${
-                  slide.id === "detailing"
-                    ? "w-full object-cover top-100"
-                    : "w-full h-full inset-0"
-                }
               `}
             />
           ))}
 
-          {/* overlay */}
-          <div className="absolute inset-0 bg-black/35" />
+          {/* 🔥 Сильніше затемнення */}
+          <div
+            className="
+              absolute inset-0
+              bg-black/60
+              backdrop-blur-[0.5 px]
+              transition-all duration-500
+            "
+          />
         </div>
 
         {/* Контент поверх */}
         <div className="relative z-10 flex min-h-[92vh]">
-          <div className="w-full mx-auto mt-[120px] px-4">
+          <div className="w-full mx-auto mt-[120px] px-6">
             <div className="space-y-4">
               <h1
                 className="text-[40px] font-extrabold leading-[100%] text-white pr-4"
-                style={{ fontFamily: "Manrope, sans-serif" }}
+                style={{ fontFamily: 'Manrope, sans-serif' }}
               >
                 WELCOME TO DANILETS
               </h1>
 
               <p
                 className="text-[20px] text-[rgba(230,230,235,1)] max-w-[85%]"
-                style={{ fontFamily: "Manrope, sans-serif" }}
+                style={{ fontFamily: 'Manrope, sans-serif' }}
               >
-Columbus' trusted provider of premium auto detailing and commercial 
-cleaning services tailored with precision and delivered with excellence.
+                Columbus' trusted provider of premium auto detailing and commercial
+                cleaning services tailored with precision and delivered with excellence.
               </p>
 
-              {/* Learn More — веде на різні сторінки залежно від слайду */}
               <Link
                 to={currentSlide.link}
                 className="
@@ -132,10 +141,10 @@ cleaning services tailored with precision and delivered with excellence.
             </div>
           </div>
 
-          {/* Бейдж справа */}
+          {/* 🟡 Бейдж справа */}
           <div
             className="
-              absolute bottom-[60px] right-4
+              absolute bottom-[70px] right-4
               bg-[rgba(235,176,108,0.18)]
               rounded-full
               px-4 py-3
@@ -149,12 +158,11 @@ cleaning services tailored with precision and delivered with excellence.
             </span>
           </div>
 
-          {/* СТРІЛКИ КАРУСЕЛІ */}
+          {/* ⬅️➡️ СТРІЛКИ КАРУСЕЛІ — ПЕРЕМІЩЕНІ ПРАВІШЕ */}
           <div
             className="
-              absolute
-              bottom-15
-              left-1/4
+              absolute bottom-[70px]
+              left-[20%]             /* Було по центру — тепер правіше */
               -translate-x-1/2
               flex gap-3
               z-20
@@ -167,11 +175,8 @@ cleaning services tailored with precision and delivered with excellence.
                 rounded-full
                 bg-[#4A4A4A]
                 flex items-center justify-center
-                text-white text-[22px]
-                font-semibold
-                shadow-md
-                active:scale-95
-                transition
+                text-white text-[22px] font-semibold
+                shadow-md active:scale-95 transition
               "
             >
               ‹
@@ -184,11 +189,8 @@ cleaning services tailored with precision and delivered with excellence.
                 rounded-full
                 bg-[#4A4A4A]
                 flex items-center justify-center
-                text-white text-[22px]
-                font-semibold
-                shadow-md
-                active:scale-95
-                transition
+                text-white text-[22px] font-semibold
+                shadow-md active:scale-95 transition
               "
             >
               ›
@@ -199,8 +201,6 @@ cleaning services tailored with precision and delivered with excellence.
 
       <Services className="relative z-10 mt-[-40px]" />
       <StatsBlock />
-
-      <OurPortfolio />
       <OurCoreValues />
       <OurReviews />
       <ActionMini />

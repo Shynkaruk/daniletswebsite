@@ -3,9 +3,6 @@ import Head from "./Head.jsx";
 import Services from "./Services.jsx";
 import { Link } from "react-router-dom";
 
-import bg_detaling from "../assets/photo/bg_detailing_pc.png";
-import bg_cleaining from "../assets/photo/cleaningn_bg.png";
-
 import diamondicon from "../assets/icons/diamond-icon.svg";
 import OurPortfolio from "./OurPortfolio.jsx";
 import OurCoreValues from "./OurCoreValues.jsx";
@@ -14,26 +11,45 @@ import ActionMini from "./ActionMini.jsx";
 import FAQ from "./FAQ.jsx";
 import Footer from "./Footer.jsx";
 import StatsBlock from "./StatsBlock.jsx";
-import familyphoto from "./../assets/photo/family-photo.jpg";
 
+// 🔹 Фони тепер беруться з public/Top_of_Page
+//    шлях відносно public → /Top_of_Page/1.jpg
 const SLIDES = [
   {
-    id: "family",
-    image: familyphoto,
-    alt: "Danilets family",
-    link: "/about-us", // сімейне фото → About Us
+    id: "top1",
+    image: "/Top_of_Page/1.jpg",
+    alt: "Danilets hero 1",
+    link: "/about-us",
   },
   {
-    id: "detailing",
-    image: bg_detaling,
-    alt: "Danilets Detailing",
-    link: "/detailing", // Detailing slide
+    id: "top2",
+    image: "/Top_of_Page/2.jpg",
+    alt: "Danilets hero 2",
+    link: "/detailing",
   },
   {
-    id: "cleaning",
-    image: bg_cleaining,
-    alt: "Danilets Cleaning",
-    link: "/cleaning", // Cleaning slide
+    id: "top3",
+    image: "/Top_of_Page/3.jpg",
+    alt: "Danilets hero 3",
+    link: "/cleaning",
+  },
+  {
+    id: "top4",
+    image: "/Top_of_Page/4.jpg",
+    alt: "Danilets hero 4",
+    link: "/detailing",
+  },
+  {
+    id: "top5",
+    image: "/Top_of_Page/5.jpg",
+    alt: "Danilets hero 5",
+    link: "/cleaning",
+  },
+  {
+    id: "top6",
+    image: "/Top_of_Page/6.jpg",
+    alt: "Danilets hero 6",
+    link: "/about-us",
   },
 ];
 
@@ -64,7 +80,7 @@ const Main = () => {
       <Head />
 
       {/* Головний блок hero */}
-      <main className="relative min-h-screen overflow-x-clip">
+      <main className="relative min-h-[560px] sm:min-h-[640px] lg:min-h-screen overflow-x-clip">
         {/* 🔥 Фонова карусель */}
         <div className="absolute inset-0">
           {SLIDES.map((slide, index) => (
@@ -73,34 +89,36 @@ const Main = () => {
               src={slide.image}
               alt={slide.alt}
               className={`
-                w-full h-full
-                object-cover
-                absolute inset-0
-                transition-opacity duration-700
-                ${index === currentImageIndex ? "opacity-100" : "opacity-0"}
+              w-full h-full
+              object-contain  /* Заміна object-cover */
+              scale-[1]     /* віддаляємо фото */
+              object-center
+              absolute inset-0
+              transition-all duration-700
+              ${index === currentImageIndex ? "opacity-100" : "opacity-0"}
               `}
             />
           ))}
 
           {/* Темний overlay для контрасту тексту */}
-<div
-  className={`
-    absolute inset-0 
-    transition-all duration-500
-    ${currentSlide.id === "family" ? "bg-black/55" : "bg-black/30"}
-  `}
-/>
+          <div
+            className={`
+              absolute inset-0
+              transition-all duration-500
+              bg-black/70 sm:bg-black/60 lg:bg-black/50
+            `}
+          />
         </div>
 
         {/* Контент поверх фону */}
-        <div className="relative z-10 flex min-h-screen">
-          <div className="w-[95%] max-w-[1792px] mx-auto mt-[140px] px-4 mb-[50px]">
+        <div className="relative z-10 flex min-h-[560px] sm:min-h-[640px] lg:min-h-screen">
+          <div className="w-[95%] max-w-[1792px] mx-auto mt-[110px] sm:mt-[130px] lg:mt-[140px] px-4 mb-[50px]">
             <div className="w-full md:w-2/3 lg:w-1/2 space-y-5">
               <h1
                 className="
-                  text-[32px]
-                  sm:text-[40px]
-                  md:text-[50px]
+                  text-[30px]
+                  sm:text-[38px]
+                  md:text-[48px]
                   lg:text-[64px]
                   xl:text-[80px]
                   font-extrabold
@@ -110,7 +128,6 @@ const Main = () => {
               >
                 WELCOME TO DANILETS
               </h1>
-
               <p
                 className="
                   text-[14px]
@@ -122,11 +139,13 @@ const Main = () => {
                   leading-snug
                   text-[rgba(230,230,235,1)]
                   max-w-[900px]
+                  -mt-5
                 "
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
-Columbus' trusted provider of premium auto detailing and commercial 
-cleaning services tailored with precision and delivered with excellence. 
+                Columbus&apos; trusted provider of premium auto detailing and
+                commercial cleaning services tailored with precision and
+                delivered with excellence.
               </p>
 
               {/* Learn More → посилання залежить від слайду */}
@@ -153,10 +172,10 @@ cleaning services tailored with precision and delivered with excellence.
           {/* бейдж праворуч внизу */}
           <div
             className="
-              absolute bottom-6 md:bottom-[120px] right-5 md:right-20
+              absolute bottom-5 sm:bottom-8 md:bottom-[110px] right-4 sm:right-6 md:right-20
               bg-[rgba(235,176,108,0.15)]
               rounded-full
-              px-6 py-3
+              px-5 sm:px-6 py-2.5 sm:py-3
               flex items-center gap-3
               z-10
             "
@@ -169,8 +188,8 @@ cleaning services tailored with precision and delivered with excellence.
             <span
               className="
                 text-white
-                text-[16px]
-                sm:text-[18px]
+                text-[14px]
+                sm:text-[16px]
                 lg:text-[20px]
                 font-semibold
               "
@@ -183,8 +202,8 @@ cleaning services tailored with precision and delivered with excellence.
           <div
             className="
               absolute
-              bottom-6 md:bottom-[120px]
-              left-15
+              bottom-5 sm:bottom-8 md:bottom-[110px]
+              left-10 sm:left-20 md:left-12
               flex gap-2
               z-20
             "
@@ -192,16 +211,17 @@ cleaning services tailored with precision and delivered with excellence.
             <button
               onClick={goPrev}
               className="
-    w-[70px] h-[45px]                /* овальна форма */
-    rounded-full
-    bg-[#4A4A4A]                    /* темно-сірий фон як на скріні */
-    flex items-center justify-center
-    text-white text-[22px]          /* стрілка товща */
-    font-semibold
-    shadow-md
-    active:scale-95
-    transition
-  "
+                w-[64px] h-[40px]
+                sm:w-[70px] sm:h-[45px]
+                rounded-full
+                bg-[#4A4A4A]
+                flex items-center justify-center
+                text-white text-[20px] sm:text-[22px]
+                font-semibold
+                shadow-md
+                active:scale-95
+                transition
+              "
             >
               ‹
             </button>
@@ -209,16 +229,17 @@ cleaning services tailored with precision and delivered with excellence.
             <button
               onClick={goNext}
               className="
-    w-[70px] h-[45px]
-    rounded-full
-    bg-[#4A4A4A]
-    flex items-center justify-center
-    text-white text-[22px]
-    font-semibold
-    shadow-md
-    active:scale-95
-    transition
-  "
+                w-[64px] h-[40px]
+                sm:w-[70px] sm:h-[45px]
+                rounded-full
+                bg-[#4A4A4A]
+                flex items-center justify-center
+                text-white text-[20px] sm:text-[22px]
+                font-semibold
+                shadow-md
+                active:scale-95
+                transition
+              "
             >
               ›
             </button>

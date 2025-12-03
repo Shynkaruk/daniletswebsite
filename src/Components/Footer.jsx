@@ -139,23 +139,6 @@ const Footer = () => {
                 )}
               </div>
 
-              <div className="flex flex-col gap-1">
-                <h3 className="text-[18px] lg:text-[19px] font-extrabold text-[#18181B] mb-1">
-                  Legal
-                </h3>
-                {["Privacy Policy", "Terms & Conditions", "FAQ"].map(
-                  (text, i) => (
-                    <Link
-                      key={i}
-                      to={`/legal/${text.toLowerCase().replace(" ", "-")}`}
-                      className="text-[15px] lg:text-[16px] font-normal text-[#18181B] hover:text-yellow-600"
-                    >
-                      {text}
-                    </Link>
-                  )
-                )}
-              </div>
-
               <div className="flex flex-col gap-2">
                 <h3 className="text-[18px] lg:text-[19px] font-extrabold text-[#18181B]">
                   Contact

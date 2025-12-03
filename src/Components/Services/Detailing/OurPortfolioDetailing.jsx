@@ -31,36 +31,66 @@ function VideoThumb({ webm, mp4 }) {
 }
 
 const OurPortfolioDetailing = () => {
-  const items = useMemo(
-    () => [
-      {
-        id: 1,
-        srcWebm: "/video/video1.webm",
-        srcMp4: "/video/video1.mp4",
-      },
-      {
-        id: 2,
-        srcWebm: "/video/video2.webm",
-        srcMp4: "/video/video2.mp4",
-      },
-      {
-        id: 3,
-        srcWebm: "/video/video3.webm",
-        srcMp4: "/video/video3.mp4",
-      },
-      {
-        id: 4,
-        srcWebm: "/video/video4.webm",
-        srcMp4: "/video/video4.mp4",
-      },
-      {
-        id: 5,
-        srcWebm: "/video/video1.webm",
-        srcMp4: "/video/video1.mp4",
-      },
-    ],
-    []
-  );
+const items = useMemo(
+  () => [
+    {
+      id: 1,
+      srcWebm: "/video/video1.webm",
+      srcMov: "/video/video1.webm",
+    },
+    {
+      id: 2,
+      srcWebm: "/video/video2.webm",
+      srcMov: "/video/video2.webm",
+    },
+    {
+      id: 3,
+      srcWebm: "/video/video3.webm",
+      srcMov: "/video/video3.webm",
+    },
+    {
+      id: 4,
+      srcWebm: "/video/video4.webm",
+      srcMov: "/video/video4.webm",
+    },
+    {
+      id: 5,
+      srcWebm: null,
+      srcMov: "/video/video5.webm",
+    },
+    {
+      id: 6,
+      srcWebm: "/video/video6.webm",
+      srcMov: "/video/video6.webm",
+    },
+    {
+      id: 7,
+      srcWebm: "/video/video7.webm",
+      srcMov: "/video/video7.webm",
+    },
+    {
+      id: 8,
+      srcWebm: "/video/video8.webm",
+      srcMov: "/video/video8.webm",
+    },
+    {
+      id: 9,
+      srcWebm: "/video/video9.webm",
+      srcMov: "/video/video9.webm",
+    },
+    {
+      id: 10,
+      srcWebm: "/video/video10.webm",
+      srcMov: "/video/video10.webm",
+    },
+    {
+      id: 11,
+      srcWebm: "/video/video11.webm",
+      srcMov: "/video/video11.webm",
+    },
+  ],
+  []
+);
 
   const PAGE = 3;
   const [start, setStart] = useState(0);
