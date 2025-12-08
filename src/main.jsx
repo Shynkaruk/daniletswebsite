@@ -11,7 +11,7 @@ import { loadStripe } from "@stripe/stripe-js";
 
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const stripePromise = loadStripe(
-  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY // pk_test_...
+  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
 );
 
 createRoot(document.getElementById("root")).render(

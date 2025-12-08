@@ -8,8 +8,10 @@ import logoRed from "../assets/logo/Danilets_logo_red.svg";
 import contactIcon1 from "../assets/icons/icon-envelope.png";
 import contactIcon2 from "../assets/icons/icon-phone.png";
 import RightArrowIcon from "../assets/icons/angle-right-icon.png";
-// 🔹 Модальне вікно соцмереж
+
+// Модалки
 import SocialModal from "./SocialModal.jsx";
+import ContactForm from "./ContactForm.jsx";
 
 const Footer = () => {
   const location = useLocation();
@@ -35,12 +37,11 @@ const Footer = () => {
     ? "linear-gradient(107.27deg, #8B3434 -27.97%, #A84E4E -12.13%, #F29292 22.69%, #FF9E9E 45.99%, #E17B7B 77.51%)"
     : "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)";
 
-  // 🔹 Стан модалки соцмереж
+  // Модалка соцмереж
   const [socialOpen, setSocialOpen] = useState(false);
   const [socialTab, setSocialTab] = useState("Detailing");
 
   const handleOpenSocial = () => {
-    // Вибір вкладки в модалці за маршрутом
     if (isCleaningPage) {
       setSocialTab("Cleaning");
     } else {
@@ -50,6 +51,15 @@ const Footer = () => {
   };
 
   const handleCloseSocial = () => setSocialOpen(false);
+
+  // Модалка Contact (аналогічно Head.jsx)
+  const [isContactOpen, setIsContactOpen] = useState(false);
+
+  // Який сервіс підставляти в форму
+  const initialService =
+    isDetailingPage || (!isDetailingPage && !isCleaningPage)
+      ? "Danilets Detailing"
+      : "Danilets Cleaning";
 
   return (
     <>
@@ -108,18 +118,34 @@ const Footer = () => {
                 <h3 className="text-[18px] lg:text-[19px] font-extrabold text-[#18181B] mb-1">
                   Menu
                 </h3>
-                {["Home", "About Us", "Contact"].map((text, i) => (
-                  <Link
-                    key={i}
-                    to={`/${text.toLowerCase().replace(" ", "-")}`}
-                    className={
-                      "text-[15px] lg:text-[16px] font-normal text-[#18181B] hover:text-yellow-600" +
-                      (text === "About Us" ? " whitespace-nowrap" : "")
-                    }
-                  >
-                    {text}
-                  </Link>
-                ))}
+                {["Home", "About Us", "Contact"].map((text, i) => {
+                  if (text === "Contact") {
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setIsContactOpen(true)}
+                        className="text-left text-[15px] lg:text-[16px] font-normal text-[#18181B] hover:text-yellow-600"
+                      >
+                        Contact
+                      </button>
+                    );
+                  }
+
+                  const path = `/${text.toLowerCase().replace(" ", "-")}`;
+                  return (
+                    <Link
+                      key={i}
+                      to={path}
+                      className={
+                        "text-[15px] lg:text-[16px] font-normal text-[#18181B] hover:text-yellow-600" +
+                        (text === "About Us" ? " whitespace-nowrap" : "")
+                      }
+                    >
+                      {text}
+                    </Link>
+                  );
+                })}
               </div>
 
               <div className="flex flex-col gap-1">
@@ -156,18 +182,18 @@ const Footer = () => {
                     (614) 980-7380
                   </a>
                 </div>
-                <div className="flex items-center gap-2">
+                <div
+                  className="flex items-center gap-2 cursor-pointer"
+                  onClick={() => setIsContactOpen(true)}
+                >
                   <img
                     src={contactIcon1}
                     alt="Email Icon"
                     className="w-5 h-5"
                   />
-                  <a
-                    href={`mailto:${contactEmail}`}
-                    className="text-[15px] lg:text-[16px] font-normal text-[#18181B]"
-                  >
+                  <span className="text-[15px] lg:text-[16px] font-normal text-[#18181B]">
                     {contactEmail}
-                  </a>
+                  </span>
                 </div>
               </div>
             </div>
@@ -185,7 +211,6 @@ const Footer = () => {
                 "
                 style={{ background: buttonGradient }}
               >
-                {/* Hover overlay */}
                 <div
                   className="
                     absolute inset-0 bg-black
@@ -217,7 +242,6 @@ const Footer = () => {
                 "
                 style={{ background: buttonGradient }}
               >
-                {/* Hover overlay */}
                 <div
                   className="
                     absolute inset-0 bg-black
@@ -245,11 +269,18 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* 🔹 Модальне вікно соцмереж */}
+      {/* Модалка соцмереж */}
       <SocialModal
         open={socialOpen}
         onClose={handleCloseSocial}
         initialTab={socialTab}
+      />
+
+      {/* Модалка Contact — як у Head.jsx */}
+      <ContactForm
+        open={isContactOpen}
+        onClose={() => setIsContactOpen(false)}
+        initialService={initialService}
       />
     </>
   );

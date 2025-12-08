@@ -5,8 +5,15 @@ import bgImagePC from "../../../assets/photo/bg_detailing_pc.png";
 import iconBuble from "../../../assets/icons/buble_red.svg";
 import ServicesProvide from "./ServicesProvide";
 import LogoRed from "../../../assets/icons/logo_red.svg";
+import { useNavigate } from "react-router-dom";
 
 const Detailing = () => {
+  const navigate = useNavigate();
+
+  const handleBookNow = () => {
+    navigate("/book-online");
+  };
+
   return (
     <section
       className="relative w-full min-h-[100dvh] overflow-hidden text-white flex flex-col justify-between"
@@ -64,7 +71,10 @@ commercial work to ceramic coatings—we deliver perfection in every detail.
             deliver perfection in every detail.
           </p>
 
-          <button className="text-base md:text-xl mt-10 px-12 py-4 border border-white rounded-full hover:bg-white hover:text-black transition">
+          <button
+            onClick={handleBookNow}
+            className="text-base md:text-xl mt-10 px-12 py-4 border border-white rounded-full hover:bg-white hover:text-black transition"
+          >
             Book Now
           </button>
         </div>

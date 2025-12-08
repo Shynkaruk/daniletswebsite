@@ -39,7 +39,7 @@ const MainAboutUs = () => {
                 text-[16px] sm:text-[18px] md:text-[20px] lg:text-[22px] xl:text-[24px]
                 font-medium leading-snug text-[#A1A1A5] max-w-[900px]
               "
-              style={{ fontFamily: 'Manrope, sans-serif' }}
+              style={{ fontFamily: "Manrope, sans-serif" }}
             >
               A family story of faith, resilience, and the American dream. From
               losing everything to building something meaningful, every
@@ -54,7 +54,7 @@ const MainAboutUs = () => {
                 hover:bg-white hover:text-black transition
               "
             >
-              Learn More
+              Read More
             </button>
           </div>
         </div>
@@ -79,74 +79,128 @@ const MainAboutUs = () => {
 
       {/* POPUP */}
       {showPopup && (
-        <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="relative bg-white rounded-2xl w-full max-w-[900px] max-height-[85vh] overflow-y-auto p-8 shadow-2xl">
-            <button
-              onClick={closePopup}
-              className="absolute top-4 right-4 text-2xl font-semibold text-gray-600 hover:text-black bg-white p-2 rounded-full shadow"
-            >
-              ✕
-            </button>
-
-            <h2 className="text-3xl font-bold mb-4 text-center">
-              A Journey of Faith and Resilience
-            </h2>
-
-            <p className="mb-3">
-              Our story begins in 2009 when our family moved to the United
-              States, leaving everything behind...
-            </p>
-
-            <p className="mb-3">
-              From 2010 to 2012, Nataly wasn't physically present in the US...
-            </p>
-
-            <h3 className="text-2xl font-semibold mt-6 mb-3">
-              Building from the Ground Up
-            </h3>
-
-            <p className="mb-3">
-              When we first arrived in Columbus, Nataly started working at a
-              hotel, making just $3.75 per room...
-            </p>
-
-            <h3 className="text-2xl font-semibold mt-6 mb-3">
-              Milestones of Perseverance
-            </h3>
-
-            <ul className="list-disc pl-6 mb-3 space-y-1">
-              <li>2016: Started cleaning for private clients</li>
-              <li>2020: Started hiring team members...</li>
-              <li>2021: Granted asylum...</li>
-              <li>2024: Received green card</li>
-              <li>2024: Purchased first home</li>
-              <li>2025: Rebranded the company</li>
-            </ul>
-
-            <h3 className="text-2xl font-semibold mt-6 mb-3">
-              Our Promise to You
-            </h3>
-
-            <p className="mb-3">
-              We know what it's like to start with nothing...
-            </p>
-
-            <p>
-              When you choose Danilets, you're not just hiring a service — you're
-              supporting a family that believes in the American dream...
-            </p>
-
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={closePopup}
-                className="px-6 py-2 rounded-full border border-[#D4D4D8] text-sm md:text-[15px] hover:bg-[#F4F4F5] transition"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
+        <PopupStory onClose={closePopup} />
       )}
+    </div>
+  );
+};
+
+/* ============================
+   МОДАЛЬНЕ ВІКНО (БЕЗ ФОТО)
+=============================== */
+
+const PopupStory = ({ onClose }) => {
+  return (
+    <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+      <div
+        className="
+          relative bg-white rounded-2xl w-full max-w-[900px]
+          max-h-[85vh] overflow-y-auto p-8 shadow-2xl
+        "
+      >
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="
+            absolute top-4 right-4 text-2xl font-semibold text-gray-600
+            hover:text-black bg-white p-2 rounded-full shadow
+          "
+        >
+          ✕
+        </button>
+
+        {/* TITLE */}
+        <h2 className="text-3xl font-bold mb-4 text-center">
+          A Journey of Faith and Resilience
+        </h2>
+
+        {/* TEXT — НЕ ЗМІНЮВАВ */}
+        <p className="mb-3">
+          Our story begins in 2009 when our family moved to the United
+          States, leaving everything behind. We lost our home and business,
+          and arrived in upstate New York with nothing but hope and faith in
+          God's plan.
+        </p>
+
+        <p className="mb-3">
+          From 2010 to 2012, Nataly wasn't physically present in the
+          US—stuck in Europe, separated from her children, fighting to
+          reunite our family. After two years of perseverance and prayer,
+          she was finally able to return. In 2013, we moved to Columbus,
+          Ohio, where our American dream truly began.
+        </p>
+
+        <h3 className="text-2xl font-semibold mt-6 mb-3">
+          Building from the Ground Up
+        </h3>
+
+        <p className="mb-3">
+          When we first arrived in Columbus, Nataly started working at a
+          hotel, making just $3.75 per room. During those difficult days,
+          she made a promise: "When I have my own company, I will never
+          treat my team members like this."
+        </p>
+
+        <p className="mb-3">
+          From 2013 to 2016, she worked for others while building her skills
+          and reputation. She then started working independently as a sole
+          proprietor, serving clients with the same dedication and care that
+          would become our family trademark.
+        </p>
+
+        <p className="mb-3">
+          In 2020, everything changed. Nataly began hiring team members,
+          growing from a one-person operation to a full cleaning company.
+          That same year, Timothy came across a YouTube channel called
+          "Detailed Geek," ordered some equipment, and detailed his mom's
+          car. Elijah joined him in partnership, and Danilets Detailing was
+          born.
+        </p>
+
+        <h3 className="text-2xl font-semibold mt-6 mb-3">
+          Milestones of Perseverance
+        </h3>
+
+        <ul className="list-disc pl-6 mb-3 space-y-1">
+          <li>2016: Started cleaning for private clients</li>
+          <li>2020: Started hiring team members for cleaning services</li>
+          <li>2020: Founded Danilets Detailing</li>
+          <li>2021: Granted asylum in the United States</li>
+          <li>2024: Received green card in the United States</li>
+          <li>2024: Purchased first home in the United States</li>
+          <li>2025: Rebranded to combine detailing and cleaning </li>
+        </ul>
+
+        <h3 className="text-2xl font-semibold mt-6 mb-3">
+          Our Promise to You
+        </h3>
+
+        <p className="mb-3">
+          We know what it's like to start with nothing. We know the value of
+          hard work, integrity, and treating people with dignity. Every
+          customer we serve receives the same care and excellence we wished
+          for during our hardest days.
+        </p>
+
+        <p>
+          When you choose Danilets, you're not just hiring a service—you're
+          supporting a family that believes in the American dream, honors
+          God in everything we do, and treats every client like family.
+        </p>
+
+        {/* Close button */}
+        <div className="mt-6 flex justify-end">
+          <button
+            onClick={onClose}
+            className="
+              px-6 py-2 rounded-full border border-[#D4D4D8]
+              text-sm md:text-[15px] hover:bg-[#F4F4F5] transition
+            "
+          >
+            Close
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

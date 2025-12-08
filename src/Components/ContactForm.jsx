@@ -1,13 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import { apiSend } from "../lib/api";
+import { useLocation } from "react-router-dom";
 
-const ContactForm = ({ open, onClose }) => {
+const ContactForm = ({ open, onClose, initialService = "Danilets Detailing" }) => {
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
-    service: "Danilets Cleaning",
+    service: initialService || "Danilets Detailing",
     description: "",
   });
 
@@ -16,6 +17,17 @@ const ContactForm = ({ open, onClose }) => {
   const [success, setSuccess] = useState(false);
 
   const dialogRef = useRef(null);
+
+const location = useLocation();
+
+useEffect(() => {
+  if (location.pathname.includes("/services/detailing")) {
+    setForm((s) => ({ ...s, service: "Danilets Detailing" }));
+  } else if (location.pathname.includes("/services/cleaning")) {
+    setForm((s) => ({ ...s, service: "Danilets Cleaning" }));
+  }
+}, [location.pathname]);
+
 
   // ESC
   useEffect(() => {
@@ -58,7 +70,7 @@ const ContactForm = ({ open, onClose }) => {
         lastName: "",
         email: "",
         phone: "",
-        service: "Danilets Cleaning",
+        service: initialService || "Danilets Detailing",
         description: "",
       });
 
@@ -77,7 +89,7 @@ const ContactForm = ({ open, onClose }) => {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <div
         ref={dialogRef}
         className="relative w-[92%] max-w-[560px] rounded-2xl bg-white p-5 sm:p-6 shadow-2xl"
@@ -166,11 +178,7 @@ const ContactForm = ({ open, onClose }) => {
             </p>
           </div>
 
-          {error && (
-            <div className="text-sm text-red-600">
-              {error}
-            </div>
-          )}
+          {error && <div className="text-sm text-red-600">{error}</div>}
 
           {success && (
             <div className="text-sm text-green-600">

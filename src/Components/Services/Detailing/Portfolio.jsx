@@ -10,7 +10,6 @@ const portfolioItems = [
       "/Portfolio/Box 1/A7R04116 copy.JPG",
       "/Portfolio/Box 1/A7R04173 copy.JPG",
       "/Portfolio/Box 1/A7308458 copy.JPG",
-      // якщо додаси скрін – просто впиши його сюди
     ],
   },
   {
@@ -204,7 +203,7 @@ const Portfolio = () => {
           Portfolio
         </h2>
 
-        {/* Сітка — менші gap, більші картки */}
+        {/* Сітка */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
           {portfolioItems.map((item) => (
             <article
@@ -213,6 +212,7 @@ const Portfolio = () => {
               className="cursor-pointer bg-white rounded-[26px] shadow-[0_6px_22px_rgba(0,0,0,0.06)] overflow-hidden 
                          transform transition-transform duration-300 lg:hover:scale-[1.015] active:scale-[0.99]"
             >
+              {/* Фото */}
               <div className="p-2 sm:p-3 lg:p-3.5">
                 <div className="aspect-[4/3] w-full overflow-hidden rounded-[22px]">
                   <img
@@ -230,8 +230,32 @@ const Portfolio = () => {
                 </div>
               </div>
 
-              {/* запас під текст, якщо потім додаватимеш опис */}
-              <div className="px-5 pb-5 h-[20px]" />
+              {/* Нова зона з CTA */}
+              <div className="px-4 pb-4 flex items-center justify-between">
+                <span className="text-[13px] sm:text-[14px] text-[#6B6B6F]">
+                  Tap to view full gallery
+                </span>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation(); // щоб не дублювати клік по статті
+                    setSelectedItem(item);
+                  }}
+                  className="
+                    inline-flex items-center justify-center
+                    px-4 py-2
+                    rounded-full
+                    text-[13px] sm:text-[14px] font-semibold
+                    bg-black text-white
+                    hover:bg-[#2A2A2A]
+                    transition
+                  "
+                >
+                  View Gallery
+                  <span className="ml-1 text-[16px] leading-none">↗</span>
+                </button>
+              </div>
             </article>
           ))}
         </div>

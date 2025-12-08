@@ -39,7 +39,7 @@ const OurCoreValues = () => {
   };
 
   return (
-    <section className="bg-white mx-4 md:mx-8 xl:mx-16 rounded-[32px] py-10 md:py-14 px-4 md:px-8 xl:px-10 md:mt-15">
+    <section className="bg-white mx-4 mt-10 md:mx-8 xl:mx-16 rounded-[32px] py-10 md:py-14 px-4 md:px-8 xl:px-10 md:mt-15">
       {/* Верхній блок з заголовком + кнопкою справа */}
       <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-6 w-full">
         {/* Ліва частина */}

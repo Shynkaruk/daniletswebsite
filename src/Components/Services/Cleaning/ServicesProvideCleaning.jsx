@@ -68,7 +68,7 @@ const ServicesProvideCleaning = () => {
     <section className="w-full bg-[#F5F5F7] pt-16 md:pt-28 pb-10 md:pb-16">
       <div className="w-[min(1600px,100%)] mx-auto px-4 md:px-8">
         {/* Контейнер із картками */}
-        <div className="relative z-10 -mt-10 md:-mt-60 bg-white rounded-[32px] px-4 py-6 md:px-10 md:py-10 shadow-sm">
+        <div className="relative z-10 -mt-35 md:-mt-60 bg-white rounded-[32px] px-4 py-6 md:px-10 md:py-10 shadow-sm">
           <h2 className="text-[28px] sm:text-[36px] md:text-[48px] font-bold text-black">
             Services We Provide
           </h2>

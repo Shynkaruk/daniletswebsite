@@ -4,6 +4,72 @@ import { createPortal } from "react-dom";
 import carRed from "../../../assets/icons/carred.svg";
 import arrowRightIcon from "../../../assets/icons/arrows/arrow_right_black.svg";
 
+// ==== МЕДІА ДЛЯ КОЖНОГО СЕРВІСУ ====
+// Шляхи розраховані під те, що фото/відео лежать у public/Services we provide/...
+// Якщо вони в іншій папці — просто підкоригуй шляхи.
+const mediaByServiceId = {
+  // Dealerships (поки без медіа)
+  1: {
+    images: [],
+    videos: [],
+  },
+
+  // Fleets
+  2: {
+    images: [
+      "/Services we provide/Fleets/IMG_0529.JPG",
+      "/Services we provide/Fleets/IMG_0530.JPG",
+      "/Services we provide/Fleets/IMG_0639.jpg",
+      "/Services we provide/Fleets/IMG_8378.JPG",
+      "/Services we provide/Fleets/IMG_8380.JPG",
+    ],
+    videos: [
+      "/Services we provide/Fleets/IMG_0674.MOV",
+      "/Services we provide/Fleets/IMG_8974.mov",
+    ],
+  },
+
+  // Interior & Exterior Detailing
+  3: {
+    images: [
+      "/Services we provide/Interior and Exterior Detailing/ELI02869.JPG",
+      "/Services we provide/Interior and Exterior Detailing/ELI02878.JPG",
+      "/Services we provide/Interior and Exterior Detailing/ELI02886.JPG",
+      "/Services we provide/Interior and Exterior Detailing/TIM06143 copy.JPG",
+      "/Services we provide/Interior and Exterior Detailing/TIM06149 copy.JPG",
+      // можеш додати й скріни, якщо хочеш:
+      // "/Services we provide/Interior and Exterior Detailing/Screenshot 2025-04-10 at 10.46.32.png",
+    ],
+    videos: [],
+  },
+
+  // Ceramic
+  4: {
+    images: [
+      "/Services we provide/Ceramic/Copy of A7R04034 copy.JPG",
+      "/Services we provide/Ceramic/Copy of A7R04116 copy.JPG",
+      "/Services we provide/Ceramic/Copy of A7R04173 copy.JPG",
+    ],
+    videos: [],
+  },
+
+  // Wrap / PPF (поки без медіа — за бажанням додаси)
+  5: {
+    images: [],
+    videos: [],
+  },
+
+  // Other Services
+  6: {
+    images: [],
+    videos: [
+      "/Services we provide/Other Services/01 - IMG_2127.mov",
+      "/Services we provide/Other Services/02 - 0cd9e35030f340adba9c26.mov",
+    ],
+  },
+};
+
+// ==== ТЕКСТОВИЙ КОНТЕНТ СЕРВІСІВ (Я НЕ ЧІПАВ СТРУКТУРУ) ====
 const services = [
   {
     id: 1,
@@ -214,6 +280,52 @@ const ServicesProvide = () => {
                 ✕
               </button>
 
+              {/* ГАЛЕРЕЯ ФОТО / ВІДЕО */}
+              {(() => {
+                const media = mediaByServiceId[modalService.id] || {};
+                const hasMedia =
+                  (media.images && media.images.length > 0) ||
+                  (media.videos && media.videos.length > 0);
+
+                if (!hasMedia) return null;
+
+                return (
+                  <div className="mb-5">
+                    <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+                      {media.images &&
+                        media.images.map((src) => (
+                          <div
+                            key={src}
+                            className="w-full overflow-hidden rounded-[16px] bg-black/5"
+                          >
+                            <img
+                              src={src}
+                              alt={`${modalService.title} photo`}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          </div>
+                        ))}
+
+                      {media.videos &&
+                        media.videos.map((src) => (
+                          <div
+                            key={src}
+                            className="w-full overflow-hidden rounded-[16px] bg-black/5"
+                          >
+                            <video
+                              src={src}
+                              controls
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* ТЕКСТ (СТРУКТУРУ НЕ ЧІПАВ) */}
               <div className="text-[16px] leading-relaxed text-[#333] space-y-4">
                 <h3 className="font-bold text-[20px]">{modalService.title}</h3>
 

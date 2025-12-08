@@ -134,6 +134,9 @@ const StepCleaningDetails = ({
     ? COMMERCIAL_PROJECT_OPTIONS
     : [];
 
+  // 🔴 додатковий прапор: коли можна показувати наступні блоки
+  const showDetailsBlocks = (isResidential || isCommercial) && !!projectType;
+
   return (
     <div className="w-full max-w-full min-w-0 text-left">
       <div className="bg-white/90 backdrop-blur rounded-[24px] p-4 sm:p-5 shadow space-y-5">
@@ -152,7 +155,9 @@ const StepCleaningDetails = ({
         </div>
 
         {/* Прогрес: Cleaning — 1/3 */}
-        {renderProgress ? renderProgress(1) : <ProgressBar activeCount={1} total={3} />}
+        {renderProgress ? renderProgress(1) : (
+          <ProgressBar activeCount={1} total={3} />
+        )}
 
         {/* Type: Residential / Commercial */}
         <section className="space-y-2 mt-1">
@@ -185,7 +190,7 @@ const StepCleaningDetails = ({
           </div>
         </section>
 
-        {/* Type of Project – тільки після вибору Residential/Commercial */}
+        {/* Type of Project – тільки після вибору Type */}
         {(isResidential || isCommercial) && (
           <section className="space-y-2">
             <div className="text-sm text-[#6B7280] font-medium">
@@ -216,7 +221,7 @@ const StepCleaningDetails = ({
         )}
 
         {/* ------- Residential ------- */}
-        {isResidential && (
+        {isResidential && showDetailsBlocks && (
           <div className="space-y-4">
             {/* Bedrooms/Bathrooms */}
             <section className="bg-white rounded-[20px] border border-[#E5E7EB] p-4 space-y-2">
@@ -229,7 +234,7 @@ const StepCleaningDetails = ({
                   onChange={(e) => setBedrooms(e.target.value)}
                   type="number"
                   min="0"
-                  placeholder="Bedrooms"                // 🔹 підпис всередині бульки
+                  placeholder="Bedrooms"
                   className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none"
                 />
                 <input
@@ -237,7 +242,7 @@ const StepCleaningDetails = ({
                   onChange={(e) => setBathrooms(e.target.value)}
                   type="number"
                   min="0"
-                  placeholder="Bathrooms"              // 🔹 підпис всередині бульки
+                  placeholder="Bathrooms"
                   className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none"
                 />
               </div>
@@ -347,7 +352,7 @@ const StepCleaningDetails = ({
         )}
 
         {/* ------- Commercial ------- */}
-        {isCommercial && (
+        {isCommercial && showDetailsBlocks && (
           <div className="space-y-4">
             <section className="bg-white rounded-[20px] border border-[#E5E7EB] p-4 space-y-4">
               <div className="space-y-2">
