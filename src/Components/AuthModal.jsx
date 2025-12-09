@@ -5,6 +5,8 @@ import { auth } from "../lib/api"; // див. src/lib/api.js
 import GoogleCustomButton from "./GoogleCustomButton";
 import OtpModal from "./OtpModal";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+
 const gradient =
   "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)";
 
@@ -41,6 +43,11 @@ export default function AuthModal({
       document.removeEventListener("mousedown", onDown);
     };
   }, [open, onClose]);
+
+  // Apple login — редірект на бекенд
+  const handleAppleLogin = () => {
+    window.location.href = `${API_BASE}/api/auth/apple/login`;
+  };
 
   if (!open) return null;
 
@@ -92,16 +99,16 @@ export default function AuthModal({
           </div>
 
           {/* forms */}
-{tab === "login" ? (
-  <LoginForm
-    onSuccess={(u) => {
-      onAuth?.(u);
-      onClose?.();
-      // після логіну завжди ведемо в акаунт
-      window.location.href = "/account";
-    }}
-  />
-) : (
+          {tab === "login" ? (
+            <LoginForm
+              onSuccess={(u) => {
+                onAuth?.(u);
+                onClose?.();
+                // після логіну завжди ведемо в акаунт
+                window.location.href = "/account";
+              }}
+            />
+          ) : (
             <SignupForm
               onSuccess={(u, email) => {
                 // користувач створений — запустили OTP
@@ -132,11 +139,10 @@ export default function AuthModal({
               />
             </div>
 
-            {/* поки Apple — як заглушка */}
+            {/* Apple auth */}
             <button
+              onClick={handleAppleLogin}
               className="h-11 rounded-[12px] bg-[#F4F4F5] font-semibold flex items-center justify-center gap-2 text-[#18181B]"
-              disabled
-              title="Soon"
             >
               <FaApple className="text-[#18181B]" />
               <span>Apple</span>

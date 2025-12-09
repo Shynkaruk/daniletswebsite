@@ -68,6 +68,7 @@ app.set("trust proxy", true);
 
 app.use(cors({ origin: "*", credentials: false }));
 app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
 app.use("/api/contact", contactRouter);
 
 app.use("/api/reviews", googleReviewsRouter);
@@ -901,6 +902,117 @@ app.get("/api/auth/me", auth, async (req, res) => {
 
   res.json({ user });
 });
+
+
+async function findOrCreateAppleUser(applePayload) {
+  const appleId = applePayload.sub;
+  const email = applePayload.email;
+  const emailVerified =
+    applePayload.email_verified === "true" || applePayload.email_verified === true;
+
+  let userDoc = await User.findOne({ apple_id: appleId });
+
+  if (!userDoc && email) {
+    // пробуємо знайти по email (може вже є акаунт)
+    userDoc = await User.findOne({ email });
+  }
+
+  if (!userDoc) {
+    // створюємо нового
+    userDoc = await User.create({
+      email: email || "",
+      apple_id: appleId,
+      first_name: "",
+      last_name: "",
+      phone: "",
+      is_admin: false,
+      email_verified: emailVerified,
+    });
+  } else {
+    // дописуємо apple_id, якщо не було
+    if (!userDoc.apple_id) {
+      userDoc.apple_id = appleId;
+    }
+    if (emailVerified && !userDoc.email_verified) {
+      userDoc.email_verified = true;
+    }
+    await userDoc.save();
+  }
+
+  return userDoc;
+}
+
+app.get("/api/auth/apple/login", (req, res) => {
+  const params = new URLSearchParams({
+    response_type: "code",
+    response_mode: "form_post",
+    client_id: process.env.APPLE_CLIENT_ID,
+    redirect_uri: process.env.APPLE_REDIRECT_URI,
+    scope: "name email",
+  });
+
+  const url =
+    "https://appleid.apple.com/auth/authorize?" + params.toString();
+
+  res.redirect(url);
+});
+
+
+app.post("/api/auth/apple/callback", async (req, res) => {
+  try {
+    const { code } = req.body || {};
+
+    if (!code) {
+      return res.status(400).json({ error: "No code from Apple" });
+    }
+
+    // формується clientSecret
+    const clientSecret = appleSignin.getClientSecret({
+      clientID: process.env.APPLE_CLIENT_ID,
+      teamID: process.env.APPLE_TEAM_ID,
+      privateKey: process.env.APPLE_PRIVATE_KEY,
+      keyIdentifier: process.env.APPLE_KEY_ID,
+    });
+
+    const tokens = await appleSignin.getAuthorizationToken(code, {
+      clientID: process.env.APPLE_CLIENT_ID,
+      clientSecret,
+      redirectUri: process.env.APPLE_REDIRECT_URI,
+    });
+
+    // розпарсимо id_token від Apple
+    const applePayload = jwt.decode(tokens.id_token);
+
+    // шукаємо/створюємо юзера
+    const userDoc = await findOrCreateAppleUser(applePayload);
+
+    const user = {
+      id: userDoc._id.toString(),
+      email: userDoc.email,
+      first_name: userDoc.first_name,
+      last_name: userDoc.last_name,
+      phone: userDoc.phone,
+      is_admin: userDoc.is_admin,
+      email_verified: userDoc.email_verified,
+    };
+
+    const token = signToken(user); // твоя існуюча функція
+
+    // 🔹 Варіант 1: редірект на фронт з токеном у query
+    const FRONT_URL = process.env.FRONT_URL || "https://danilets.com";
+    const redirectUrl = `${FRONT_URL}/auth/callback?token=${token}`;
+
+    return res.redirect(redirectUrl);
+
+    // 🔹 Якщо захочеш чистий JSON, замість редіректу робиш:
+    // return res.json({ user, token });
+  } catch (err) {
+    console.error("Apple callback error:", err);
+    return res.status(500).json({ error: "Apple auth failed" });
+  }
+});
+
+
 
 // ====================== CONTENT BLOCKS ======================
 
