@@ -5,16 +5,11 @@ import carRed from "../../../assets/icons/carred.svg";
 import arrowRightIcon from "../../../assets/icons/arrows/arrow_right_black.svg";
 
 // ==== МЕДІА ДЛЯ КОЖНОГО СЕРВІСУ ====
-// Шляхи розраховані під те, що фото/відео лежать у public/Services we provide/...
-// Якщо вони в іншій папці — просто підкоригуй шляхи.
 const mediaByServiceId = {
-  // Dealerships (поки без медіа)
   1: {
     images: [],
     videos: [],
   },
-
-  // Fleets
   2: {
     images: [
       "/Services we provide/Fleets/IMG_0529.JPG",
@@ -24,12 +19,10 @@ const mediaByServiceId = {
       "/Services we provide/Fleets/IMG_8380.JPG",
     ],
     videos: [
-      "/Services we provide/Fleets/IMG_0674.MOV",
-      "/Services we provide/Fleets/IMG_8974.mov",
+      "/Services we provide/Fleets/IMG_0674.webm",
+      "/Services we provide/Fleets/IMG_8974.webm",
     ],
   },
-
-  // Interior & Exterior Detailing
   3: {
     images: [
       "/Services we provide/Interior and Exterior Detailing/ELI02869.JPG",
@@ -37,13 +30,9 @@ const mediaByServiceId = {
       "/Services we provide/Interior and Exterior Detailing/ELI02886.JPG",
       "/Services we provide/Interior and Exterior Detailing/TIM06143 copy.JPG",
       "/Services we provide/Interior and Exterior Detailing/TIM06149 copy.JPG",
-      // можеш додати й скріни, якщо хочеш:
-      // "/Services we provide/Interior and Exterior Detailing/Screenshot 2025-04-10 at 10.46.32.png",
     ],
     videos: [],
   },
-
-  // Ceramic
   4: {
     images: [
       "/Services we provide/Ceramic/Copy of A7R04034 copy.JPG",
@@ -52,24 +41,19 @@ const mediaByServiceId = {
     ],
     videos: [],
   },
-
-  // Wrap / PPF (поки без медіа — за бажанням додаси)
   5: {
     images: [],
     videos: [],
   },
-
-  // Other Services
   6: {
     images: [],
     videos: [
-      "/Services we provide/Other Services/01 - IMG_2127.mov",
-      "/Services we provide/Other Services/02 - 0cd9e35030f340adba9c26.mov",
+      "/Services we provide/Other Services/01 - IMG_2127.webm",
     ],
   },
 };
 
-// ==== ТЕКСТОВИЙ КОНТЕНТ СЕРВІСІВ (Я НЕ ЧІПАВ СТРУКТУРУ) ====
+// ==== ТЕКСТОВИЙ КОНТЕНТ СЕРВІСІВ ====
 const services = [
   {
     id: 1,
@@ -182,18 +166,51 @@ determine the best solution for your needs.
   },
 ];
 
+const buildMediaArray = (serviceId) => {
+  const media = mediaByServiceId[serviceId] || {};
+  const result = [];
+  (media.images || []).forEach((src) =>
+    result.push({ type: "image", src })
+  );
+  (media.videos || []).forEach((src) =>
+    result.push({ type: "video", src })
+  );
+  return result;
+};
+
 const ServicesProvide = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalService, setModalService] = useState(null);
+  const [modalMedia, setModalMedia] = useState([]);
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
 
   const openModal = (service) => {
     setModalService(service);
+    const mediaArr = buildMediaArray(service.id);
+    setModalMedia(mediaArr);
+    setActiveMediaIndex(0);
     setModalOpen(true);
   };
 
   const closeModal = () => {
     setModalService(null);
+    setModalMedia([]);
+    setActiveMediaIndex(0);
     setModalOpen(false);
+  };
+
+  const handlePrev = () => {
+    if (!modalMedia.length) return;
+    setActiveMediaIndex((prev) =>
+      prev === 0 ? modalMedia.length - 1 : prev - 1
+    );
+  };
+
+  const handleNext = () => {
+    if (!modalMedia.length) return;
+    setActiveMediaIndex((prev) =>
+      prev === modalMedia.length - 1 ? 0 : prev + 1
+    );
   };
 
   return (
@@ -266,102 +283,134 @@ const ServicesProvide = () => {
         ))}
       </div>
 
-      {/* Модалка через портал у body */}
+      {/* Модалка нового дизайну */}
       {modalOpen &&
         modalService &&
         typeof document !== "undefined" &&
         createPortal(
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[99999] px-4">
-            <div className="bg-white rounded-[24px] max-w-xl w-full p-6 shadow-xl relative max-h-[90vh] overflow-y-auto">
-              <button
-                onClick={closeModal}
-                className="absolute top-4 right-4 text-[20px] font-bold text-gray-500 hover:text-black"
-              >
-                ✕
-              </button>
-
-              {/* ГАЛЕРЕЯ ФОТО / ВІДЕО */}
-              {(() => {
-                const media = mediaByServiceId[modalService.id] || {};
-                const hasMedia =
-                  (media.images && media.images.length > 0) ||
-                  (media.videos && media.videos.length > 0);
-
-                if (!hasMedia) return null;
-
-                return (
-                  <div className="mb-5">
-                    <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-                      {media.images &&
-                        media.images.map((src) => (
-                          <div
-                            key={src}
-                            className="w-full overflow-hidden rounded-[16px] bg-black/5"
-                          >
-                            <img
-                              src={src}
-                              alt={`${modalService.title} photo`}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                            />
-                          </div>
-                        ))}
-
-                      {media.videos &&
-                        media.videos.map((src) => (
-                          <div
-                            key={src}
-                            className="w-full overflow-hidden rounded-[16px] bg-black/5"
-                          >
-                            <video
-                              src={src}
-                              controls
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* ТЕКСТ (СТРУКТУРУ НЕ ЧІПАВ) */}
-              <div className="text-[16px] leading-relaxed text-[#333] space-y-4">
-                <h3 className="font-bold text-[20px]">{modalService.title}</h3>
-
-                {modalService.id === 6 && modalService.items ? (
-                  <div className="space-y-4">
-                    {modalService.items.map((item) => (
-                      <div key={item.title}>
-                        <p className="font-bold text-[16px] mb-1">
-                          {item.title}
-                        </p>
-                        <p className="text-[16px] leading-[1.55]">
-                          {item.description}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  modalService.detailedDescription &&
-                  modalService.detailedDescription
-                    .trim()
-                    .split(/\n\s*\n/)
-                    .map((paragraph, idx) => (
-                      <p key={idx} className="text-[16px] leading-[1.55]">
-                        {paragraph.trim()}
-                      </p>
-                    ))
-                )}
-              </div>
-
-              <div className="mt-6 flex justify-end">
+            <div className="bg-white rounded-[28px] md:rounded-[32px] w-full max-w-[980px] max-h-[90vh] shadow-2xl flex flex-col overflow-hidden">
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 md:px-7 pt-5 pb-3 border-b border-[#E4E4E7]">
+                <h3
+                  className="text-[18px] sm:text-[20px] md:text-[22px] font-semibold text-[#18181B]"
+                  style={{ fontFamily: "Manrope, sans-serif" }}
+                >
+                  {modalService.title}
+                </h3>
                 <button
                   onClick={closeModal}
-                  className="px-6 py-2 rounded-full border border-[#D4D4D8] text-sm md:text-[15px] hover:bg-[#F4F4F5] transition"
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-[#F4F4F5] text-[18px] font-semibold text-[#52525B] hover:bg-[#E4E4E7] transition"
                 >
-                  Close
+                  ✕
                 </button>
+              </div>
+
+              {/* Body (скролиться) */}
+              <div className="px-5 md:px-7 pb-6 pt-4 overflow-y-auto">
+                {/* Головне зображення / відео + стрілки */}
+                {modalMedia.length > 0 && (
+                  <div className="relative mb-4">
+                    <div className="w-full rounded-[20px] md:rounded-[24px] overflow-hidden bg-[#F4F4F5]">
+                      {modalMedia[activeMediaIndex].type === "image" ? (
+                        <img
+                          src={modalMedia[activeMediaIndex].src}
+                          alt={`${modalService.title} media`}
+                          className="w-full h-[220px] sm:h-[320px] md:h-[420px] object-cover"
+                        />
+                      ) : (
+                        <video
+                          src={modalMedia[activeMediaIndex].src}
+                          controls
+                          className="w-full h-[220px] sm:h-[320px] md:h-[420px] object-cover"
+                        />
+                      )}
+                    </div>
+
+                    {modalMedia.length > 1 && (
+                      <div className="absolute left-4 bottom-4 flex items-center gap-2">
+                        <button
+                          onClick={handlePrev}
+                          className="w-9 h-9 flex items-center justify-center rounded-full bg-white/90 shadow-md text-[18px] font-semibold hover:bg-white"
+                        >
+                          {"<"}
+                        </button>
+                        <button
+                          onClick={handleNext}
+                          className="w-9 h-9 flex items-center justify-center rounded-full bg-white/90 shadow-md text-[18px] font-semibold hover:bg-white"
+                        >
+                          {">"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Мініатюри */}
+                {modalMedia.length > 1 && (
+                  <div className="mb-5">
+                    <div className="flex gap-3 overflow-x-auto pb-1">
+                      {modalMedia.map((item, idx) => (
+                        <button
+                          key={item.src}
+                          onClick={() => setActiveMediaIndex(idx)}
+                          className={`min-w-[80px] sm:min-w-[96px] h-[70px] sm:h-[80px] rounded-[16px] overflow-hidden border ${
+                            idx === activeMediaIndex
+                              ? "border-[#18181B]"
+                              : "border-transparent"
+                          } bg-[#F4F4F5] flex-shrink-0`}
+                        >
+                          {item.type === "image" ? (
+                            <img
+                              src={item.src}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <video
+                              src={item.src}
+                              className="w-full h-full object-cover"
+                              muted
+                            />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Текст */}
+                <div className="text-[15px] sm:text-[16px] leading-relaxed text-[#3F3F46] space-y-4">
+                  {modalService.id === 6 && modalService.items ? (
+                    <div className="space-y-4">
+                      {modalService.items.map((item) => (
+                        <div key={item.title}>
+                          <p className="font-semibold mb-1 text-[#18181B]">
+                            {item.title}
+                          </p>
+                          <p>{item.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : modalService.detailedDescription ? (
+                    modalService.detailedDescription
+                      .trim()
+                      .split(/\n\s*\n/)
+                      .map((paragraph, idx) => (
+                        <p key={idx}>{paragraph.trim()}</p>
+                      ))
+                  ) : null}
+                </div>
+
+                {/* Кнопка Close внизу (як на десктопі) */}
+                <div className="mt-6 flex justify-end">
+                  <button
+                    onClick={closeModal}
+                    className="px-6 py-2 rounded-full border border-[#D4D4D8] text-sm md:text-[15px] hover:bg-[#F4F4F5] transition"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
           </div>,

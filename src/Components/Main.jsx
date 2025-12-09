@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Head from "./Head.jsx";
 import Services from "./Services.jsx";
 import { Link } from "react-router-dom";
@@ -12,8 +12,6 @@ import FAQ from "./FAQ.jsx";
 import Footer from "./Footer.jsx";
 import StatsBlock from "./StatsBlock.jsx";
 
-// 🔹 Фони тепер беруться з public/Top_of_Page
-//    шлях відносно public → /Top_of_Page/1.jpg
 const SLIDES = [
   {
     id: "top1",
@@ -56,21 +54,46 @@ const SLIDES = [
 const Main = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  // новий стейт для автоплею
+  const [autoPlay, setAutoPlay] = useState(true);
+  const intervalRef = useRef(null);
+
   // авто-ротація кожні 5 секунд
   useEffect(() => {
-    const interval = setInterval(() => {
+    if (!autoPlay) return;
+
+    intervalRef.current = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % SLIDES.length);
     }, 5000);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [autoPlay]);
+
+  // зупиняємо автоплей при ручному кліку
+  const stopAutoPlay = () => {
+    if (!autoPlay) return;
+    setAutoPlay(false);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  };
 
   const goNext = () => {
+    stopAutoPlay();
     setCurrentImageIndex((prev) => (prev + 1) % SLIDES.length);
   };
 
   const goPrev = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
+    stopAutoPlay();
+    setCurrentImageIndex(
+      (prev) => (prev - 1 + SLIDES.length) % SLIDES.length
+    );
   };
 
   const currentSlide = SLIDES[currentImageIndex];

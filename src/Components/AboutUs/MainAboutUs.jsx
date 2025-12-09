@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Head from "./../Head.jsx";
 import familyPhoto from "../../assets/photo/family-photo3.png";
+import familyMobile from "../../assets/photo/bg_family_mobile.png"; // 👈 мобільний фон
 import diamondicon from "../../assets/icons/diamond-icon.svg";
 
 const MainAboutUs = () => {
@@ -20,15 +21,28 @@ const MainAboutUs = () => {
           before:content-[''] before:absolute before:inset-0
           before:bg-black/20 before:z-[1]
         "
-        style={{ backgroundImage: `url(${familyPhoto})` }}
+        style={{
+          backgroundImage: `url(${familyPhoto})`,
+        }}
       >
+        {/* Мобільний фон */}
+        <style>
+          {`
+            @media (max-width: 768px) {
+              main {
+                background-image: url(${familyMobile}) !important;
+              }
+            }
+          `}
+        </style>
+
         {/* TEXT BLOCK */}
-        <div className="w-[95%] max-w-[1792px] mx-auto mt-[180px] px-4 mb-50 relative z-[2]">
+        <div className="w-[95%] max-w-[1792px] mx-auto mt-[120px] px-4 mb-50 relative z-[2]">
           <div className="w-full md:w-2/3 lg:w-1/2 space-y-6">
             <h1
               className="
-                text-[36px] sm:text-[44px] md:text-[56px] lg:text-[72px] xl:text-[90px]
-                font-extrabold leading-tight text-white
+                text-[36px] sm:text-[56px] md:text-[56px] lg:text-[72px] xl:text-[90px]
+                font-extrabold text-white
               "
             >
               Danilets Family
@@ -36,8 +50,8 @@ const MainAboutUs = () => {
 
             <p
               className="
-                text-[16px] sm:text-[18px] md:text-[20px] lg:text-[22px] xl:text-[24px]
-                font-medium leading-snug text-[#A1A1A5] max-w-[900px]
+                text-[18px] sm:text-[18px] md:text-[20px] lg:text-[22px] xl:text-[24px]
+                font-medium leading-snug text-white max-w-[900px]
               "
               style={{ fontFamily: "Manrope, sans-serif" }}
             >
@@ -71,19 +85,18 @@ const MainAboutUs = () => {
             alt="Diamond Icon"
             className="w-6 h-6 lg:w-8 lg:h-8"
           />
-          <span className="text-white text-[16px] sm:text-[18px] lg:text-[20px] font-semibold">
+          <span className="text-white text-[16px] sm:text-[18px] lg:text-[20px] font-semibold ">
             Lets is More
           </span>
         </div>
       </main>
 
       {/* POPUP */}
-      {showPopup && (
-        <PopupStory onClose={closePopup} />
-      )}
+      {showPopup && <PopupStory onClose={closePopup} />}
     </div>
   );
 };
+
 
 /* ============================
    МОДАЛЬНЕ ВІКНО (БЕЗ ФОТО)

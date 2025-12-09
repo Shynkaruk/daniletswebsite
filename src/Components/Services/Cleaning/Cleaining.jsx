@@ -70,7 +70,7 @@ const Cleaning = () => {
           <button
           onClick={handleBookNow} 
           className="text-base md:text-xl mt-6 px-12 py-4 border border-white rounded-full hover:bg-white hover:text-black transition">
-            Book now
+            Get Quote
           </button>
         </div>
       </div>

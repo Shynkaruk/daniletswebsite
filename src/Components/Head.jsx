@@ -55,7 +55,7 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                   color: "rgba(62, 38, 12, 1)",
                 }}
               >
-                Book now
+                Get Quote
               </button>
             </Link>
             <AccountMenu variant="icon" onShowAuth={onOpenAuth} />
@@ -192,7 +192,7 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                       color: "rgba(62, 38, 12, 1)",
                     }}
                   >
-                    Book now
+                    Get Quote
                   </button>
                 </Link>
               </div>
@@ -368,7 +368,7 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                     "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)",
                 }}
               >
-                Book Now
+                Get Quote
               </button>
             </Link>
 
@@ -387,37 +387,6 @@ const Head = () => {
   const [authTab, setAuthTab] = useState("login"); // "login" | "signup"
   const [isSocialOpen, setIsSocialOpen] = useState(false);
 
-  // стан показу шапки
-  const [showHeader, setShowHeader] = useState(true);
-  const lastScrollY = useRef(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentY =
-        window.scrollY !== undefined ? window.scrollY : window.pageYOffset || 0;
-
-      const diff = currentY - lastScrollY.current;
-      const isScrollingDown = diff > 0;
-      const isScrollingUp = diff < 0;
-
-      // біля самого верху — завжди показуємо
-      if (currentY < 80) {
-        setShowHeader(true);
-      } else if (isScrollingDown && currentY > 80) {
-        // скролимо вниз — ховаємо
-        setShowHeader(false);
-      } else if (isScrollingUp) {
-        // скролимо вверх — показуємо
-        setShowHeader(true);
-      }
-
-      lastScrollY.current = currentY;
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   const showAuth = (tab = "login") => {
     setAuthTab(tab);
     setIsAuthOpen(true);
@@ -425,11 +394,10 @@ const Head = () => {
 
   return (
     <header
-      className={`
-        fixed left-0 w-full z-[200] font-sans
-        transition-all duration-300 ease-out
-        ${showHeader ? "top-4" : "-top-24"}
-      `}
+      className="
+        fixed top-4 left-0 w-full 
+        z-[10000] font-sans
+      "
     >
       {/* один фіксований wrapper; усередині — адаптивні хедери */}
       <MobileHead
@@ -463,4 +431,5 @@ const Head = () => {
 };
 
 export default Head;
+
 

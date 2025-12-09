@@ -51,7 +51,7 @@ const ActionMini = () => {
             className="text-[14px] sm:text-[16px] font-bold text-black"
             style={{ fontFamily: 'Manrope, sans-serif' }}
           >
-            Book Now
+            Get Quote
           </span>
           <img 
             src={RightArrowIcon}

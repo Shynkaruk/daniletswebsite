@@ -19,11 +19,6 @@ const FAQ = () => {
         "We serve the Greater Columbus area and surrounding communities. Contact us to confirm if we service your specific location.",
     },
     {
-      question: "How do I book services with Danilets?",
-      answer:
-        "For detailing services, you can book directly through our online booking system. For cleaning services, fill out our quote form and we'll get back to you as soon as possible. You can also call or text us at (614) 980-7380.",
-    },
-    {
       question: "Do you handle emergency or last-minute requests?",
       answer:
         "We do our best to accommodate urgent situations. While we can't guarantee immediate availability, call (614) 980-7380 and we'll see how we can help.",

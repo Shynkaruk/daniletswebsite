@@ -20,7 +20,7 @@ const WhyDaniletsCleaning = () => {
 
     {
       id: 2,
-      title: <>Attention to<br/>Detail</>,
+      title: <>Attention to Detail</>,
       subtitle:
         "We don't cut corners. Every surface, every space receives the same thorough care we'd want for our own family.",
       icon: <img src={iconPaint} className="w-7 h-7" alt="" />,

@@ -219,7 +219,7 @@ const Footer = () => {
                   "
                 />
                 <span className="text-[14px] font-semibold text-black whitespace-nowrap relative z-10">
-                  Book Now
+                  Get Quote
                 </span>
                 <img
                   src={RightArrowIcon}
@@ -250,7 +250,7 @@ const Footer = () => {
                   "
                 />
                 <span className="text-[15px] font-semibold text-black relative z-10">
-                  Book Now
+                  Get Quote
                 </span>
                 <img
                   src={RightArrowIcon}

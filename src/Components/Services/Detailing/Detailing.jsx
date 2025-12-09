@@ -15,12 +15,17 @@ const Detailing = () => {
   };
 
   return (
-    <section
-      className="relative w-full min-h-[100dvh] overflow-hidden text-white flex flex-col justify-between"
-      style={{
-        background: "linear-gradient(90deg, #1C1C1C 46.13%)",
-      }}
-    >
+<section
+  className="
+    relative w-full 
+    min-h-[100dvh] 
+    overflow-x-hidden   /* тільки по X, не по Y */
+    text-white
+  "
+  style={{
+    background: "linear-gradient(90deg, #1C1C1C 46.13%)",
+  }}
+>
       {/* Фон — мобільний */}
       <div className="absolute bottom-10 inset-0 z-0 pointer-events-none md:hidden flex justify-end items-end">
         <img
@@ -75,7 +80,7 @@ commercial work to ceramic coatings—we deliver perfection in every detail.
             onClick={handleBookNow}
             className="text-base md:text-xl mt-10 px-12 py-4 border border-white rounded-full hover:bg-white hover:text-black transition"
           >
-            Book Now
+            Get Quote
           </button>
         </div>
       </div>

@@ -258,45 +258,50 @@ const PickleballWhySection = ({
         </div>
       </section>
 
-      {activeCard && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div
-            className="
+{activeCard && (
+  <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div
+      className="
         relative bg-white rounded-2xl max-w-[900px] max-h-[90vh]
         overflow-y-auto text-black shadow-2xl
-        p-6 sm:p-8      /* базові паддінги */
-        pt-14 sm:pt-8   /* на мобілці більше зверху під кнопку */
-        pr-14 sm:pr-8   /* на мобілці більше справа під кнопку */
+        px-6 sm:px-8
+        pt-14 sm:pt-10
+        pb-6 sm:pb-8
+        pr-14 sm:pr-8
       "
-          >
-            {/* X справа */}
-            <button
-              onClick={() => setActiveCard(null)}
-              className="absolute top-3 right-3 text-2xl font-semibold text-gray-600 hover:text-black bg-white p-2 rounded-full shadow"
-            >
-              ✕
-            </button>
+    >
+      {/* X справа */}
+      <button
+        onClick={() => setActiveCard(null)}
+        className="
+          absolute top-3 right-3
+          text-2xl font-semibold text-gray-600
+          hover:text-black bg-white p-2 rounded-full shadow
+        "
+      >
+        ✕
+      </button>
 
-            <h2 className="text-3xl font-bold mb-4 text-center">
-              {activeCard.title}
-            </h2>
+      <h2 className="text-3xl font-bold mb-4 text-center pr-10 sm:pr-0">
+        {activeCard.title}
+      </h2>
 
-            <p className="text-[15px] sm:text-[16px] leading-relaxed whitespace-pre-line">
-              {activeCard.detailed}
-            </p>
+      <p className="text-[15px] sm:text-[16px] leading-relaxed whitespace-pre-line">
+        {activeCard.detailed}
+      </p>
 
-            {/* Кнопка Close внизу справа */}
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={() => setActiveCard(null)}
-                className="px-6 py-2 rounded-full border border-[#D4D4D8] text-sm md:text-[15px] hover:bg-[#F4F4F5] transition"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <div className="mt-6 flex justify-end">
+        <button
+          onClick={() => setActiveCard(null)}
+          className="px-6 py-2 rounded-full border border-[#D4D4D8] text-sm md:text-[15px] hover:bg-[#F4F4F5] transition"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </>
   );
 };
