@@ -281,104 +281,341 @@ function buildCleaningComment(requestDoc, userDoc) {
 function buildDetailingComment(requestDoc, userDoc, vehicleDoc) {
   const lines = [];
 
-  // Розбираємо items_json (масив [{title, price, qty}])
-  let items = [];
+  // Пробуємо розпарсити items_json
+  let parsed;
   try {
-    const parsed = JSON.parse(requestDoc.items_json || "[]");
-    if (Array.isArray(parsed)) items = parsed;
+    parsed = JSON.parse(requestDoc.items_json || "{}");
   } catch {
-    items = [];
+    parsed = {};
   }
 
-  const mainService = items[0] || null;
-  const addons = items
-    .slice(1)
-    .filter((it) => it && typeof it.title === "string" && it.title !== "Tip");
+  const serviceType = requestDoc.service_type || "";
 
-  const tipItem = items.find((it) => it && it.title === "Tip");
+  // --- Випадок старого формату (масив з послугами) — лишаємо для сумісності ---
+  if (Array.isArray(parsed)) {
+    let items = parsed;
+    const mainService = items[0] || null;
+    const addons = items
+      .slice(1)
+      .filter(
+        (it) => it && typeof it.title === "string" && it.title !== "Tip"
+      );
+    const tipItem = items.find((it) => it && it.title === "Tip");
 
-  lines.push("DETAILING BOOKING");
-  lines.push("");
-  lines.push("Main information:");
-  lines.push(`- Status: ${requestDoc.status || "-"}`);
-  lines.push(`- Location type: ${requestDoc.location_type || "-"}`);
-  lines.push(`- Service date: ${requestDoc.service_date || "-"}`);
-  lines.push(`- Time window: ${requestDoc.time_window || "-"}`);
-  lines.push("");
-
-  // Type Services (основний пакет)
-  if (mainService) {
-    lines.push("Type services (main package):");
-    lines.push(`- ${mainService.title}`);
+    lines.push("DETAILING BOOKING (legacy format)");
     lines.push("");
-  }
-
-  // Additional services (додаткові послуги)
-  if (addons.length) {
-    lines.push("Additional services:");
-    addons.forEach((svc) => {
-      lines.push(`- ${svc.title}`);
-    });
+    lines.push("Main information:");
+    lines.push(`- Status: ${requestDoc.status || "-"}`);
+    lines.push(`- Location type: ${requestDoc.location_type || "-"}`);
+    lines.push(`- Service date: ${requestDoc.service_date || "-"}`);
+    lines.push(`- Time window: ${requestDoc.time_window || "-"}`);
     lines.push("");
-  }
 
-  // Tip (якщо є)
-  if (tipItem) {
-    lines.push("Tip:");
-    lines.push(
-      `- Amount: ${tipItem.price != null ? tipItem.price : ""}`
-    );
+    if (mainService) {
+      lines.push("Type services (main package):");
+      lines.push(`- ${mainService.title}`);
+      lines.push("");
+    }
+
+    if (addons.length) {
+      lines.push("Additional services:");
+      addons.forEach((svc) => lines.push(`- ${svc.title}`));
+      lines.push("");
+    }
+
+    if (tipItem) {
+      lines.push("Tip:");
+      lines.push(
+        `- Amount: ${tipItem.price != null ? tipItem.price : ""}`
+      );
+      lines.push("");
+    }
+
+    lines.push("Location:");
+    if (requestDoc.service_address)
+      lines.push(`- Service address: ${requestDoc.service_address}`);
+    if (requestDoc.pickup_address)
+      lines.push(`- Pickup address: ${requestDoc.pickup_address}`);
+    if (requestDoc.dropoff_address)
+      lines.push(`- Dropoff address: ${requestDoc.dropoff_address}`);
     lines.push("");
+
+    if (vehicleDoc) {
+      lines.push("Vehicle:");
+      if (vehicleDoc.year) lines.push(`- Year: ${vehicleDoc.year}`);
+      if (vehicleDoc.make) lines.push(`- Make: ${vehicleDoc.make}`);
+      if (vehicleDoc.model) lines.push(`- Model: ${vehicleDoc.model}`);
+      if (vehicleDoc.color) lines.push(`- Color: ${vehicleDoc.color}`);
+      if (vehicleDoc.plate) lines.push(`- Plate: ${vehicleDoc.plate}`);
+      lines.push("");
+    }
+
+    lines.push("Price:");
+    lines.push(`- Subtotal: ${requestDoc.subtotal || 0}`);
+    lines.push(`- Tax: ${requestDoc.tax || 0}`);
+    lines.push(`- Total: ${requestDoc.total || 0}`);
+    lines.push("");
+
+    if (requestDoc.notes_customer) {
+      lines.push("Additional notes from customer:");
+      lines.push(`- ${requestDoc.notes_customer}`);
+      lines.push("");
+    }
+
+    lines.push("Customer information:");
+    const nameLineLegacy = `${userDoc.first_name || ""} ${
+      userDoc.last_name || ""
+    }`.trim();
+    if (nameLineLegacy) lines.push(`- Name: ${nameLineLegacy}`);
+    if (userDoc.email) lines.push(`- Email: ${userDoc.email}`);
+    if (userDoc.phone) lines.push(`- Phone: ${userDoc.phone}`);
+
+    const textLegacy = lines.join("\n").trim();
+    return textLegacy || "Detailing booking from website";
   }
 
-  // Локація
-  lines.push("Location:");
-  if (requestDoc.service_address)
-    lines.push(`- Service address: ${requestDoc.service_address}`);
-  if (requestDoc.pickup_address)
-    lines.push(`- Pickup address: ${requestDoc.pickup_address}`);
-  if (requestDoc.dropoff_address)
-    lines.push(`- Dropoff address: ${requestDoc.dropoff_address}`);
-  lines.push("");
+  // --- Новий формат: персональний детайлінг з Booking.jsx ---
+  if (serviceType === "detailing_quote_personal" || parsed.vehicle) {
+    const {
+      vehicle,
+      history,
+      services,
+      multipleVehicles,
+      vehicles,
+      location,
+      contact,
+    } = parsed;
 
-  // Авто
-  if (vehicleDoc) {
+    lines.push("DETAILING QUOTE (PERSONAL)");
+    lines.push("");
+    lines.push("Main information:");
+    lines.push(`- Status: ${requestDoc.status || "-"}`);
+    lines.push(`- Service type: ${serviceType || "detailing_quote_personal"}`);
+    lines.push(`- Service date: ${requestDoc.service_date || "-"}`);
+    lines.push(`- Location type: ${requestDoc.location_type || "-"}`);
+    lines.push("");
+
+    // Vehicle
     lines.push("Vehicle:");
-    if (vehicleDoc.year) lines.push(`- Year: ${vehicleDoc.year}`);
-    if (vehicleDoc.make) lines.push(`- Make: ${vehicleDoc.make}`);
-    if (vehicleDoc.model) lines.push(`- Model: ${vehicleDoc.model}`);
-    if (vehicleDoc.color) lines.push(`- Color: ${vehicleDoc.color}`);
-    if (vehicleDoc.plate) lines.push(`- Plate: ${vehicleDoc.plate}`);
+    if (vehicle?.year) lines.push(`- Year: ${vehicle.year}`);
+    if (vehicle?.make) lines.push(`- Make: ${vehicle.make}`);
+    if (vehicle?.model) lines.push(`- Model: ${vehicle.model}`);
+    if (multipleVehicles && Array.isArray(vehicles) && vehicles.length) {
+      lines.push("- Multiple vehicles selected:");
+      vehicles.forEach((v, idx) => {
+        lines.push(
+          `  • Vehicle ${idx + 1}: ${v.model || "(no description)"} – services: ${
+            Array.isArray(v.services) && v.services.length
+              ? v.services.join(", ")
+              : "none"
+          }`
+        );
+      });
+    }
     lines.push("");
+
+    // History & condition
+    if (history) {
+      lines.push("Vehicle history & condition:");
+      if (history.lastDetailed)
+        lines.push(`- Last detailed: ${history.lastDetailed}`);
+      if (
+        Array.isArray(history.conditionFlags) &&
+        history.conditionFlags.length
+      ) {
+        lines.push(`- Condition flags: ${history.conditionFlags.join(", ")}`);
+      }
+      if (history.conditionRating)
+        lines.push(`- Overall condition: ${history.conditionRating}`);
+      lines.push("");
+    }
+
+    // Services
+    lines.push("Requested services:");
+    if (Array.isArray(services) && services.length) {
+      services.forEach((s) => lines.push(`- ${s}`));
+    } else {
+      lines.push("- (none selected)");
+    }
+    lines.push("");
+
+    // Location
+    lines.push("Location:");
+    if (location?.baseAddress)
+      lines.push(`- Customer address (search): ${location.baseAddress}`);
+    if (requestDoc.service_address)
+      lines.push(`- Service address: ${requestDoc.service_address}`);
+    if (requestDoc.pickup_address)
+      lines.push(`- Pickup address: ${requestDoc.pickup_address}`);
+    if (requestDoc.dropoff_address)
+      lines.push(`- Dropoff address: ${requestDoc.dropoff_address}`);
+    if (location?.completionDate)
+      lines.push(`- Preferred completion date: ${location.completionDate}`);
+    lines.push("");
+
+    // Notes
+    if (requestDoc.notes_customer || parsed.contact?.extraInfo) {
+      lines.push("Additional notes from customer:");
+      if (parsed.contact?.extraInfo)
+        lines.push(`- ${parsed.contact.extraInfo}`);
+      if (requestDoc.notes_customer)
+        lines.push(`- ${requestDoc.notes_customer}`);
+      lines.push("");
+    }
+
+    // Customer
+    lines.push("Customer information:");
+    const contactName =
+      `${contact?.firstName || ""} ${
+        contact?.lastName || ""
+      }`.trim() ||
+      `${userDoc.first_name || ""} ${userDoc.last_name || ""}`.trim();
+    if (contactName) lines.push(`- Name: ${contactName}`);
+    const email =
+      contact?.email || parsed.contact?.email || userDoc.email || null;
+    const phone =
+      contact?.phone || parsed.contact?.phone || userDoc.phone || null;
+    if (email) lines.push(`- Email: ${email}`);
+    if (phone) lines.push(`- Phone: ${phone}`);
+
+    const textPersonal = lines.join("\n").trim();
+    return textPersonal || "Detailing quote (personal) from website";
   }
 
-  // Фінанси
-  lines.push("Price:");
-  lines.push(`- Subtotal: ${requestDoc.subtotal || 0}`);
-  lines.push(`- Tax: ${requestDoc.tax || 0}`);
-  lines.push(`- Total: ${requestDoc.total || 0}`);
-  lines.push("");
+  // --- Новий формат: бізнес / флот детайлінг ---
+  if (
+    serviceType === "detailing_quote_business" ||
+    parsed.business ||
+    parsed.fleet
+  ) {
+    const { business, contact, fleet, preferences, location } = parsed;
 
-  // Нотатки
-  if (requestDoc.notes_customer) {
-    lines.push("Additional notes from customer:");
-    lines.push(`- ${requestDoc.notes_customer}`);
+    lines.push("DETAILING QUOTE (BUSINESS / FLEET)");
     lines.push("");
+    lines.push("Main information:");
+    lines.push(`- Status: ${requestDoc.status || "-"}`);
+    lines.push(`- Service type: ${serviceType || "detailing_quote_business"}`);
+    lines.push("");
+    if (business?.businessType)
+      lines.push(`- Business type: ${business.businessType}`);
+    if (business?.businessTypeOther)
+      lines.push(`- Business type (other): ${business.businessTypeOther}`);
+    if (business?.vehiclesCount)
+      lines.push(`- Number of vehicles (approx): ${business.vehiclesCount}`);
+    if (business?.serviceFrequency)
+      lines.push(`- Service frequency: ${business.serviceFrequency}`);
+    if (business?.serviceFrequencyOther)
+      lines.push(
+        `- Service frequency (other): ${business.serviceFrequencyOther}`
+      );
+    lines.push("");
+
+    // Fleet
+    if (fleet) {
+      lines.push("Fleet:");
+      const vt = fleet.vehicleTypes || {};
+      const sumVehicles = Object.values(vt).reduce(
+        (s, v) => s + (Number(v) || 0),
+        0
+      );
+      if (sumVehicles) lines.push(`- Total vehicles in fleet: ${sumVehicles}`);
+
+      const vehicleLines = [];
+      const addIf = (key, label) => {
+        const val = Number(vt[key] || 0);
+        if (val > 0) {
+          vehicleLines.push(`${label}: ${val}`);
+        }
+      };
+      addIf("sedans", "Sedans");
+      addIf("suvs", "SUVs");
+      addIf("pickups", "Pick-Ups");
+      addIf("minivans", "Mini-Vans / 3-Row SUVs");
+      addIf("transit_vans", "Transit Vans");
+      addIf("semi_trucks", "Semi-Trucks");
+      if (Number(vt.other || 0) > 0) {
+        vehicleLines.push(
+          `${fleet.vehicleOtherLabel || "Other"}: ${vt.other}`
+        );
+      }
+      if (vehicleLines.length) {
+        vehicleLines.forEach((l) => lines.push(`- ${l}`));
+      }
+      if (fleet.serviceLocation)
+        lines.push(`- Service location: ${fleet.serviceLocation}`);
+      if (Array.isArray(fleet.services) && fleet.services.length) {
+        lines.push("- Requested services:");
+        fleet.services.forEach((s) => lines.push(`  • ${s}`));
+      }
+      if (fleet.servicesOther) {
+        lines.push(`- Other services: ${fleet.servicesOther}`);
+      }
+      lines.push("");
+    }
+
+    // Location
+    lines.push("Location:");
+    if (location?.baseAddress)
+      lines.push(`- Base customer location: ${location.baseAddress}`);
+    if (requestDoc.service_address)
+      lines.push(`- Service address: ${requestDoc.service_address}`);
+    if (requestDoc.pickup_address)
+      lines.push(`- Pickup address: ${requestDoc.pickup_address}`);
+    if (requestDoc.dropoff_address)
+      lines.push(`- Dropoff address: ${requestDoc.dropoff_address}`);
+    lines.push("");
+
+    // Preferences / notes
+    if (preferences) {
+      lines.push("Contact preferences:");
+      if (preferences.preferredContactMethod)
+        lines.push(
+          `- Preferred contact method: ${preferences.preferredContactMethod}`
+        );
+      if (preferences.contactTimePreference)
+        lines.push(
+          `- Best time to reach: ${preferences.contactTimePreference}`
+        );
+      if (preferences.notes) {
+        lines.push("");
+        lines.push("Additional preferences / notes:");
+        lines.push(`- ${preferences.notes}`);
+      }
+      lines.push("");
+    }
+
+    if (requestDoc.notes_customer) {
+      lines.push("Notes (from requestDoc.notes_customer):");
+      lines.push(`- ${requestDoc.notes_customer}`);
+      lines.push("");
+    }
+
+    // Customer
+    lines.push("Customer information:");
+    const contactName =
+      `${contact?.firstName || ""} ${
+        contact?.lastName || ""
+      }`.trim() ||
+      `${userDoc.first_name || ""} ${userDoc.last_name || ""}`.trim();
+    if (contactName) lines.push(`- Name: ${contactName}`);
+    const email =
+      contact?.email || parsed.contact?.email || userDoc.email || null;
+    const phone =
+      contact?.phone || parsed.contact?.phone || userDoc.phone || null;
+    if (contact?.companyName) lines.push(`- Company: ${contact.companyName}`);
+    if (contact?.companyAddress)
+      lines.push(`- Company address: ${contact.companyAddress}`);
+    if (email) lines.push(`- Email: ${email}`);
+    if (phone) lines.push(`- Phone: ${phone}`);
+
+    const textBusiness = lines.join("\n").trim();
+    return textBusiness || "Detailing quote (business/fleet) from website";
   }
 
-  // Клієнт
-  lines.push("Customer information:");
-  const nameLine = `${userDoc.first_name || ""} ${
-    userDoc.last_name || ""
-  }`.trim();
-  if (nameLine) lines.push(`- Name: ${nameLine}`);
-  if (userDoc.email) lines.push(`- Email: ${userDoc.email}`);
-  if (userDoc.phone) lines.push(`- Phone: ${userDoc.phone}`);
-
+  // Fallback
   const text = lines.join("\n").trim();
   return text || "Detailing booking from website";
 }
-
 
 // ---- Хелпер для створення DEAL в Bitrix24 ----
 async function createBitrixDealFromRequest(requestDoc, userDoc) {
@@ -393,29 +630,44 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
       userDoc.email ||
       "New client";
 
-    const isCleaning = requestDoc.service_type
-      ? requestDoc.service_type === "cleaning"
-      : requestDoc.location_type === "cleaning";
+    const serviceType = requestDoc.service_type || "";
+
+    // 🔹 Все, що починається з "cleaning" – вважаємо Cleaning
+    const isCleaning =
+      serviceType.startsWith("cleaning") ||
+      (!serviceType && requestDoc.location_type === "cleaning");
 
     const categoryId = isCleaning
       ? BITRIX_CATEGORY_CLEANING
       : BITRIX_CATEGORY_DETAILING;
 
-    const titlePrefix = isCleaning ? "Cleaning" : "Detailing";
+    // 🔹 Тайтл угоди в Bitrix
+    let titlePrefix;
+    if (isCleaning) {
+      titlePrefix = "Cleaning";
+    } else if (serviceType === "detailing_quote_business") {
+      titlePrefix = "Detailing (Business/Fleet)";
+    } else if (serviceType === "detailing_quote_personal") {
+      titlePrefix = "Detailing (Personal)";
+    } else {
+      titlePrefix = "Detailing";
+    }
 
+    // 🔹 Сума угоди – для квот можемо ставити 0, або брати total, якщо він є
     const opportunity = isCleaning ? 0 : (requestDoc.total ?? 0);
 
-    // Стадія воронки
+    // 🔹 Стадія воронки
     const stageId =
       categoryId && categoryId > 0 ? `C${categoryId}:NEW` : "NEW";
 
+    // 🔹 Контакт
     const contactId = await ensureBitrixContact({
       fullName,
       email: userDoc.email,
       phone: userDoc.phone,
     });
 
-    // Авто (для Detailing)
+    // 🔹 Авто (тільки для старих Detailing-букінгів, де є vehicle_id)
     let vehicleDoc = null;
     if (!isCleaning && requestDoc.vehicle_id) {
       try {
@@ -425,6 +677,7 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
       }
     }
 
+    // 🔹 Коментар в угоді – будуємо окремими хелперами
     const commentText = isCleaning
       ? buildCleaningComment(requestDoc, userDoc)
       : buildDetailingComment(requestDoc, userDoc, vehicleDoc);
@@ -440,7 +693,7 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
         CATEGORY_ID: categoryId,
         STAGE_ID: stageId,
 
-        // Тип сделки — Services
+        // Тип сделки — Services (налаштований у Bitrix)
         TYPE_ID: BITRIX_DEAL_TYPE,
 
         OPPORTUNITY: opportunity,
@@ -470,7 +723,7 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
       return data;
     }
 
-    // 🆕 Далі додаємо товари/послуги в угоду (тільки для Detailing)
+    // 🧾 Додаємо товари/послуги тільки для Detailing, і тільки якщо items_json – масив (старий формат)
     if (!isCleaning) {
       let items = [];
       try {
@@ -486,7 +739,7 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
             it &&
             typeof it.title === "string" &&
             it.title.trim() &&
-            it.title !== "Tip" // Tip не кидаємо в товари, тільки в коментар / total
+            it.title !== "Tip" // Tip не додаємо як товар
         )
         .map((it) => ({
           PRODUCT_NAME: it.title,
@@ -524,6 +777,7 @@ async function createBitrixDealFromRequest(requestDoc, userDoc) {
     );
   }
 }
+
 
 
 // ====================== OTP ======================

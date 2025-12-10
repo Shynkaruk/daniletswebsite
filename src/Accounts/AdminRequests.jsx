@@ -1,316 +1,316 @@
 // src/pages/AdminRequests.jsx
 import React, { useEffect, useState } from "react";
-import { cardsApi } from "../lib/api";
+import { reqApi } from "../lib/api";
 
 const gradient =
   "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
 
-// працюємо тільки з detailing
-const DETAILING_SLUG = "detailing";
-// додаткові послуги для детейлінгу
-const DETAILING_ADDON_SLUG = "detailing_addon";
-
-/* ================= MAIN ================= */
+const MENU_ITEMS = [
+  { key: "detailing", label: "Detailing Booking" },
+  { key: "cleaning", label: "Cleaning Booking" },
+  { key: "users", label: "Users" },
+];
 
 export default function AdminRequests() {
-  const [svcLoading, setSvcLoading] = useState(false);
+  const [activeMenu, setActiveMenu] = useState("detailing");
 
-  // окремо основні та додаткові послуги
-  const [services, setServices] = useState([]); // main
-  const [extraServices, setExtraServices] = useState([]); // addons
+  const [loading, setLoading] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [selectedRow, setSelectedRow] = useState(null);
 
-  // {id?, title, price, slug}
-  const [svcEditing, setSvcEditing] = useState(null);
+  /* ---------------------- LOAD BOOKINGS ---------------------- */
 
-  // завантажити всі detailing-послуги
-  const loadServices = async () => {
-    setSvcLoading(true);
+  const loadBookings = async () => {
+    setLoading(true);
     try {
-      const rows = await cardsApi.list({ type: "service" });
-      const safe = Array.isArray(rows) ? rows : [];
+      const type =
+        activeMenu === "detailing"
+          ? "detailing_quote"
+          : activeMenu === "cleaning"
+          ? "cleaning_quote"
+          : null;
 
-      const main = safe
-        .filter((r) => (r.slug || "") === DETAILING_SLUG)
-        .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+      if (!type) {
+        setRows([]);
+        return;
+      }
 
-      const addons = safe
-        .filter((r) => (r.slug || "") === DETAILING_ADDON_SLUG)
-        .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
-
-      setServices(main);
-      setExtraServices(addons);
+      const data = await reqApi.list({ service_type: type });
+      setRows(Array.isArray(data) ? data : []);
     } finally {
-      setSvcLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadServices();
-  }, []);
+    loadBookings();
+  }, [activeMenu]);
 
-  const onSaveService = async () => {
-    try {
-      const title = (svcEditing?.title || "").trim();
-      const price = Number(svcEditing?.price ?? 0);
+  /* --------------------------- DELETE ------------------------- */
 
-      if (!title) return alert("Please enter the service title.");
-      if (Number.isNaN(price)) return alert("Price must be a number.");
-
-      // визначаємо, до якої групи належить послуга
-      const slug =
-        svcEditing?.slug === DETAILING_ADDON_SLUG
-          ? DETAILING_ADDON_SLUG
-          : DETAILING_SLUG;
-
-      const payload = {
-        id: svcEditing?.id, // якщо є — оновимо, якщо ні — створимо
-        type: "service",
-        title,
-        price,
-        slug,
-      };
-
-      const saved = await cardsApi.save(payload);
-      setSvcEditing(null);
-      await loadServices();
-      return saved;
-    } catch (e) {
-      console.error("Save service failed:", e);
-      const msg =
-        (e && (e.error || e.message)) ||
-        "Failed to save the service. Please try again.";
-      alert(msg);
-    }
+  const deleteBooking = async (row) => {
+    if (!window.confirm("Delete this request?")) return;
+    await reqApi.remove(row.id);
+    await loadBookings();
   };
 
-  const onDeleteService = async (row) => {
-    if (!window.confirm(`Delete service "${row.title}"?`)) return;
-    await cardsApi.remove(row.id);
-    await loadServices();
+  /* --------------------------- UPDATE STATUS ------------------ */
+
+  const updateStatus = async (id, status) => {
+    await reqApi.save({ id, status });
+    await loadBookings();
   };
 
-  return (
-    <div className="max-w-5xl mx-auto px-4 py-28">
-      {/* header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
-        <h1 className="text-2xl font-extrabold">
-          Admin • Detailing Services
-        </h1>
+  /* ----------------------- RENDER SECTION ---------------------- */
 
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() =>
-              setSvcEditing({
-                id: undefined,
-                title: "",
-                price: 0,
-                slug: DETAILING_SLUG,
-              })
-            }
-            className="px-5 py-3 rounded-[14px] font-semibold text-black text-sm sm:text-base"
-            style={{ background: gradient }}
-          >
-            New Service
-          </button>
+  const renderTable = () => {
+    if (loading) return <div className="p-6">Loading…</div>;
+    if (!rows.length) return <div className="p-6">No requests found.</div>;
 
-          <button
-            onClick={() =>
-              setSvcEditing({
-                id: undefined,
-                title: "",
-                price: 0,
-                slug: DETAILING_ADDON_SLUG,
-              })
-            }
-            className="px-5 py-3 rounded-[14px] font-semibold text-black text-sm sm:text-base"
-            style={{ background: gradient }}
-          >
-            New Additional Service
-          </button>
-        </div>
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[800px] text-sm">
+          <thead>
+            <tr className="border-b bg-gray-50 text-[#6B7280] text-xs">
+              <th className="p-3">ID</th>
+              <th className="p-3">Created</th>
+              <th className="p-3">Customer</th>
+              <th className="p-3">Type</th>
+              <th className="p-3">Status</th>
+              <th className="p-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => {
+              const info = JSON.parse(r.items_json || "{}");
+              const contact = info?.contact || {};
+              const vehicle = info?.vehicle || {};
+
+              return (
+                <tr key={r.id} className="border-b">
+                  <td className="p-3">{r.id}</td>
+                  <td className="p-3 whitespace-nowrap">
+                    {new Date(r.created_at).toLocaleString()}
+                  </td>
+                  <td className="p-3">
+                    {contact.firstName} {contact.lastName}
+                    <br />
+                    <span className="text-xs text-gray-500">
+                      {contact.email}
+                    </span>
+                  </td>
+
+                  <td className="p-3 capitalize">
+                    {activeMenu === "detailing"
+                      ? `${vehicle.year} ${vehicle.make} ${vehicle.model}`
+                      : "Cleaning"}
+                  </td>
+
+                  <td className="p-3 capitalize">{r.status}</td>
+
+                  <td className="p-3 text-right whitespace-nowrap">
+                    <button
+                      onClick={() => setSelectedRow(r)}
+                      className="px-3 py-1 border rounded-lg mr-2"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() => deleteBooking(r)}
+                      className="px-3 py-1 border rounded-lg"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
+    );
+  };
 
-      {/* блок основних послуг */}
-      <ServicesBlock
-        title="Services & Prices (Detailing)"
-        loading={svcLoading}
-        rows={services}
-        onRefresh={loadServices}
-        onEdit={(s) =>
-          setSvcEditing({
-            id: s.id,
-            title: s.title || "",
-            price: s.price ?? 0,
-            slug: s.slug || DETAILING_SLUG,
-          })
-        }
-        onDelete={onDeleteService}
-      />
+  /* ------------------------- DETAILS MODAL --------------------- */
 
-      {/* блок додаткових послуг */}
-      <div className="mt-8">
-        <ServicesBlock
-          title="Additional Services (Detailing)"
-          loading={svcLoading}
-          rows={extraServices}
-          onRefresh={loadServices}
-          onEdit={(s) =>
-            setSvcEditing({
-              id: s.id,
-              title: s.title || "",
-              price: s.price ?? 0,
-              slug: s.slug || DETAILING_ADDON_SLUG,
-            })
-          }
-          onDelete={onDeleteService}
-          emptyText="No additional services yet."
-        />
-      </div>
+  const renderDetailsModal = () => {
+    if (!selectedRow) return null;
 
-      {/* modal для створення/редагування сервісу */}
-      {svcEditing && (
-        <Modal onClose={() => setSvcEditing(null)}>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3">
-            <h3 className="text-xl font-bold">
-              {svcEditing.id
-                ? `Edit ${
-                    svcEditing.slug === DETAILING_ADDON_SLUG
-                      ? "Additional Service"
-                      : "Service"
-                  } #${svcEditing.id}`
-                : svcEditing.slug === DETAILING_ADDON_SLUG
-                ? "New Additional Service"
-                : "New Detailing Service"}
-            </h3>
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => setSvcEditing(null)}
-                className="px-4 py-2 rounded-xl border bg-white text-sm md:text-base"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={onSaveService}
-                className="px-4 py-2 rounded-xl font-semibold text-black text-sm md:text-base"
-                style={{ background: gradient }}
-              >
-                Save
-              </button>
-            </div>
-          </div>
+    const data = JSON.parse(selectedRow.items_json || "{}");
+    const contact = data.contact || {};
+    const vehicle = data.vehicle || {};
+    const history = data.history || {};
+    const location = data.location || {};
 
-          <div className="grid md:grid-cols-2 gap-4">
-            <Field
-              label="Service title"
-              value={svcEditing.title || ""}
-              onChange={(v) =>
-                setSvcEditing((prev) => ({ ...prev, title: v }))
-              }
-            />
+    return (
+      <Modal onClose={() => setSelectedRow(null)}>
+        <h2 className="text-xl font-bold mb-4">Request #{selectedRow.id}</h2>
 
-            <Field
-              label="Price (USD)"
-              value={svcEditing.price ?? 0}
-              onChange={(v) =>
-                setSvcEditing((prev) => ({
-                  ...prev,
-                  price: v,
-                }))
-              }
-            />
-          </div>
-        </Modal>
-      )}
-    </div>
-  );
-}
+        <div className="space-y-4 text-sm">
 
-/* ============= BLOCK WITH TABLE ============= */
+          {/* Customer */}
+          <Section title="Customer">
+            <p>
+              {contact.firstName} {contact.lastName}
+            </p>
+            <p>{contact.phone}</p>
+            <p>{contact.email}</p>
+            {contact.heardAbout && <p>Heard about us: {contact.heardAbout}</p>}
+            {contact.extraInfo && <p>Note: {contact.extraInfo}</p>}
+          </Section>
 
-function ServicesBlock({
-  title,
-  loading,
-  rows,
-  onRefresh,
-  onEdit,
-  onDelete,
-  emptyText = "No services yet.",
-}) {
-  return (
-    <div className="bg-white rounded-2xl border border-[#eee] shadow-sm">
-      <div className="p-4 flex items-center gap-3 flex-wrap">
-        <div className="font-bold mr-auto">{title}</div>
-        <button
-          onClick={onRefresh}
-          className="px-3 py-2 rounded-xl border bg-white text-sm"
-        >
-          Refresh
-        </button>
-      </div>
+          {/* Vehicle */}
+          {activeMenu === "detailing" && (
+            <>
+              <Section title="Vehicle">
+                <p>
+                  {vehicle.year} {vehicle.make} {vehicle.model}
+                </p>
+              </Section>
 
-      {loading ? (
-        <div className="px-4 pb-4 text-[#6B7280]">Loading…</div>
-      ) : (
-        <div className="p-4 pt-0">
-          {rows.length === 0 ? (
-            <div className="text-[#6B7280]">{emptyText}</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left min-w-[600px] text-sm">
-                <thead>
-                  <tr className="text-[#6B7280] text-xs sm:text-sm border-b">
-                    <th className="py-3 pr-3">Title</th>
-                    <th className="py-3 pr-3">Price</th>
-                    <th className="py-3 pr-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((s) => (
-                    <tr key={s.id} className="border-b last:border-b-0">
-                      <td className="py-3 pr-3 align-middle">
-                        <div className="max-w-xs sm:max-w-none break-words">
-                          {s.title}
-                        </div>
-                      </td>
-                      <td className="py-3 pr-3 align-middle whitespace-nowrap">
-                        ${(Number(s.price ?? 0)).toFixed(2)}
-                      </td>
-                      <td className="py-3 pr-3 align-middle">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            className="px-3 py-2 rounded-xl border bg-white text-xs sm:text-sm"
-                            onClick={() => onEdit(s)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="px-3 py-2 rounded-xl border bg-white text-xs sm:text-sm"
-                            onClick={() => onDelete(s)}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+              <Section title="Condition">
+                <p>Last detailed: {history.lastDetailed}</p>
+                <p>Condition rating: {history.conditionRating}</p>
+
+                {history.conditionFlags?.length ? (
+                  <ul className="list-disc pl-5">
+                    {history.conditionFlags.map((f) => (
+                      <li key={f}>{f}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>No condition issues selected.</p>
+                )}
+              </Section>
+
+              {/* Services */}
+              <Section title="Selected Services">
+                {data.services?.length ? (
+                  <ul className="list-disc pl-5">
+                    {data.services.map((s) => (
+                      <li key={s}>{s}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>No services.</p>
+                )}
+
+                {data.multipleVehicles && (
+                  <div className="mt-3">
+                    <p className="font-semibold">Additional vehicles:</p>
+                    {data.vehicles?.map((v, i) => (
+                      <div key={i} className="ml-4 mt-2 p-2 bg-gray-100 rounded">
+                        <p className="font-medium">
+                          {v.year} {v.make} {v.model}
+                        </p>
+
+                        {v.services?.length ? (
+                          <ul className="list-disc pl-5">
+                            {v.services.map((x) => (
+                              <li key={x}>{x}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p>No services.</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Section>
+
+              {/* Location */}
+              <Section title="Location">
+                <p>Type: {location.location_type}</p>
+                <p>
+                  Preferred completion date:{" "}
+                  {location.completionDate || "not specified"}
+                </p>
+
+                <p>Address: {location.baseAddress}</p>
+              </Section>
+            </>
           )}
         </div>
-      )}
+
+        {/* status update */}
+        <div className="flex justify-end gap-2 mt-6">
+          {["new", "in_progress", "completed", "cancelled"].map((st) => (
+            <button
+              key={st}
+              className="px-3 py-2 border rounded-lg text-sm"
+              onClick={() => updateStatus(selectedRow.id, st)}
+            >
+              {st}
+            </button>
+          ))}
+        </div>
+      </Modal>
+    );
+  };
+
+  /* ---------------------- MAIN RENDER ---------------------- */
+
+  return (
+    <div className="min-h-screen w-full bg-[#F4F4F5] flex">
+
+      {/* ====== SIDEBAR ====== */}
+      <aside className="w-64 hidden md:flex flex-col border-r border-[#E5E7EB] bg-white">
+        <div className="px-5 py-6 border-b">
+          <div className="text-xs text-[#9CA3AF] uppercase">Admin Panel</div>
+          <div className="text-lg font-extrabold text-[#111827]">
+            Danilets Dashboard
+          </div>
+        </div>
+
+        <nav className="flex-1 px-2 py-4 space-y-1">
+          {MENU_ITEMS.map((item) => {
+            const active = activeMenu === item.key;
+            return (
+              <button
+                key={item.key}
+                onClick={() => setActiveMenu(item.key)}
+                className={`w-full px-3 py-2 rounded-xl text-sm font-semibold text-left
+                  ${
+                    active
+                      ? "text-black shadow-sm"
+                      : "text-[#4B5563] hover:text-[#111827] hover:bg-gray-100"
+                  }`}
+                style={{ background: active ? gradient : undefined }}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </nav>
+      </aside>
+
+      {/* ===== MAIN CONTENT ===== */}
+      <div className="flex-1 p-6">
+        <h1 className="text-2xl font-extrabold mb-6">
+          {activeMenu === "detailing"
+            ? "Detailing Booking Requests"
+            : activeMenu === "cleaning"
+            ? "Cleaning Booking Requests"
+            : "Users"}
+        </h1>
+
+        {renderTable()}
+      </div>
+
+      {renderDetailsModal()}
     </div>
   );
 }
 
-/* ================= MODAL ================= */
+/* ========== COMPONENTS ========== */
 
 function Modal({ children, onClose }) {
   return (
     <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40" onClick={onClose}></div>
       <div className="absolute inset-0 flex items-start justify-center overflow-auto">
-        <div className="mt-10 mb-10 w-[min(600px,92vw)] rounded-2xl bg-white p-6 shadow-xl">
+        <div className="mt-10 mb-10 bg-white rounded-2xl p-6 w-[min(600px,90vw)] shadow-xl">
           {children}
         </div>
       </div>
@@ -318,17 +318,11 @@ function Modal({ children, onClose }) {
   );
 }
 
-/* ================= INPUTS ================= */
-
-function Field({ label, value, onChange }) {
+function Section({ title, children }) {
   return (
-    <label className="block">
-      <div className="text-sm mb-1">{label}</div>
-      <input
-        value={value ?? ""}
-        onChange={(e) => onChange?.(e.target.value)}
-        className="w-full h-11 rounded-xl bg-[#F4F4F5] px-3 outline-none text-sm"
-      />
-    </label>
+    <div>
+      <h3 className="font-semibold mb-1">{title}</h3>
+      <div className="text-sm text-[#4B5563]">{children}</div>
+    </div>
   );
 }
