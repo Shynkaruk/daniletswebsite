@@ -13,6 +13,7 @@ const Step1Search = ({ visible, onSearch }) => {
 
       {/* Місце для майбутніх кнопок чи вибору — поки пусто */}
       <p className="text-center mt-4 text-black/80 text-[16px]">
+        Select service type on the next step
       </p>
             {/* Кнопка Continue */}
       <button

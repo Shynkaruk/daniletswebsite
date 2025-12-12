@@ -1,3 +1,4 @@
+// src/Components/Booking.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -13,21 +14,36 @@ import Step1Search from "../Components/Booking/Step1Search";
 import StepCleaningTypeProject from "../Components/NewBooking/Cleaning/StepCleaningTypeProject";
 import StepCleaningPropertyDetails from "../Components/NewBooking/Cleaning/StepCleaningPropertyDetails";
 import StepCleaningBudgetExtras from "../Components/NewBooking/Cleaning/StepCleaningBudgetExtras";
-import StepReviewSubmitCleaning from "../Components/NewBooking/StepReviewSubmitCleaning";
 
-// Detailing – персональні кроки
-import StepDetailingVehicle from "../Components/NewBooking/Detailing/StepDetailingVehicle";
-import StepDetailingHistoryCondition from "../Components/NewBooking/Detailing/StepDetailingHistoryCondition";
-import StepDetailingServices from "../Components/NewBooking/Detailing/StepDetailingServices";
-import StepDetailingLocationTimeline from "../Components/NewBooking/Detailing/StepDetailingLocationTimeline";
+// Контактний крок, спільний (Cleaning + Detailing Personal)
 import StepContactDetails from "../Components/NewBooking/StepConctactDetails";
-import StepReviewSubmit from "../Components/NewBooking/StepReviewSubmit";
 
-// Detailing – бізнес / флот кроки
-import StepDetailingBusinessDetails from "../Components/NewBooking/Detailing/StepDetailingBusinessDetails";
-import StepDetailingBusinessContact from "../Components/NewBooking/Detailing/StepDetailingBusinessContact";
-import StepDetailingBusinessVehiclesServices from "../Components/NewBooking/Detailing/StepDetailingBusinessVehiclesServices";
-import StepDetailingBusinessReview from "../Components/NewBooking/Detailing/StepDetailingBusinessReview";
+// Section 1: Get Quote (Personal / Business)
+import StepDetailingGetQuoteType from "../Components/NewBooking/Detailing/StepDetailingGetQuoteType";
+
+// PERSONAL Detailing steps
+import StepDetailingVehicleInfo from "../Components/NewBooking/Detailing/Personal/StepDetailingVehicleInfo";
+import StepDetailingVehicleHistory from "../Components/NewBooking/Detailing/Personal/StepDetailingVehicleHistory";
+import StepDetailingVehicleCondition from "../Components/NewBooking/Detailing/Personal/StepDetailingVehicleCondition";
+import StepDetailingServices from "../Components/NewBooking/Detailing/Personal/StepDetailingServices";
+import StepDetailingMultipleVehicles from "../Components/NewBooking/Detailing/Personal/StepDetailingMultipleVehicles";
+import StepDetailingLocationTimeline from "../Components/NewBooking/Detailing/Personal/StepDetailingLocationTimeline";
+import StepDetailingTimeline from "../Components/NewBooking/Detailing/Personal/StepDetailingTimeline";
+import StepDetailingContactInfo from "../Components/NewBooking/Detailing/Personal/StepDetailingContactInfo";
+import StepDetailingAdditionalInfo from "../Components/NewBooking/Detailing/Personal/StepDetailingAdditionalInfo";
+import StepReview from "../Components/NewBooking/Detailing/Personal/StepReview";
+
+// BUSINESS Detailing – нові кроки (1 секція = 1 компонент)
+// BUSINESS Detailing steps (нові)
+import StepDetailingBusinessContactInfo from "../Components/NewBooking/Detailing/Business/StepDetailingBusinessContactInfo";
+import StepDetailingBusinessDetails from "../Components/NewBooking/Detailing/Business/StepDetailingBusinessDetails";
+import StepDetailingBusinessServiceFrequency from "../Components/NewBooking/Detailing/Business/StepDetailingBusinessServiceFrequency";
+import StepDetailingBusinessVehicleTypes from "../Components/NewBooking/Detailing/Business/StepDetailingBusinessVehicleTypes";
+import StepDetailingBusinessServiceLocation from "../Components/NewBooking/Detailing/Business/StepDetailingBusinessServiceLocation";
+import StepDetailingBusinessServices from "../Components/NewBooking/Detailing/Business/StepDetailingBusinessServices";
+import StepDetailingBusinessTimeline from "../Components/NewBooking/Detailing/Business/StepDetailingBusinessTimeline";
+import StepDetailingBusinessAdditionalInfo from "../Components/NewBooking/Detailing/Business/StepDetailingBusinessAdditionalInfo";
+import StepDetailingBusinessReview from "../Components/NewBooking/Detailing/Business/StepDetailingBusinessReview";
 
 import ProgressBar from "./NewBooking/ProgressBar";
 
@@ -122,8 +138,10 @@ const CATEGORY_TABS = [
 const GOLD_GRADIENT =
   "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
 
-const CLEANING_STEPS_COUNT = 4; // 1 - Type, 2 - Property, 3 - Budget, 4 - Contact
-const DETAILING_BUSINESS_STEPS_COUNT = 4; // Business: Details, Contact, Fleet&Services, Review
+// к-сть кроків у прогрес-барах
+const CLEANING_STEPS_COUNT = 4; // Cleaning: Type, Property, Budget, Contact
+const DETAILING_PERSONAL_STEPS_COUNT = 11; // Personal: 1–11
+const DETAILING_BUSINESS_STEPS_COUNT = 10; // Business: 1–10 (від Get Quote до Review)
 
 const Booking = () => {
   const navigate = useNavigate();
@@ -136,16 +154,23 @@ const Booking = () => {
   );
   const isCleaning = activeKey === "cleaning";
 
-  // Detailing: режим Personal / Business
+  // Detailing: режим Personal / Business (Section 1)
   const [detailingMode, setDetailingMode] = useState("personal"); // "personal" | "business"
   const isPersonalDetailing = !isCleaning && detailingMode === "personal";
   const isBusinessDetailing = !isCleaning && detailingMode === "business";
 
-  // Main step (спільний для вкладки Detailing або Cleaning)
+  // Main step (спільний для детайлінгу/кліінінгу)
   const [step, setStep] = useState(1);
 
   const renderCleaningProgress = (activeIndex) => (
     <ProgressBar activeCount={activeIndex} total={CLEANING_STEPS_COUNT} />
+  );
+
+  const renderPersonalDetailingProgress = (activeIndex) => (
+    <ProgressBar
+      activeCount={activeIndex}
+      total={DETAILING_PERSONAL_STEPS_COUNT}
+    />
   );
 
   const renderBusinessDetailingProgress = (activeIndex) => (
@@ -171,9 +196,9 @@ const Booking = () => {
   const fallbackSuggestions = useMemo(
     () =>
       [
-        "10950 SW 5th St, Beaverton",
-        "10950 SW 5th St, Beaverton",
-        "10950 SW 5th St, Beaverton",
+        "4014 Gender Rd, Canal Winchester, OH",
+        "4014 Gender Rd, Canal Winchester, OH",
+        "4014 Gender Rd, Canal Winchester, OH",
       ].map((addr, i) => ({ description: addr, place_id: `fallback-${i}` })),
     []
   );
@@ -211,46 +236,60 @@ const Booking = () => {
   };
 
   const onSearch = () => {
+    // Після адреси → Section 1: Get Quote (Detailing) або Type (Cleaning)
     setStep(2);
   };
 
   const hasInput = query.trim().length > 0;
   const visibleList = step === 1 && hasInput ? predictions : [];
 
-  /** ---------- DETAILING FLOW (стейти) ---------- */
+  /** ---------- DETAILING PERSONAL FLOW (стейти) ---------- */
 
-  // Personal Detailing – Step 2: Vehicle info
+  // Section 2: Vehicle Information
   const [detYear, setDetYear] = useState("");
   const [detMake, setDetMake] = useState("");
   const [detModel, setDetModel] = useState("");
+  const [color, setColor] = useState("");
+  const [seatMaterial, setSeatMaterial] = useState("");
 
-  // Personal – Step 3: History & condition
+  // Section 3: History & Condition
   const [lastDetailed, setLastDetailed] = useState("");
-  const [conditionFlags, setConditionFlags] = useState([]);
-  const [conditionRating, setConditionRating] = useState("");
+  const [conditionFlags, setConditionFlags] = useState([]); // чекбокси
+  const [conditionRating, setConditionRating] = useState(""); // Very Clean / Dirty...
+  const [conditionOtherText, setConditionOtherText] = useState("");
 
-  // Personal – Step 4: Services
+  // Section 4/5: Services + Multiple Vehicles
   const [detServices, setDetServices] = useState([]);
+  const [servicesOtherText, setServicesOtherText] = useState("");
   const [detMultipleVehicles, setDetMultipleVehicles] = useState(false);
   const [detVehiclesCount, setDetVehiclesCount] = useState("");
   const [detVehicles, setDetVehicles] = useState([]);
 
-  // Personal – Step 5: Location & date
-  const [detServiceLocation, setDetServiceLocation] = useState(""); // "drop_off" | "pickup"
+  // Section 7: Location
+  const [detServiceLocation, setDetServiceLocation] = useState(""); // "drop_off" | "pickup" | "mobile"
+
+  // Section 8: Timeline
   const [detCompletionDate, setDetCompletionDate] = useState("");
 
-  // Business Detailing – Step 2: Business details
+  // Section 11: Additional Information
+  const [additionalInfo, setAdditionalInfo] = useState("");
+
+  /** ---------- BUSINESS Detailing стейти ---------- */
+
+  // Section 3: Vehicles + business type
   const [businessVehiclesCount, setBusinessVehiclesCount] = useState("");
   const [businessType, setBusinessType] = useState("");
   const [businessTypeOther, setBusinessTypeOther] = useState("");
+
+  // Section 4: Service frequency
   const [serviceFrequency, setServiceFrequency] = useState("");
   const [serviceFrequencyOther, setServiceFrequencyOther] = useState("");
 
-  // Business Detailing – Step 3: Contact (how did you hear about us)
+  // Section 2: Contact "How did you hear about us?"
   const [hearAbout, setHearAbout] = useState("");
   const [hearAboutOther, setHearAboutOther] = useState("");
 
-  // Business Detailing – Step 4: Vehicle types & services
+  // Section 5: Vehicle types
   const [businessVehicleTypes, setBusinessVehicleTypes] = useState({
     sedans: "",
     suvs: "",
@@ -262,21 +301,30 @@ const Booking = () => {
   });
   const [businessVehicleOtherLabel, setBusinessVehicleOtherLabel] =
     useState("");
-  const [businessServiceLocation, setBusinessServiceLocation] = useState(""); // on_site | drop_off | mixed
+
+  // Section 6: Service location
+  const [businessServiceLocation, setBusinessServiceLocation] = useState(""); // customer_dropoff | pickup_dropoff | mobile
+
+  // Section 7: Services interested in
   const [businessServices, setBusinessServices] = useState([]);
   const [businessServicesOther, setBusinessServicesOther] = useState("");
 
-  // Business Detailing – Step 5: preferences & notes
+  // Section 8: Timeline
+  const [businessStartDate, setBusinessStartDate] = useState("");
+
+  // Section 9: Additional info + contact preferences
   const [businessNotes, setBusinessNotes] = useState("");
   const [preferredContactMethod, setPreferredContactMethod] = useState("");
   const [contactTimePreference, setContactTimePreference] = useState("");
 
-  // Contact info (shared / personal & cleaning)
+  // Contact info (shared / personal & cleaning & business)
   const [firstName, setFirstName] = useState("");
   const [lastNameState, setLastNameState] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [heardAbout, setHeardAbout] = useState([]); // для StepContactDetails
+
+  // для Personal/Cleaning contact step
+  const [heardAbout, setHeardAbout] = useState([]);
   const [extraInfo, setExtraInfo] = useState("");
 
   /** ---------- CLEANING FLOW (стейти) ---------- */
@@ -302,16 +350,7 @@ const Booking = () => {
   const [comBudget, setComBudget] = useState("");
   const [comExtraDetails, setComExtraDetails] = useState("");
 
-  // (опційно) окрема дата для Cleaning – зараз не обов’язкова
-  const [serviceDate, setServiceDate] = useState(null);
-
-  /** ---------- Валідація контактів (для Cleaning) ---------- */
-
-  const isEmail = (v) => /\S+@\S+\.\S+/.test(v);
-  const isPhone = (v) => v.replace(/[^\d]/g, "").length >= 7;
-
-  const canContinueContactCleaning =
-    firstName.trim() && lastNameState.trim() && isPhone(phone) && isEmail(email);
+  const [serviceDate, setServiceDate] = useState(null); // поки не використовуємо
 
   /** ---------- User + модалки ---------- */
 
@@ -388,6 +427,14 @@ const Booking = () => {
         dropoff_address: shopAddress,
       };
     }
+    if (detServiceLocation === "mobile") {
+      return {
+        location_type: "mobile",
+        service_address: baseAddress,
+        pickup_address: null,
+        dropoff_address: null,
+      };
+    }
     return {
       location_type: "unknown",
       service_address: baseAddress || null,
@@ -401,11 +448,14 @@ const Booking = () => {
   async function submitDetailingRequest() {
     if (submitting) return;
 
+    const isEmailLocal = (v) => /\S+@\S+\.\S+/.test(v || "");
+    const isPhoneLocal = (v) => (v || "").replace(/[^\d]/g, "").length >= 7;
+
     if (
       !firstName.trim() ||
       !lastNameState.trim() ||
-      !isPhone(phone) ||
-      !isEmail(email)
+      !isPhoneLocal(phone) ||
+      !isEmailLocal(email)
     ) {
       openInfoModal(
         "Contact details incomplete",
@@ -435,10 +485,17 @@ const Booking = () => {
       );
       return;
     }
-    if (!detServiceLocation || !detCompletionDate) {
+    if (!detServiceLocation) {
       openInfoModal(
-        "Location or date missing",
-        "Please choose where the service will be performed and by what date."
+        "Location missing",
+        "Please choose where the service will be performed."
+      );
+      return;
+    }
+    if (!detCompletionDate) {
+      openInfoModal(
+        "Timeline missing",
+        "Please select by what date the service should be completed."
       );
       return;
     }
@@ -446,19 +503,29 @@ const Booking = () => {
     const loc = buildDetailingLocation();
 
     const itemsPayload = {
+      quoteType: "personal",
       vehicle: {
         year: detYear,
         make: detMake,
         model: detModel,
+        color,
+        seatMaterial,
       },
       history: {
         lastDetailed,
         conditionFlags,
         conditionRating,
+        other: conditionOtherText,
       },
-      services: detServices,
-      multipleVehicles: detMultipleVehicles,
-      vehicles: detVehicles,
+      services: {
+        selected: detServices,
+        other: servicesOtherText,
+      },
+      multipleVehicles: {
+        enabled: detMultipleVehicles,
+        count: detVehiclesCount,
+        vehicles: detVehicles,
+      },
       location: {
         ...loc,
         completionDate: detCompletionDate,
@@ -472,6 +539,7 @@ const Booking = () => {
         heardAbout,
         extraInfo,
       },
+      additionalInfo,
     };
 
     const notes = [
@@ -481,8 +549,25 @@ const Booking = () => {
       `Email: ${email}`,
       heardAbout?.length ? `Heard about us: ${heardAbout.join(", ")}` : null,
       query ? `Customer address: ${query}` : null,
-      `Preferred completion date: ${detCompletionDate}`,
+      color ? `Color: ${color}` : null,
+      seatMaterial ? `Seat material: ${seatMaterial}` : null,
+      detYear && detMake && detModel
+        ? `Vehicle: ${detYear} ${detMake} ${detModel}`
+        : null,
+      `Last detailed: ${lastDetailed}`,
+      `Condition rating: ${conditionRating}`,
+      conditionFlags?.length
+        ? `Condition flags: ${conditionFlags.join(", ")}`
+        : null,
+      conditionOtherText ? `Condition other: ${conditionOtherText}` : null,
+      detServices?.length ? `Services: ${detServices.join(", ")}` : null,
+      servicesOtherText ? `Services other: ${servicesOtherText}` : null,
+      detMultipleVehicles
+        ? `Multiple vehicles: Yes, count: ${detVehiclesCount || "n/a"}`
+        : "Multiple vehicles: No",
       `Location type: ${loc.location_type}`,
+      `Preferred completion date: ${detCompletionDate}`,
+      additionalInfo ? `Additional info: ${additionalInfo}` : null,
     ]
       .filter(Boolean)
       .join(" | ");
@@ -517,8 +602,7 @@ const Booking = () => {
     }
   }
 
-  /** ---------- SUBMIT: Business / Fleet Detailing interest ---------- */
-
+  /** ---------- SUBMIT: Business / Fleet Detailing ---------- */
   async function submitDetailingBusinessRequest() {
     if (submitting) return;
 
@@ -592,7 +676,6 @@ const Booking = () => {
       return;
     }
 
-    // перевірка типів авто / послуг – теоретично це вже провалідовано в степі, але підстрахуємось
     const totalFleetVehicles = Object.values(businessVehicleTypes || {}).reduce(
       (sum, v) => sum + (Number(v) || 0),
       0
@@ -631,13 +714,18 @@ const Booking = () => {
       );
       return;
     }
-    if (
-      businessServices.includes("Other") &&
-      !businessServicesOther.trim()
-    ) {
+    if (businessServices.includes("Other") && !businessServicesOther.trim()) {
       openInfoModal(
         "Other services not specified",
         "Please specify which 'Other' services you need."
+      );
+      return;
+    }
+
+    if (!businessStartDate) {
+      openInfoModal(
+        "Timeline missing",
+        "Please select when you would like us to start."
       );
       return;
     }
@@ -657,15 +745,20 @@ const Booking = () => {
     let pickup_address = null;
     let dropoff_address = null;
 
-    if (businessServiceLocation === "on_site") {
-      location_type = "on_site";
-      service_address = baseAddress || null;
-    } else if (businessServiceLocation === "drop_off") {
+    if (
+      businessServiceLocation === "customer_dropoff" ||
+      businessServiceLocation === "drop_off"
+    ) {
       location_type = "shop";
       service_address = shopAddress;
-    } else if (businessServiceLocation === "mixed") {
-      location_type = "mixed";
+    } else if (businessServiceLocation === "pickup_dropoff") {
+      location_type = "pickup";
       service_address = shopAddress;
+      pickup_address = baseAddress || null;
+      dropoff_address = shopAddress;
+    } else if (businessServiceLocation === "mobile") {
+      location_type = "mobile";
+      service_address = baseAddress || null;
     }
 
     const itemsPayload = {
@@ -692,6 +785,9 @@ const Booking = () => {
         serviceLocation: businessServiceLocation,
         services: businessServices,
         servicesOther: businessServicesOther,
+      },
+      timeline: {
+        startDate: businessStartDate,
       },
       preferences: {
         preferredContactMethod,
@@ -748,7 +844,14 @@ const Booking = () => {
       businessServices.includes("Other") && businessServicesOther
         ? `Other services: ${businessServicesOther}`
         : null,
+      businessStartDate ? `Preferred start date: ${businessStartDate}` : null,
       baseAddress ? `Customer location (base): ${baseAddress}` : null,
+      preferredContactMethod
+        ? `Preferred contact method: ${preferredContactMethod}`
+        : null,
+      contactTimePreference
+        ? `Best time to contact: ${contactTimePreference}`
+        : null,
       businessNotes ? `Notes: ${businessNotes}` : null,
     ];
 
@@ -786,13 +889,11 @@ const Booking = () => {
   }
 
   /** ---------- SUBMIT: Cleaning quote ---------- */
-
   async function submitCleaningRequest() {
     if (submitting) return;
 
     const isEmailLocal = (v) => /\S+@\S+\.\S+/.test(v || "");
-    const isPhoneLocal = (v) =>
-      (v || "").replace(/[^\d]/g, "").length >= 7;
+    const isPhoneLocal = (v) => (v || "").replace(/[^\d]/g, "").length >= 7;
 
     if (
       !firstName.trim() ||
@@ -911,8 +1012,18 @@ const Booking = () => {
     >
       <Header />
 
-      <main className="flex items-center justify-center px-4">
-        <div className="w-full max-w-xl flex flex-col items-center text-center min-w-0">
+      <main className="flex items-center justify-center px-4 lg:px-6">
+        <div
+          className="
+            w-full 
+            max-w-xl 
+            lg:max-w-4xl 
+            flex flex-col 
+            items-center 
+            text-center 
+            min-w-0
+          "
+        >
           <h1 className="text-[#18181B] font-extrabold text-[26px] sm:text-[32px] mt-10 mb-6">
             Book with Danilets
           </h1>
@@ -953,99 +1064,142 @@ const Booking = () => {
             onSearch={onSearch}
           />
 
-          {/* Перемикач режиму всередині Detailing: Personal / Business */}
-          {!isCleaning && step > 1 && (
-            <div className="w-full mb-4">
-              <div className="inline-flex items-center bg-[#F2F2F2]/90 rounded-full p-1 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDetailingMode("personal");
-                    setStep(2);
-                  }}
-                  className={[
-                    "px-5 py-2 rounded-full text-sm sm:text-[15px] font-semibold transition",
-                    detailingMode === "personal"
-                      ? "bg-white shadow text-[#18181B]"
-                      : "text-[#5E5E61] hover:text-[#18181B]",
-                  ].join(" ")}
-                >
-                  Personal
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDetailingMode("business");
-                    setStep(2);
-                  }}
-                  className={[
-                    "px-5 py-2 rounded-full text-sm sm:text-[15px] font-semibold transition",
-                    detailingMode === "business"
-                      ? "bg-white shadow text-[#18181B]"
-                      : "text-[#5E5E61] hover:text-[#18181B]",
-                  ].join(" ")}
-                >
-                  Business / Fleet
-                </button>
-              </div>
-            </div>
+          {/* ============= DETAILING: Section 1 (Get Quote: Personal / Business) ============= */}
+          {!isCleaning && step === 2 && (
+            <StepDetailingGetQuoteType
+              visible
+              detailingMode={detailingMode}
+              setDetailingMode={setDetailingMode}
+              onBack={() => setStep(1)}
+              onNext={() =>
+                setStep(
+                  detailingMode === "business"
+                    ? 3 // бізнес йде в свою секцію
+                    : 3 // персонал теж з 3-го, просто інший флоу
+                )
+              }
+              renderProgress={(idx) =>
+                detailingMode === "business"
+                  ? renderBusinessDetailingProgress(idx)
+                  : renderPersonalDetailingProgress(idx)
+              }
+              progressStepIndex={1}
+              totalSteps={
+                detailingMode === "business"
+                  ? DETAILING_BUSINESS_STEPS_COUNT
+                  : DETAILING_PERSONAL_STEPS_COUNT
+              }
+            />
           )}
 
-          {/* ============= DETAILING PERSONAL FLOW (1–7) ============= */}
+          {/* ============= DETAILING PERSONAL FLOW ============= */}
           {!isCleaning && isPersonalDetailing && (
             <>
-              <StepDetailingVehicle
-                visible={step === 2}
-                onBack={() => setStep(1)}
-                onNext={() => setStep(3)}
+              {/* Section 2: Vehicle Information */}
+              <StepDetailingVehicleInfo
+                visible={step === 3}
+                onBack={() => setStep(2)}
+                onNext={() => setStep(4)}
                 year={detYear}
                 setYear={setDetYear}
                 make={detMake}
                 setMake={setDetMake}
                 model={detModel}
                 setModel={setDetModel}
+                color={color}
+                setColor={setColor}
+                seatMaterial={seatMaterial}
+                setSeatMaterial={setSeatMaterial}
+                renderProgress={renderPersonalDetailingProgress}
+                progressStepIndex={2}
+                totalSteps={DETAILING_PERSONAL_STEPS_COUNT}
               />
 
-              <StepDetailingHistoryCondition
-                visible={step === 3}
-                onBack={() => setStep(2)}
-                onNext={() => setStep(4)}
+              {/* Section 3: Vehicle History */}
+              <StepDetailingVehicleHistory
+                visible={step === 4}
+                onBack={() => setStep(3)}
+                onNext={() => setStep(5)}
                 lastDetailed={lastDetailed}
                 setLastDetailed={setLastDetailed}
+                renderProgress={renderPersonalDetailingProgress}
+                progressStepIndex={3}
+                totalSteps={DETAILING_PERSONAL_STEPS_COUNT}
+              />
+
+              {/* Section 4: Vehicle Condition */}
+              <StepDetailingVehicleCondition
+                visible={step === 5}
+                onBack={() => setStep(4)}
+                onNext={() => setStep(6)}
                 conditionFlags={conditionFlags}
                 setConditionFlags={setConditionFlags}
                 conditionRating={conditionRating}
                 setConditionRating={setConditionRating}
+                otherConditionText={conditionOtherText}
+                setOtherConditionText={setConditionOtherText}
+                renderProgress={renderPersonalDetailingProgress}
+                progressStepIndex={4}
+                totalSteps={DETAILING_PERSONAL_STEPS_COUNT}
               />
 
+              {/* Section 5: Services */}
               <StepDetailingServices
-                visible={step === 4}
-                onBack={() => setStep(3)}
-                onNext={() => setStep(5)}
+                visible={step === 6}
+                onBack={() => setStep(5)}
+                onNext={() => setStep(7)}
                 services={detServices}
                 setServices={setDetServices}
+                otherServiceText={servicesOtherText}
+                setOtherServiceText={setServicesOtherText}
+                renderProgress={renderPersonalDetailingProgress}
+                progressStepIndex={5}
+                totalSteps={DETAILING_PERSONAL_STEPS_COUNT}
+              />
+
+              {/* Section 6: Multiple vehicles */}
+              <StepDetailingMultipleVehicles
+                visible={step === 7}
+                onBack={() => setStep(6)}
+                onNext={() => setStep(8)}
                 multipleVehicles={detMultipleVehicles}
                 setMultipleVehicles={setDetMultipleVehicles}
                 vehiclesCount={detVehiclesCount}
                 setVehiclesCount={setDetVehiclesCount}
-                vehicles={detVehicles}
-                setVehicles={setDetVehicles}
+                renderProgress={renderPersonalDetailingProgress}
+                progressStepIndex={6}
+                totalSteps={DETAILING_PERSONAL_STEPS_COUNT}
               />
 
+              {/* Section 7: Location */}
               <StepDetailingLocationTimeline
-                visible={step === 5}
-                onBack={() => setStep(4)}
-                onNext={() => setStep(6)}
+                visible={step === 8}
+                onBack={() => setStep(7)}
+                onNext={() => setStep(9)}
                 serviceLocation={detServiceLocation}
                 setServiceLocation={setDetServiceLocation}
-                completionDate={detCompletionDate}
-                setCompletionDate={setDetCompletionDate}
+                renderProgress={renderPersonalDetailingProgress}
+                progressStepIndex={7}
+                totalSteps={DETAILING_PERSONAL_STEPS_COUNT}
               />
 
-              <StepContactDetails
-                visible={step === 6}
-                onBack={() => setStep(5)}
-                onNext={() => setStep(7)}
+              {/* Section 8: Timeline */}
+              <StepDetailingTimeline
+                visible={step === 9}
+                onBack={() => setStep(8)}
+                onNext={() => setStep(10)}
+                completionDate={detCompletionDate}
+                setCompletionDate={setDetCompletionDate}
+                renderProgress={renderPersonalDetailingProgress}
+                progressStepIndex={8}
+                totalSteps={DETAILING_PERSONAL_STEPS_COUNT}
+              />
+
+              {/* Section 10: Contact details */}
+              <StepDetailingContactInfo
+                visible={step === 10}
+                onBack={() => setStep(9)}
+                onNext={() => setStep(11)}
                 firstName={firstName}
                 setFirstName={setFirstName}
                 lastName={lastNameState}
@@ -1059,22 +1213,42 @@ const Booking = () => {
                 extraInfo={extraInfo}
                 setExtraInfo={setExtraInfo}
                 user={user}
-                isCleaning={false}
+                renderProgress={renderPersonalDetailingProgress}
+                progressStepIndex={9}
+                totalSteps={DETAILING_PERSONAL_STEPS_COUNT}
               />
 
-              <StepReviewSubmit
-                visible={step === 7}
-                onBack={() => setStep(6)}
-                onSubmit={submitDetailingRequest}
+              {/* Section 11: Additional Information */}
+              <StepDetailingAdditionalInfo
+                visible={step === 11}
+                onBack={() => setStep(10)}
+                onNext={() => setStep(12)}
+                additionalInfo={additionalInfo}
+                setAdditionalInfo={setAdditionalInfo}
+                renderProgress={renderPersonalDetailingProgress}
+                progressStepIndex={10}
+                totalSteps={DETAILING_PERSONAL_STEPS_COUNT}
+              />
+
+              {/* FINAL: Review & Submit */}
+              <StepReview
+                visible={step === 12}
+                progressActive={11}
+                totalSteps={DETAILING_PERSONAL_STEPS_COUNT}
+                quoteType={detailingMode}
                 year={detYear}
                 make={detMake}
                 model={detModel}
+                color={color}
+                seatMaterial={seatMaterial}
                 lastDetailed={lastDetailed}
                 conditionFlags={conditionFlags}
                 conditionRating={conditionRating}
+                otherConditionText={conditionOtherText}
                 services={detServices}
+                otherServiceText={servicesOtherText}
                 multipleVehicles={detMultipleVehicles}
-                vehicles={detVehicles}
+                vehiclesCount={detVehiclesCount}
                 serviceLocation={detServiceLocation}
                 completionDate={detCompletionDate}
                 firstName={firstName}
@@ -1082,118 +1256,225 @@ const Booking = () => {
                 phone={phone}
                 email={email}
                 heardAbout={heardAbout}
-                extraInfo={extraInfo}
+                additionalInfo={additionalInfo}
+                onBack={() => setStep(11)}
+                onEditSection={(sectionKey) => {
+                  const map = {
+                    type: 2,
+                    vehicle: 3,
+                    history: 4,
+                    condition: 5,
+                    services: 6,
+                    multiple: 7,
+                    location: 8,
+                    timeline: 9,
+                    contact: 10,
+                    additional: 11,
+                  };
+                  const targetStep = map[sectionKey];
+                  if (targetStep) setStep(targetStep);
+                }}
+                submitting={submitting}
+                submitRequest={submitDetailingRequest}
               />
             </>
           )}
 
           {/* ============= DETAILING BUSINESS / FLEET FLOW ============= */}
-          {!isCleaning && isBusinessDetailing && (
-            <>
-              {/* STEP 2: Business details + frequency */}
-              <StepDetailingBusinessDetails
-                visible={step === 2}
-                onBack={() => setStep(1)}
-                onNext={() => setStep(3)}
-                businessVehiclesCount={businessVehiclesCount}
-                setBusinessVehiclesCount={setBusinessVehiclesCount}
-                businessType={businessType}
-                setBusinessType={setBusinessType}
-                businessTypeOther={businessTypeOther}
-                setBusinessTypeOther={setBusinessTypeOther}
-                serviceFrequency={serviceFrequency}
-                setServiceFrequency={setServiceFrequency}
-                serviceFrequencyOther={serviceFrequencyOther}
-                setServiceFrequencyOther={setServiceFrequencyOther}
-                renderProgress={renderBusinessDetailingProgress}
-                totalSteps={DETAILING_BUSINESS_STEPS_COUNT}
-              />
+{/* ============= DETAILING BUSINESS / FLEET FLOW ============= */}
+{!isCleaning && isBusinessDetailing && (
+  <>
+    {/* Section 2: Contact Information */}
+    <StepDetailingBusinessContactInfo
+      visible={step === 3}
+      onBack={() => setStep(2)}
+      onNext={() => setStep(4)}
+      firstName={firstName}
+      setFirstName={setFirstName}
+      lastName={lastNameState}
+      setLastName={setLastNameState}
+      companyName={companyName}
+      setCompanyName={setCompanyName}
+      companyAddress={companyAddress}
+      setCompanyAddress={setCompanyAddress}
+      phone={phone}
+      setPhone={setPhone}
+      email={email}
+      setEmail={setEmail}
+      heardAbout={hearAbout}
+      setHeardAbout={setHearAbout}
+      heardOther={hearAboutOther}
+      setHeardOther={setHearAboutOther}
+      renderProgress={renderBusinessDetailingProgress}
+      progressStepIndex={2}
+      totalSteps={DETAILING_BUSINESS_STEPS_COUNT}
+    />
 
-              {/* STEP 3: Business contact info */}
-              <StepDetailingBusinessContact
-                visible={step === 3}
-                onBack={() => setStep(2)}
-                onNext={() => setStep(4)}
-                firstName={firstName}
-                setFirstName={setFirstName}
-                lastName={lastNameState}
-                setLastName={setLastNameState}
-                companyName={companyName}
-                setCompanyName={setCompanyName}
-                companyAddress={companyAddress}
-                setCompanyAddress={setCompanyAddress}
-                phone={phone}
-                setPhone={setPhone}
-                email={email}
-                setEmail={setEmail}
-                hearAbout={hearAbout}
-                setHearAbout={setHearAbout}
-                hearAboutOther={hearAboutOther}
-                setHearAboutOther={setHearAboutOther}
-                renderProgress={renderBusinessDetailingProgress}
-                totalSteps={DETAILING_BUSINESS_STEPS_COUNT}
-              />
+    {/* Section 3: Business Details */}
+    <StepDetailingBusinessDetails
+      visible={step === 4}
+      onBack={() => setStep(3)}
+      onNext={() => setStep(5)}
+      vehiclesCount={businessVehiclesCount}
+      setVehiclesCount={setBusinessVehiclesCount}
 
-              {/* STEP 4: Vehicle types, location, services */}
-              <StepDetailingBusinessVehiclesServices
-                visible={step === 4}
-                onBack={() => setStep(3)}
-                onNext={() => setStep(5)}
-                businessVehicleTypes={businessVehicleTypes}
-                setBusinessVehicleTypes={setBusinessVehicleTypes}
-                businessVehicleOtherLabel={businessVehicleOtherLabel}
-                setBusinessVehicleOtherLabel={setBusinessVehicleOtherLabel}
-                businessServiceLocation={businessServiceLocation}
-                setBusinessServiceLocation={setBusinessServiceLocation}
-                businessServices={businessServices}
-                setBusinessServices={setBusinessServices}
-                businessServicesOther={businessServicesOther}
-                setBusinessServicesOther={setBusinessServicesOther}
-                renderProgress={renderBusinessDetailingProgress}
-                totalSteps={DETAILING_BUSINESS_STEPS_COUNT}
-              />
+      businessType={businessType}
+      setBusinessType={setBusinessType}
+      businessTypeOther={businessTypeOther}
+      setBusinessTypeOther={setBusinessTypeOther}
 
-              {/* STEP 5: Review + preferences + submit */}
-              <StepDetailingBusinessReview
-                visible={step === 5}
-                onBack={() => setStep(4)}
-                onSubmit={submitDetailingBusinessRequest}
-                isSubmitting={submitting}
-                // Step 2
-                businessVehiclesCount={businessVehiclesCount}
-                businessType={businessType}
-                businessTypeOther={businessTypeOther}
-                serviceFrequency={serviceFrequency}
-                serviceFrequencyOther={serviceFrequencyOther}
-                // Step 3
-                firstName={firstName}
-                lastName={lastNameState}
-                companyName={companyName}
-                companyAddress={companyAddress}
-                phone={phone}
-                email={email}
-                hearAbout={hearAbout}
-                hearAboutOther={hearAboutOther}
-                // Step 4
-                businessVehicleTypes={businessVehicleTypes}
-                businessVehicleOtherLabel={businessVehicleOtherLabel}
-                businessServiceLocation={businessServiceLocation}
-                businessServices={businessServices}
-                businessServicesOther={businessServicesOther}
-                // Final
-                businessNotes={businessNotes}
-                setBusinessNotes={setBusinessNotes}
-                preferredContactMethod={preferredContactMethod}
-                setPreferredContactMethod={setPreferredContactMethod}
-                contactTimePreference={contactTimePreference}
-                setContactTimePreference={setContactTimePreference}
-                renderProgress={renderBusinessDetailingProgress}
-                totalSteps={DETAILING_BUSINESS_STEPS_COUNT}
-              />
-            </>
-          )}
+      renderProgress={renderBusinessDetailingProgress}
+      progressStepIndex={3}
+      totalSteps={DETAILING_BUSINESS_STEPS_COUNT}
+    />
 
-          {/* ============= CLEANING FLOW (1–4) ============= */}
+    {/* Section 4: Service Frequency */}
+    <StepDetailingBusinessServiceFrequency
+      visible={step === 5}
+      onBack={() => setStep(4)}
+      onNext={() => setStep(6)}
+      serviceFrequency={serviceFrequency}
+      setServiceFrequency={setServiceFrequency}
+      serviceFrequencyOther={serviceFrequencyOther}
+      setServiceFrequencyOther={setServiceFrequencyOther}
+      renderProgress={renderBusinessDetailingProgress}
+      progressStepIndex={4}
+      totalSteps={DETAILING_BUSINESS_STEPS_COUNT}
+    />
+
+    {/* Section 5: Vehicle Types */}
+    <StepDetailingBusinessVehicleTypes
+      visible={step === 6}
+      onBack={() => setStep(5)}
+      onNext={() => setStep(7)}
+      businessVehicleTypes={businessVehicleTypes}
+      setBusinessVehicleTypes={setBusinessVehicleTypes}
+      businessVehicleOtherLabel={businessVehicleOtherLabel}
+      setBusinessVehicleOtherLabel={setBusinessVehicleOtherLabel}
+      renderProgress={renderBusinessDetailingProgress}
+      progressStepIndex={5}
+      totalSteps={DETAILING_BUSINESS_STEPS_COUNT}
+    />
+
+    {/* Section 6: Service Location */}
+    <StepDetailingBusinessServiceLocation
+      visible={step === 7}
+      onBack={() => setStep(6)}
+      onNext={() => setStep(8)}
+      businessServiceLocation={businessServiceLocation}
+      setBusinessServiceLocation={setBusinessServiceLocation}
+      renderProgress={renderBusinessDetailingProgress}
+      progressStepIndex={6}
+      totalSteps={DETAILING_BUSINESS_STEPS_COUNT}
+    />
+
+    {/* Section 7: Services Interested In */}
+    <StepDetailingBusinessServices
+      visible={step === 8}
+      onBack={() => setStep(7)}
+      onNext={() => setStep(9)}
+      businessServices={businessServices}
+      setBusinessServices={setBusinessServices}
+      businessServicesOther={businessServicesOther}
+      setBusinessServicesOther={setBusinessServicesOther}
+      renderProgress={renderBusinessDetailingProgress}
+      progressStepIndex={7}
+      totalSteps={DETAILING_BUSINESS_STEPS_COUNT}
+    />
+
+    {/* Section 8: Timeline */}
+    <StepDetailingBusinessTimeline
+      visible={step === 9}
+      onBack={() => setStep(8)}
+      onNext={() => setStep(10)}
+      businessStartDate={businessStartDate}
+      setBusinessStartDate={setBusinessStartDate}
+      renderProgress={renderBusinessDetailingProgress}
+      progressStepIndex={8}
+      totalSteps={DETAILING_BUSINESS_STEPS_COUNT}
+    />
+
+    {/* Section 9: Additional Information */}
+    <StepDetailingBusinessAdditionalInfo
+      visible={step === 10}
+      onBack={() => setStep(9)}
+      onNext={() => setStep(11)}
+      businessNotes={businessNotes}
+      setBusinessNotes={setBusinessNotes}
+      preferredContactMethod={preferredContactMethod}
+      setPreferredContactMethod={setPreferredContactMethod}
+      contactTimePreference={contactTimePreference}
+      setContactTimePreference={setContactTimePreference}
+      renderProgress={renderBusinessDetailingProgress}
+      progressStepIndex={9}
+      totalSteps={DETAILING_BUSINESS_STEPS_COUNT}
+    />
+
+    {/* Preview / Review */}
+<StepDetailingBusinessReview
+  visible={step === 11}
+  onBack={() => setStep(10)}
+  onSubmit={submitDetailingBusinessRequest}
+  isSubmitting={submitting}
+
+  /* progress */
+  renderProgress={renderBusinessDetailingProgress}
+  progressStepIndex={10}
+  totalSteps={DETAILING_BUSINESS_STEPS_COUNT}
+
+  /* Section 2 – Contact */
+  firstName={firstName}
+  lastName={lastNameState}
+  companyName={companyName}
+  companyAddress={companyAddress}
+  phone={phone}
+  email={email}
+  hearAbout={hearAbout}
+  hearAboutOther={hearAboutOther}
+
+  /* Section 3 – Business details */
+  businessVehiclesCount={businessVehiclesCount}
+  businessType={businessType}
+  businessTypeOther={businessTypeOther}
+
+  /* Section 4 – Frequency */
+  serviceFrequency={serviceFrequency}
+  serviceFrequencyOther={serviceFrequencyOther}
+
+  /* Section 5 – Vehicle types */
+  businessVehicleTypes={businessVehicleTypes}
+  businessVehicleOtherLabel={businessVehicleOtherLabel}
+
+  /* Section 6 – Location */
+  businessServiceLocation={businessServiceLocation}
+
+  /* Section 7 – Services */
+  businessServices={businessServices}
+  businessServicesOther={businessServicesOther}
+
+  /* Section 8 – Timeline */
+  businessStartDate={businessStartDate}
+
+  /* Section 9 – Additional */
+  businessNotes={businessNotes}
+
+  /* Change buttons */
+  onEditContact={() => setStep(3)}
+  onEditVehiclesBusinessType={() => setStep(4)}
+  onEditFrequency={() => setStep(5)}
+  onEditVehicleTypes={() => setStep(6)}
+  onEditLocation={() => setStep(7)}
+  onEditServices={() => setStep(8)}
+  onEditTimeline={() => setStep(9)}
+  onEditAdditionalInfo={() => setStep(10)}
+/>
+
+  </>
+)}
+
+
+
+          {/* ============= CLEANING FLOW ============= */}
           {isCleaning && (
             <>
               {/* STEP 2: Type + project */}
@@ -1257,7 +1538,7 @@ const Booking = () => {
                 totalSteps={CLEANING_STEPS_COUNT}
               />
 
-              {/* STEP 5: Contact details – субмітить Cleaning */}
+              {/* STEP 5: Contact details – сабмітить Cleaning */}
               <StepContactDetails
                 visible={step === 5}
                 onBack={() => setStep(4)}
