@@ -1,5 +1,4 @@
 // src/Components/Booking/Detailing/Personal/StepDetailingVehicleInfo.jsx
-
 import React from "react";
 import { FiChevronLeft } from "react-icons/fi";
 import ProgressBar from "../../ProgressBar"; // перевір шлях
@@ -37,11 +36,13 @@ const StepDetailingVehicleInfo = ({
   const colorVal = color ?? "";
   const seatVal = seatMaterial ?? "";
 
+  // ✅ color тепер теж обовʼязковий
   const canContinue =
     yearVal.trim() &&
     makeVal.trim() &&
     modelVal.trim() &&
-    seatVal.trim(); // seatMaterial required
+    colorVal.trim() &&
+    seatVal.trim();
 
   const inputBase =
     "w-full h-[48px] sm:h-[56px] rounded-[16px] bg-[#F4F4F5] px-4 sm:px-5 text-[14px] sm:text-[15px] outline-none";
@@ -78,7 +79,6 @@ const StepDetailingVehicleInfo = ({
 
         {/* INPUTS */}
         <section className="space-y-4">
-
           {/* Year */}
           <div className="space-y-1">
             <div className="text-sm text-[#6B7280] font-medium">Year</div>
@@ -86,7 +86,7 @@ const StepDetailingVehicleInfo = ({
               value={yearVal}
               onChange={(e) => setYear?.(e.target.value)}
               className={inputBase}
-              placeholder="Enter vehicle year"
+              placeholder="2025"
             />
           </div>
 
@@ -97,7 +97,7 @@ const StepDetailingVehicleInfo = ({
               value={makeVal}
               onChange={(e) => setMake?.(e.target.value)}
               className={inputBase}
-              placeholder="Enter vehicle make"
+              placeholder="Mercedes"
             />
           </div>
 
@@ -108,7 +108,7 @@ const StepDetailingVehicleInfo = ({
               value={modelVal}
               onChange={(e) => setModel?.(e.target.value)}
               className={inputBase}
-              placeholder="Enter vehicle model"
+              placeholder="AMG"
             />
           </div>
 
@@ -121,11 +121,11 @@ const StepDetailingVehicleInfo = ({
               value={colorVal}
               onChange={(e) => setColor?.(e.target.value)}
               className={inputBase}
-              placeholder="Enter color"
+              placeholder="Blue"
             />
           </div>
 
-          {/* Seat Material (required) */}
+          {/* Seat Material */}
           <div className="space-y-2">
             <div className="text-sm text-[#6B7280] font-medium">
               Seat material (required)
@@ -142,7 +142,11 @@ const StepDetailingVehicleInfo = ({
                     onClick={() => setSeatMaterial?.(opt)}
                     className={`
                       h-[44px] sm:h-[48px] rounded-[16px] border text-[14px] font-medium
-                      ${active ? "border-transparent text-black" : "border-[#E5E7EB] text-[#4B5563] bg-white"}
+                      ${
+                        active
+                          ? "border-transparent text-black"
+                          : "border-[#E5E7EB] text-[#4B5563] bg-white"
+                      }
                     `}
                     style={{ background: active ? GOLD_GRADIENT : undefined }}
                   >

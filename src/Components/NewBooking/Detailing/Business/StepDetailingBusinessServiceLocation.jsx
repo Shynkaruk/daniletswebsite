@@ -1,6 +1,7 @@
 import React from "react";
 import { FiChevronLeft } from "react-icons/fi";
-import ProgressBar from "../../ProgressBar"; // перевір шлях
+import ProgressBar from "../../ProgressBar";
+import { AddressAutocomplete } from "./AddressAutocomplete";
 
 const GOLD_GRADIENT =
   "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
@@ -31,23 +32,47 @@ export default function StepDetailingBusinessServiceLocation({
   businessServiceLocation,
   setBusinessServiceLocation,
 
-  businessVehiclesCount, // щоб показати/перевірити обмеження для mobile
+  // ✅ NEW: адреса для pickup/mobile (можеш назвати як хочеш)
+  pickupAddress,
+  setPickupAddress,
+
+  businessVehiclesCount,
   renderProgress,
   progressStepIndex = 6,
   totalSteps = 11,
 }) {
   if (!visible) return null;
 
-  const vehiclesNum = Number(businessVehiclesCount || 0);
-  const isMobileSelected = businessServiceLocation === "mobile";
-  const mobileNotAllowed = isMobileSelected && vehiclesNum > 0 && vehiclesNum < 3;
+  // SAFE values
+  const loc = businessServiceLocation ?? "";
+  const addr = pickupAddress ?? "";
 
-  const canContinue =
-    !!businessServiceLocation && !mobileNotAllowed;
+  const vehiclesNum = Number(businessVehiclesCount || 0);
+
+  const isPickupSelected = loc === "pickup";
+  const isMobileSelected = loc === "mobile";
+
+  // твоє правило для mobile
+  const mobileNotAllowed =
+    isMobileSelected && vehiclesNum > 0 && vehiclesNum < 3;
+
+  // ✅ адреса потрібна тільки для pickup (і за бажанням можеш також для mobile)
+  const addressRequired = isPickupSelected; // або: isPickupSelected || isMobileSelected
+  const addressValid = !addressRequired || addr.trim().length >= 5;
+
+  const canContinue = !!loc && !mobileNotAllowed && addressValid;
 
   const handleSelect = (key) => {
     setBusinessServiceLocation?.(key);
+
+    // якщо людина пішла з pickup/mobile — можна очищати адресу (по бажанню)
+    if (key !== "pickup" /* && key !== "mobile" */) {
+      setPickupAddress?.("");
+    }
   };
+
+  const inputClass =
+    "w-full h-[52px] rounded-[16px] bg-[#F4F4F5] px-4 text-[15px] outline-none";
 
   return (
     <div className="w-full max-w-full min-w-0 text-left">
@@ -55,6 +80,7 @@ export default function StepDetailingBusinessServiceLocation({
         {/* HEADER */}
         <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={onBack}
             className="w-9 h-9 rounded-full bg-[#F2F2F2] inline-flex items-center justify-center"
             aria-label="Back"
@@ -87,7 +113,8 @@ export default function StepDetailingBusinessServiceLocation({
 
           <div className="space-y-2">
             {OPTIONS.map((opt) => {
-              const active = businessServiceLocation === opt.key;
+              const active = loc === opt.key;
+
               return (
                 <button
                   key={opt.key}
@@ -113,7 +140,6 @@ export default function StepDetailingBusinessServiceLocation({
                     </span>
                   </div>
 
-                  {/* чекбокс-іконка справа */}
                   <span
                     className={`w-6 h-6 rounded-full border flex items-center justify-center text-[14px]
                       ${
@@ -130,6 +156,29 @@ export default function StepDetailingBusinessServiceLocation({
             })}
           </div>
 
+          {/* ✅ Показуємо інпут адреси тільки коли вибрали pickup */}
+          {isPickupSelected && (
+            <div className="pt-2 space-y-2">
+              <div className="text-sm text-[#6B7280] font-medium">
+                Enter your address *
+              </div>
+
+              <AddressAutocomplete
+                value={addr}
+                onChange={(v) => setPickupAddress?.(v)}
+                onSelectAddress={(formatted) => setPickupAddress?.(formatted)}
+                inputClass={inputClass}
+                placeholder="Enter your address"
+              />
+
+              {!addressValid && (
+                <p className="text-xs text-red-500">
+                  Please enter your address to continue
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Warning для Mobile service */}
           {isMobileSelected && (
             <div className="mt-2 flex items-start gap-2 rounded-[16px] bg-[#FEF3C7] px-3 py-2 text-[12px] sm:text-[13px] text-[#92400E]">
@@ -137,7 +186,11 @@ export default function StepDetailingBusinessServiceLocation({
               <span>
                 We only offer mobile service for 3 or more vehicles.
                 {vehiclesNum > 0 && vehiclesNum < 3 && (
-                  <> Please adjust the number of vehicles or choose a different location option.</>
+                  <>
+                    {" "}
+                    Please adjust the number of vehicles or choose a different
+                    location option.
+                  </>
                 )}
               </span>
             </div>
@@ -147,7 +200,10 @@ export default function StepDetailingBusinessServiceLocation({
         {/* CONTINUE */}
         <button
           type="button"
-          onClick={onNext}
+          onClick={() => {
+            if (!canContinue) return;
+            onNext?.();
+          }}
           disabled={!canContinue}
           className={`
             w-full h-[52px] sm:h-[56px] rounded-[88px] font-semibold text-black shadow

@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FiChevronLeft } from "react-icons/fi";
-import ProgressBar from "../../ProgressBar"; // перевір шлях
+import ProgressBar from "../../ProgressBar";
+import { AddressAutocomplete } from "./AddressAutocomplete";
 
 const GOLD_GRADIENT =
   "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
@@ -13,6 +14,47 @@ const HEAR_OPTIONS = [
   "Returning Client",
   "Other",
 ];
+
+// --- Google Places loader (один раз на сторінку) ---
+let __gmapsPromise = null;
+function loadGooglePlaces() {
+  const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+  // якщо вже є google.maps.places — готово
+  if (window.google?.maps?.places) return Promise.resolve(true);
+
+  // якщо вже грузимо — повертаємо той самий проміс
+  if (__gmapsPromise) return __gmapsPromise;
+
+  // якщо нема ключа — просто не включаємо автокомпліт (щоб не падало)
+  if (!key) return Promise.resolve(false);
+
+  __gmapsPromise = new Promise((resolve) => {
+    // якщо скрипт вже є в DOM
+    const existing = document.querySelector('script[data-gmaps="places"]');
+    if (existing) {
+      existing.addEventListener("load", () => resolve(true));
+      existing.addEventListener("error", () => resolve(false));
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.setAttribute("data-gmaps", "places");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(
+      key
+    )}&libraries=places`;
+    script.async = true;
+    script.defer = true;
+
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+
+    document.head.appendChild(script);
+  });
+
+  return __gmapsPromise;
+}
+
 
 export default function StepDetailingBusinessContactInfo({
   visible,
@@ -41,9 +83,7 @@ export default function StepDetailingBusinessContactInfo({
   progressStepIndex = 2,
   totalSteps = 11,
 }) {
-  if (!visible) return null;
-
-  // ✅ SAFE values (щоб не падало на trim)
+  // ✅ SAFE values
   const first = firstName ?? "";
   const last = lastName ?? "";
   const comp = companyName ?? "";
@@ -56,7 +96,6 @@ export default function StepDetailingBusinessContactInfo({
   const isEmail = (v) => /\S+@\S+\.\S+/.test(v || "");
   const isPhone = (v) => (v || "").replace(/[^\d]/g, "").length >= 7;
 
-  // ✅ boolean, не string
   const canContinue = Boolean(
     first.trim() &&
       last.trim() &&
@@ -76,6 +115,54 @@ export default function StepDetailingBusinessContactInfo({
   const inputClass =
     "w-full h-[52px] rounded-[16px] bg-[#F4F4F5] px-4 text-[15px] outline-none";
 
+  // ✅ Google Places Autocomplete
+  const addressInputRef = useRef(null);
+  const autocompleteRef = useRef(null);
+  const [placesReady, setPlacesReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    // підключаємо тільки коли крок видимий
+    if (!visible) return;
+
+    loadGooglePlaces().then((ok) => {
+      if (cancelled) return;
+      setPlacesReady(!!ok);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible) return;
+    if (!placesReady) return;
+    if (!addressInputRef.current) return;
+    if (!window.google?.maps?.places) return;
+
+    // не створюємо двічі
+    if (autocompleteRef.current) return;
+
+    const ac = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+      fields: ["formatted_address", "address_components", "geometry", "name"],
+      // опційно можна обмежити країною:
+      // componentRestrictions: { country: "us" },
+    });
+
+    ac.addListener("place_changed", () => {
+      const place = ac.getPlace?.();
+      const formatted = place?.formatted_address || place?.name || "";
+      if (formatted) setCompanyAddress?.(formatted);
+    });
+
+    autocompleteRef.current = ac;
+  }, [visible, placesReady, setCompanyAddress]);
+
+  // ✅ return null тільки після хуків
+  if (!visible) return null;
+
   return (
     <div className="w-full max-w-full min-w-0 text-left">
       <div className="bg-white/90 backdrop-blur rounded-[24px] p-5 sm:p-6 lg:p-8 shadow space-y-6">
@@ -91,8 +178,8 @@ export default function StepDetailingBusinessContactInfo({
           </button>
 
           <div>
-            <h2 className="text-[20px] sm:text-[22px] lg:text-[24px] font-extrabold text-[#18181B]">
-              Contact information
+            <h2 className="text-[20px] sm:text-[22px] lg:text-[24px] font-extrabold text-[#18181B] uppercase">
+              CONTACT INFORMATION
             </h2>
             <p className="text-[11px] sm:text-[12px] text-[#9CA3AF]">
               Step {progressStepIndex} of {totalSteps}
@@ -149,17 +236,25 @@ export default function StepDetailingBusinessContactInfo({
             />
           </div>
 
-          {/* Company Address */}
+          {/* Company Address (Google Places) */}
           <div>
             <div className="text-sm text-[#6B7280] font-medium">
               Company Address *
             </div>
-            <input
-              value={addr}
-              onChange={(e) => setCompanyAddress?.(e.target.value)}
-              className={inputClass}
-              placeholder="Enter company address"
-            />
+  <AddressAutocomplete
+    value={addr}
+    onChange={(v) => setCompanyAddress?.(v)}
+    onSelectAddress={(formatted) => setCompanyAddress?.(formatted)}
+    inputClass={inputClass}
+    placeholder="Start typing address…"
+  />
+
+            {/* міні-підказка якщо ключа нема/скрипт не завантажився */}
+            {!placesReady && import.meta.env.VITE_GOOGLE_MAPS_API_KEY && (
+              <p className="text-[11px] text-[#9CA3AF] mt-1">
+                Loading address suggestions…
+              </p>
+            )}
           </div>
 
           {/* Phone + Email */}

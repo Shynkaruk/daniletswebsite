@@ -15,6 +15,7 @@ import AdminRequests from "./Accounts/AdminRequests.jsx";
 import Account from "./Accounts/Account.jsx";
 import ScrollToTop from "./ScrollToTop.jsx";
 import BookingSuccess from "./Components/payments/BookingSuccess.jsx";
+import Layout from './Components/Layout.jsx'
 
 const App = () => {
   const [isMobile, setIsMobile] = useState(
@@ -38,6 +39,7 @@ const App = () => {
     <Router>
       <ScrollToTop />
       <Routes>
+        <Route element={<Layout />}></Route>
         <Route path="/" element={isMobile ? <MainMobile /> : <Main />} />
         <Route path="/home" element={isMobile ? <MainMobile /> : <Main />} />
         <Route path="/about-us" element={<AboutUs />} />

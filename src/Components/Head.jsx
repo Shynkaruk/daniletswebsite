@@ -23,42 +23,44 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
 
   return (
     <div className="block md:hidden w-full">
-      {/* Бар: в межах вікна, з безпечними полями */}
-      <div className="relative left-1/2 -translate-x-1/2 w-[min(1800px,calc(100vw-4px))] px-4">
-        <div className="flex items-center justify-between w-full mx-auto px-2 py-2 rounded-full bg-white shadow-md">
-          {/* Burger */}
-          <button
-            onClick={toggleMenu}
-            className="flex items-center justify-center rounded-full border border-[#A1A1A5] w-[32px] h-[32px]"
-            aria-label="Open menu"
-          >
-            <FaBars className="text-[#A1A1A5] text-sm" />
-          </button>
+      {/* Бар: стабільне центрування через mx-auto (без left-1/2, щоб не “їздило”) */}
+      <div className="w-full px-2">
+        <div className="w-[min(1800px,calc(100vw-4px))] mx-auto px-4">
+          <div className="flex items-center justify-between w-full mx-auto px-2 py-2 rounded-full bg-white shadow-md">
+            {/* Burger */}
+            <button
+              onClick={toggleMenu}
+              className="flex items-center justify-center rounded-full border border-[#A1A1A5] w-[32px] h-[32px]"
+              aria-label="Open menu"
+            >
+              <FaBars className="text-[#A1A1A5] text-sm" />
+            </button>
 
-          {/* Logo */}
-          <Link to="/" className="flex justify-center flex-1 px-3">
-            <img
-              src={logo}
-              alt="Logo"
-              className="h-[30px] object-contain pr-0 scale-110"
-            />
-          </Link>
-
-          {/* CTA + Account */}
-          <div className="flex items-center gap-2">
-            <Link to="/book-online">
-              <button
-                className="text-1xl font-bold px-5 py-[10px] rounded-full"
-                style={{
-                  background:
-                    "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)",
-                  color: "rgba(62, 38, 12, 1)",
-                }}
-              >
-                Get Quote
-              </button>
+            {/* Logo */}
+            <Link to="/" className="flex justify-center flex-1 px-3">
+              <img
+                src={logo}
+                alt="Logo"
+                className="h-[30px] object-contain pr-0 scale-110"
+              />
             </Link>
-            <AccountMenu variant="icon" onShowAuth={onOpenAuth} />
+
+            {/* CTA + Account */}
+            <div className="flex items-center gap-2">
+              <Link to="/book-online">
+                <button
+                  className="text-1xl font-bold px-5 py-[10px] rounded-full"
+                  style={{
+                    background:
+                      "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)",
+                    color: "rgba(62, 38, 12, 1)",
+                  }}
+                >
+                  Get Quote
+                </button>
+              </Link>
+              <AccountMenu variant="icon" onShowAuth={onOpenAuth} />
+            </div>
           </div>
         </div>
       </div>
@@ -75,7 +77,7 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
               isMenuOpen ? "translate-x-0" : "-translate-x-full"
             }`}
           >
-            <div to="/" className="relative p-4 h-full flex flex-col">
+            <div className="relative p-4 h-full flex flex-col">
               {/* Logo */}
               <Link to="/">
                 <img
@@ -95,7 +97,6 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
               </button>
 
               {/* Nav */}
-              {/* Nav */}
               <nav className="flex flex-col mt-12 gap-3">
                 <Link
                   to="/"
@@ -108,10 +109,10 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                 {/* ===== Services with dropdown ===== */}
                 <details className="group">
                   <summary
-                    className="text-[#A1A1A5] border border-[#A1A1A5] rounded-[44px] 
-  text-[14px] font-bold py-2 px-4 cursor-pointer list-none
-  flex items-center justify-center relative
-  hover:bg-[rgba(245,218,147,0.8)] hover:text-black transition"
+                    className="text-[#A1A1A5] border border-[#A1A1A5] rounded-[44px]
+                      text-[14px] font-bold py-2 px-4 cursor-pointer list-none
+                      flex items-center justify-center relative
+                      hover:bg-[rgba(245,218,147,0.8)] hover:text-black transition"
                   >
                     <span>Services</span>
                     <span className="transition-transform group-open:rotate-180">
@@ -182,10 +183,10 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                 <Link to="/book-online" onClick={toggleMenu}>
                   <button
                     className="
-    text-1xl font-bold px-5 py-[10px] rounded-full transition-all duration-200
-    hover:scale-[1.05]
-    hover:brightness-90
-  "
+                      text-1xl font-bold px-5 py-[10px] rounded-full transition-all duration-200
+                      hover:scale-[1.05]
+                      hover:brightness-90
+                    "
                     style={{
                       background:
                         "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)",
@@ -232,147 +233,149 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
   }, [open]);
 
   return (
-    <div className="hidden md:block">
-      {/* Центрований контейнер з обмеженою шириною, щоб не вилізти за фон */}
-      <div className="relative left-1/2 -translate-x-1/2 w-[min(1800px,calc(100vw-32px))]">
-        <div className="bg-white h-[72px] xl:h-20 rounded-[48px] overflow-visible flex items-center justify-between px-4 sm:px-6 shadow-md">
-          {/* Лого */}
-          <Link to="/" className="flex items-center shrink-0">
-            <img
-              src={logo}
-              alt="Logo"
-              className="h-8 xl:h-10 w-auto object-contain min-w-[120px] xl:min-w-[150px]"
-            />
-          </Link>
+    <div className="hidden md:block w-full">
+      {/* Стабільне центрування через mx-auto (без left-1/2) */}
+      <div className="w-full px-4">
+        <div className="w-[min(1800px,calc(100vw-32px))] mx-auto">
+          <div className="bg-white h-[72px] xl:h-20 rounded-[48px] overflow-visible flex items-center justify-between px-4 sm:px-6 shadow-md">
+            {/* Лого */}
+            <Link to="/" className="flex items-center shrink-0">
+              <img
+                src={logo}
+                alt="Logo"
+                className="h-8 xl:h-10 w-auto object-contain min-w-[120px] xl:min-w-[150px]"
+              />
+            </Link>
 
-          {/* Навігація по центру */}
-          <nav className="flex-1 flex justify-center items-center">
-            <div className="flex items-center gap-2 xl:gap-3">
-              <Link
-                to="/"
-                className="bg-white text-[#A1A1A5] border border-[#A1A1A5]
+            {/* Навігація по центру */}
+            <nav className="flex-1 flex justify-center items-center">
+              <div className="flex items-center gap-2 xl:gap-3">
+                <Link
+                  to="/"
+                  className="bg-white text-[#A1A1A5] border border-[#A1A1A5]
                            rounded-[44px] font-bold whitespace-nowrap
                            px-4 py-2 text-sm xl:px-6 xl:py-3 xl:text-base
                            hover:bg-[rgba(245,218,147,0.8)] hover:text-black transition"
-              >
-                Home
-              </Link>
+                >
+                  Home
+                </Link>
 
-              <div className="relative">
-                <button
-                  ref={btnRef}
-                  type="button"
-                  onClick={() => setOpen((v) => !v)}
-                  aria-haspopup="menu"
-                  aria-expanded={open}
-                  className="flex items-center gap-2 bg-white text-[#A1A1A5] border border-[#A1A1A5]
+                <div className="relative">
+                  <button
+                    ref={btnRef}
+                    type="button"
+                    onClick={() => setOpen((v) => !v)}
+                    aria-haspopup="menu"
+                    aria-expanded={open}
+                    className="flex items-center gap-2 bg-white text-[#A1A1A5] border border-[#A1A1A5]
                              rounded-[44px] font-bold whitespace-nowrap
                              px-4 py-2 text-sm xl:px-6 xl:py-3 xl:text-base
                              hover:bg-[rgba(245,218,147,0.8)] hover:text-black transition"
-                >
-                  Services{" "}
-                  <span
-                    className={`transition-transform ${
-                      open ? "rotate-180" : ""
-                    }`}
                   >
-                    ▾
-                  </span>
+                    Services{" "}
+                    <span
+                      className={`transition-transform ${
+                        open ? "rotate-180" : ""
+                      }`}
+                    >
+                      ▾
+                    </span>
+                  </button>
+
+                  {open && (
+                    <div
+                      ref={menuRef}
+                      role="menu"
+                      className="absolute left-1/2 -translate-x-1/2 mt-2 w-56 z-[300] rounded-2xl border border-[#E6E6EA] bg-white shadow-lg overflow-hidden"
+                    >
+                      {[
+                        { label: "Detailing", to: "/services/detailing" },
+                        { label: "Cleaning", to: "/services/cleaning" },
+                      ].map(({ label, to }, idx) => (
+                        <Link
+                          key={label}
+                          to={to}
+                          role="menuitem"
+                          onClick={() => setOpen(false)}
+                          className={`block w-full text-left px-4 py-3 text-sm font-semibold text-black hover:bg-[rgba(245,218,147,0.25)] ${
+                            idx !== 0 ? "border-t border-[#F2F2F5]" : ""
+                          }`}
+                        >
+                          {label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={onOpenContact}
+                  className="bg-white text-[#A1A1A5] border border-[#A1A1A5]
+                           rounded-[44px] font-bold whitespace-nowrap
+                           px-4 py-2 text-sm xl:px-6 xl:py-3 xl:text-base
+                           hover:bg-[rgba(245,218,147,0.8)] hover:text-black transition"
+                >
+                  Contact
                 </button>
 
-                {open && (
-                  <div
-                    ref={menuRef}
-                    role="menu"
-                    className="absolute left-1/2 -translate-x-1/2 mt-2 w-56 z-[300] rounded-2xl border border-[#E6E6EA] bg-white shadow-lg overflow-hidden"
+                <Link
+                  to="/about-us"
+                  className="bg-white text-[#A1A1A5] border border-[#A1A1A5]
+                           rounded-[44px] font-bold whitespace-nowrap
+                           px-4 py-2 text-sm xl:px-6 xl:py-3 xl:text-base
+                           hover:bg-[rgba(245,218,147,0.8)] hover:text-black transition"
+                >
+                  About Us
+                </Link>
+              </div>
+            </nav>
+
+            {/* Правий блок */}
+            <div className="flex items-center gap-2 xl:gap-3 shrink-0">
+              {/* На md–lg — кнопка “…”, на xl — всі соц.іконки */}
+              <button
+                type="button"
+                onClick={onOpenSocial}
+                className="md:flex xl:hidden w-10 h-10 rounded-full bg-gray-100 items-center justify-center text-gray-600 hover:text-black transition"
+                aria-label="Open social modal"
+              >
+                <FaEllipsisH />
+              </button>
+
+              <div className="hidden xl:flex items-center gap-2">
+                {[FaGoogle, FaTiktok, FaYoutube, FaFacebookF].map((Icon, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={onOpenSocial}
+                    className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:text-black transition"
+                    aria-label="Open social modal"
                   >
-                    {[
-                      { label: "Detailing", to: "/services/detailing" },
-                      { label: "Cleaning", to: "/services/cleaning" },
-                    ].map(({ label, to }, idx) => (
-                      <Link
-                        key={label}
-                        to={to}
-                        role="menuitem"
-                        onClick={() => setOpen(false)}
-                        className={`block w-full text-left px-4 py-3 text-sm font-semibold text-black hover:bg-[rgba(245,218,147,0.25)] ${
-                          idx !== 0 ? "border-t border-[#F2F2F5]" : ""
-                        }`}
-                      >
-                        {label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
+                    <Icon />
+                  </button>
+                ))}
               </div>
 
-              <button
-                onClick={onOpenContact}
-                className="bg-white text-[#A1A1A5] border border-[#A1A1A5]
-                           rounded-[44px] font-bold whitespace-nowrap
-                           px-4 py-2 text-sm xl:px-6 xl:py-3 xl:text-base
-                           hover:bg-[rgba(245,218,147,0.8)] hover:text-black transition"
-              >
-                Contact
-              </button>
-
-              <Link
-                to="/about-us"
-                className="bg-white text-[#A1A1A5] border border-[#A1A1A5]
-                           rounded-[44px] font-bold whitespace-nowrap
-                           px-4 py-2 text-sm xl:px-6 xl:py-3 xl:text-base
-                           hover:bg-[rgba(245,218,147,0.8)] hover:text-black transition"
-              >
-                About Us
-              </Link>
-            </div>
-          </nav>
-
-          {/* Правий блок */}
-          <div className="flex items-center gap-2 xl:gap-3 shrink-0">
-            {/* На md–lg — кнопка “…”, на xl — всі соц.іконки */}
-            <button
-              type="button"
-              onClick={onOpenSocial}
-              className="md:flex xl:hidden w-10 h-10 rounded-full bg-gray-100 items-center justify-center text-gray-600 hover:text-black transition"
-              aria-label="Open social modal"
-            >
-              <FaEllipsisH />
-            </button>
-
-            <div className="hidden xl:flex items-center gap-2">
-              {[FaGoogle, FaTiktok, FaYoutube, FaFacebookF].map((Icon, idx) => (
+              <Link to="/book-online" className="shrink-0">
                 <button
-                  key={idx}
-                  type="button"
-                  onClick={onOpenSocial}
-                  className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:text-black transition"
-                  aria-label="Open social modal"
+                  className="
+                    text-black font-bold rounded-full pointer-events-auto
+                    px-4 py-3 text-sm md:px-5 md:py-3 md:text-sm xl:px-6 xl:py-4 xl:text-base
+                    transition-all duration-200
+                    hover:scale-[1.05]
+                    hover:brightness-90
+                  "
+                  style={{
+                    background:
+                      "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)",
+                  }}
                 >
-                  <Icon />
+                  Get Quote
                 </button>
-              ))}
+              </Link>
+
+              <AccountMenu variant="icon" onShowAuth={onOpenAuth} />
             </div>
-
-            <Link to="/book-online" className="shrink-0">
-              <button
-                className="
-    text-black font-bold rounded-full pointer-events-auto
-    px-4 py-3 text-sm md:px-5 md:py-3 md:text-sm xl:px-6 xl:py-4 xl:text-base
-    transition-all duration-200
-    hover:scale-[1.05]
-    hover:brightness-90
-  "
-                style={{
-                  background:
-                    "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)",
-                }}
-              >
-                Get Quote
-              </button>
-            </Link>
-
-            <AccountMenu variant="icon" onShowAuth={onOpenAuth} />
           </div>
         </div>
       </div>
@@ -393,25 +396,22 @@ const Head = () => {
   };
 
   return (
-    <header
-      className="
-        fixed top-4 left-0 w-full 
-        z-[10000] font-sans
-      "
-    >
-      {/* один фіксований wrapper; усередині — адаптивні хедери */}
-      <MobileHead
-        onOpenContact={() => setIsContactOpen(true)}
-        onOpenAuth={showAuth}
-        onOpenSocial={() => setIsSocialOpen(true)}
-      />
-      <DesktopHead
-        onOpenContact={() => setIsContactOpen(true)}
-        onOpenAuth={showAuth}
-        onOpenSocial={() => setIsSocialOpen(true)}
-      />
+    <header className="fixed top-0 left-0 right-0 z-[200000] font-sans pointer-events-none">
+      {/* top-4 робимо через padding, щоб не було “підстрибування” fixed */}
+      <div className="pt-4 pointer-events-auto">
+        <MobileHead
+          onOpenContact={() => setIsContactOpen(true)}
+          onOpenAuth={showAuth}
+          onOpenSocial={() => setIsSocialOpen(true)}
+        />
+        <DesktopHead
+          onOpenContact={() => setIsContactOpen(true)}
+          onOpenAuth={showAuth}
+          onOpenSocial={() => setIsSocialOpen(true)}
+        />
+      </div>
 
-      {/* Модалки */}
+      {/* Модалки (вони самі fixed, тому працюють нормально) */}
       <ContactForm
         open={isContactOpen}
         onClose={() => setIsContactOpen(false)}
@@ -431,5 +431,3 @@ const Head = () => {
 };
 
 export default Head;
-
-

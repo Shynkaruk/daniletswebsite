@@ -56,7 +56,7 @@ const StepDetailingGetQuoteType = ({
             </button>
           )}
           <h2 className="text-[20px] sm:text-[22px] font-extrabold text-[#18181B]">
-            Get a detailing quote
+            Get Quote
           </h2>
         </div>
 

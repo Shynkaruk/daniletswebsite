@@ -67,7 +67,7 @@ const StepDetailingVehicleCondition = ({
           </button>
 
           <div>
-            <h2 className="text-[18px] sm:text-[20px] font-extrabold">
+            <h2 className="text-[20px] sm:text-[22px] lg:text-[24px] font-extrabold text-[#18181B]">
               Vehicle condition
             </h2>
             <p className="text-[12px] text-[#9CA3AF]">Step 4 of {totalSteps}</p>
@@ -139,8 +139,7 @@ const StepDetailingVehicleCondition = ({
         {/* CONDITION RATING */}
         <section className="space-y-3">
           <p className="text-sm text-[#6B7280] font-medium">
-            How would you rate your vehicle's current condition?{" "}
-            <span className="text-red-500">*</span>
+            How would you rate your vehicle's current condition?
           </p>
 
           <div className="flex flex-col sm:grid sm:grid-cols-2 gap-2">

@@ -46,7 +46,7 @@ const StepDetailingVehicleHistory = ({
 
           {/* Тайтл в стилі "Select Service", але під контент секції */}
           <div className="flex flex-col">
-            <h2 className="text-[18px] sm:text-[20px] font-extrabold text-[#18181B]">
+            <h2 className="text-[20px] sm:text-[22px] lg:text-[24px] font-extrabold text-[#18181B]">
               Vehicle history
             </h2>
             <span className="text-[12px] text-[#9CA3AF]">

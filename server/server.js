@@ -1806,50 +1806,37 @@ app.post("/api/requests", auth, async (req, res) => {
     notes_customer,
   } = req.body || {};
 
-  if (!service_date) {
-    return res.status(400).json({ error: "service_date required" });
+  if (!service_type) {
+    return res.status(400).json({ error: "service_type required" });
   }
 
-  try {
-    const doc = await RequestModel.create({
-      user_id: req.user.uid,
-      vehicle_id: vehicle_id || null,
-      status,
-      location_type,
-      service_date: service_date || null,
-      service_type: service_type || null,
-      time_window: time_window || null,
-      service_address: service_address || null,
-      pickup_address: pickup_address || null,
-      dropoff_address: dropoff_address || null,
-      items_json: items_json || "[]",
-      currency,
-      subtotal,
-      tax,
-      total,
-      notes_customer: notes_customer || null,
-      created_at: new Date(),
-      updated_at: new Date(),
-    });
+  const doc = await RequestModel.create({
+    user_id: req.user.uid,
+    vehicle_id: vehicle_id || null,
+    service_type, // ✅ збережеться (після фіксу схеми)
+    status,
+    location_type,
+    service_date: service_date || null,
+    time_window: time_window || null,
+    service_address: service_address || null,
+    pickup_address: pickup_address || null,
+    dropoff_address: dropoff_address || null,
+    items_json: items_json || "[]",
+    currency,
+    subtotal,
+    tax,
+    total,
+    notes_customer: notes_customer || null,
+    created_at: new Date(),
+    updated_at: new Date(),
+  });
 
-    try {
-      const userDoc = await User.findById(req.user.uid).lean();
-      if (userDoc) {
-        await createBitrixDealFromRequest(doc, userDoc);
-      }
-    } catch (e) {
-      console.error("Failed to send booking to Bitrix:", e);
-    }
-
-    const row = doc.toObject();
-    row.id = row._id.toString();
-    delete row._id;
-    res.json(row);
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "failed to create request" });
-  }
+  const row = doc.toObject();
+  row.id = row._id.toString();
+  delete row._id;
+  res.json(row);
 });
+
 
 app.put("/api/requests/:id", auth, async (req, res) => {
   const id = req.params.id;
@@ -1915,43 +1902,22 @@ app.delete("/api/requests/:id", auth, async (req, res) => {
 // ====================== ADMIN: REQUESTS ======================
 
 app.get("/api/admin/requests", auth, requireAdmin, async (req, res) => {
-  const { status } = req.query;
+  const { status, service_type, service_type_prefix } = req.query;
+
   const filter = {};
   if (status) filter.status = status;
-
-  try {
-    const rows = await RequestModel.find(filter)
-      .sort({ created_at: -1 })
-      .populate("user_id")
-      .populate("vehicle_id")
-      .lean();
-
-    const normalized = rows.map((r) => {
-      const user = r.user_id || {};
-      const vehicle = r.vehicle_id || {};
-      const user_full_name =
-        `${user.first_name || ""} ${user.last_name || ""}`.trim() ||
-        "Unknown name";
-
-      return {
-        ...r,
-        id: r._id.toString(),
-        _id: undefined,
-        user_email: user.email || null,
-        user_phone: user.phone || null,
-        user_full_name,
-        vehicle_make: vehicle.make || null,
-        vehicle_model: vehicle.model || null,
-        vehicle_year: vehicle.year || null,
-      };
-    });
-
-    res.json(normalized);
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "failed to load admin requests" });
+  if (service_type) filter.service_type = service_type;
+  if (service_type_prefix) {
+    filter.service_type = { $regex: `^${service_type_prefix}` };
   }
+
+  const rows = await RequestModel.find(filter)
+    .sort({ created_at: -1 })
+    .lean();
+
+  res.json(rows);
 });
+
 
 app.get("/api/admin/requests/:id", auth, requireAdmin, async (req, res) => {
   const id = req.params.id;

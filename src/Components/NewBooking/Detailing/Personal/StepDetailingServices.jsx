@@ -65,7 +65,7 @@ const StepDetailingServices = ({
           </button>
 
           <div>
-            <h2 className="text-[18px] sm:text-[20px] font-extrabold">
+            <h2 className="text-[20px] sm:text-[22px] lg:text-[24px] font-extrabold text-[#18181B]">
               Select services
             </h2>
             <p className="text-[12px] text-[#9CA3AF]">

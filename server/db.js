@@ -72,23 +72,32 @@ const vehicleSchema = new mongoose.Schema({
 const requestSchema = new mongoose.Schema({
   user_id:         { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   vehicle_id:      { type: mongoose.Schema.Types.ObjectId, ref: 'Vehicle' },
-  status:          { type: String, default: 'new' },       // new|confirmed|...
-  location_type:   { type: String, default: 'shop' },      // shop|mobile|pickup
-  service_date:    String,                                 // 'YYYY-MM-DD'
-  time_window:     String,                                 // '09:00-11:00'
+
+  // ✅ 4 типи заявок
+  service_type:    { type: String, required: true },
+
+  status:          { type: String, default: 'new' },
+  location_type:   { type: String, default: 'shop' },
+  service_date:    String,
+  time_window:     String,
   service_address: String,
   pickup_address:  String,
   dropoff_address: String,
-  items_json:      { type: String, default: '[]' },        // можна потім зробити Array
+
+  // краще дефолт "{}" бо ти реально зберігаєш об'єкт
+  items_json:      { type: String, default: '{}' },
+
   currency:        { type: String, default: 'USD' },
   subtotal:        { type: Number, default: 0 },
   tax:             { type: Number, default: 0 },
   total:           { type: Number, default: 0 },
   notes_customer:  String,
   notes_admin:     String,
+
   created_at:      { type: Date, default: Date.now },
   updated_at:      { type: Date, default: Date.now },
 });
+
 
 // ----- MODELS -----
 

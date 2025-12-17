@@ -1,11 +1,85 @@
-// src/Components/Booking/Detailing/Personal/StepReview.jsx
-
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { FiChevronLeft } from "react-icons/fi";
-import ProgressBar from "../../ProgressBar"; // перевір шлях
+import ProgressBar from "../../ProgressBar";
 
 const GOLD_GRADIENT =
   "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
+
+function Pill({ value }) {
+  return (
+    <div className="w-full rounded-[22px] bg-[#F4F4F5] px-6 py-4 text-[16px] sm:text-[17px] text-[#111827]">
+      {value || "—"}
+    </div>
+  );
+}
+
+function SectionCard({
+  title,
+  open,
+  onToggle,
+  children,
+
+  // NEW
+  actions = [],
+
+  // OLD (щоб не ламати інші секції)
+  buttonLabel,
+  onButton,
+}) {
+  const finalActions =
+    actions?.length
+      ? actions
+      : buttonLabel && typeof onButton === "function"
+      ? [{ label: buttonLabel, onClick: onButton }]
+      : [];
+
+  return (
+    <div className="bg-white/70 rounded-[22px] p-4 sm:p-5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="text-[15px] sm:text-[16px] font-semibold text-[#111827]">
+          {title}
+        </div>
+
+        <button
+          type="button"
+          onClick={onToggle}
+          className="w-10 h-10 rounded-full bg-[#F4F4F5] inline-flex items-center justify-center"
+          aria-label="Toggle section"
+        >
+          <span
+            className={`text-[18px] leading-none transition-transform ${
+              open ? "rotate-180" : ""
+            }`}
+          >
+            ˄
+          </span>
+        </button>
+      </div>
+
+      {open && (
+        <div className="mt-4 space-y-4">
+          {children}
+
+          {finalActions.length > 0 && (
+            <div className="space-y-3">
+              {finalActions.map((a, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={a.onClick}
+                  className="w-full h-[56px] rounded-[88px] text-[15px] font-semibold text-[#18181B] shadow"
+                  style={{ background: GOLD_GRADIENT }}
+                >
+                  {a.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const StepReview = ({
   visible,
@@ -13,26 +87,34 @@ const StepReview = ({
   onSubmit,
   submitting = false,
 
-  // vehicle
+  // щоб працювали Change...
+  onEditSection,
+
+  // vehicle (primary)
   year,
   make,
   model,
   color,
   seatMaterial,
 
-  // history / condition
+  // condition
   lastDetailed,
   conditionFlags = [],
   conditionRating,
+  otherConditionText,
 
   // services
   services = [],
+  otherServiceText,
+
+  // multiple vehicles
   multipleVehicles,
   vehicles = [],
 
   // location / timeline
   serviceLocation,
   completionDate,
+  pickupAddress,
 
   // contact
   firstName,
@@ -48,41 +130,64 @@ const StepReview = ({
 }) => {
   if (!visible) return null;
 
-  const vehicleTitle = [year, make, model].filter(Boolean).join(" ");
+  const [openMap, setOpenMap] = useState({
+    contact: true,
+    vehicle: true,
+    condition: true,
+    services: true,
+    location: true,
+  });
 
-  const seatText = seatMaterial || "—";
-  const colorText = color || "—";
+  const toggle = (k) => setOpenMap((p) => ({ ...p, [k]: !p[k] }));
 
-  const historyLines = [
-    lastDetailed ? `Last detailed: ${lastDetailed}` : null,
-    conditionFlags?.length
-      ? `Specific issues / contamination: ${conditionFlags.join(", ")}`
-      : null,
-    conditionRating ? `Overall condition: ${conditionRating}` : null,
-  ].filter(Boolean);
-
-  const servicesText = services.length
-    ? services.join(", ")
-    : "No services selected";
-
-  let heardText = "—";
-
-  if (Array.isArray(heardAbout)) {
-    heardText = heardAbout.length ? heardAbout.join(", ") : "—";
-  } else if (typeof heardAbout === "string") {
-    heardText = heardAbout.trim() ? heardAbout : "—";
-  }
+  const heardText = useMemo(() => {
+    if (Array.isArray(heardAbout)) {
+      return heardAbout.length ? heardAbout.join(", ") : "—";
+    }
+    if (typeof heardAbout === "string") {
+      return heardAbout.trim() ? heardAbout.trim() : "—";
+    }
+    return "—";
+  }, [heardAbout]);
 
   const locationMap = {
     drop_off: "Customer drop-off at our shop",
     pickup: "Danilets pick-up & drop-off",
+    mobile: "Mobile service",
   };
+  const locationText = locationMap[serviceLocation] || "—";
 
-  const locationText = locationMap[serviceLocation] || "Not specified";
+  const primaryColor = (color ?? "").trim() || "—";
+  const primarySeat = (seatMaterial ?? "").trim() || "—";
+
+  const servicesText =
+    Array.isArray(services) && services.length ? services.join(", ") : "—";
+
+  const servicesOther =
+    Array.isArray(services) &&
+    services.includes("Other") &&
+    (otherServiceText || "").trim()
+      ? (otherServiceText || "").trim()
+      : "";
+
+  const flagsArr = Array.isArray(conditionFlags) ? conditionFlags : [];
+  const flagsText = flagsArr.length
+    ? flagsArr.includes("Other") && (otherConditionText || "").trim()
+      ? flagsArr
+          .filter((f) => f !== "Other")
+          .concat(`Other: ${(otherConditionText || "").trim()}`)
+          .join(", ")
+      : flagsArr.join(", ")
+    : "—";
+
+  const vehiclesArr = Array.isArray(vehicles) ? vehicles : [];
+
+  const pickupAddr = (pickupAddress || "").trim();
+  const showPickupAddr = serviceLocation === "pickup" && !!pickupAddr;
 
   return (
     <div className="w-full max-w-full min-w-0 text-left">
-      <div className="bg-white/90 backdrop-blur rounded-[24px] p-4 sm:p-6 lg:p-8 shadow space-y-6">
+      <div className="bg-white/90 backdrop-blur rounded-[24px] p-4 sm:p-6 lg:p-8 shadow space-y-5">
         {/* HEADER */}
         <div className="flex items-center gap-3">
           {onBack && (
@@ -111,121 +216,126 @@ const StepReview = ({
           <ProgressBar activeCount={progressStepIndex} total={totalSteps} />
         )}
 
-        <p className="text-sm sm:text-[15px] text-[#4B5563]">
-          Please review your request before submitting. We&apos;ll contact you
-          to confirm availability, pricing and any additional details.
-        </p>
-
-        {/* VEHICLE INFO */}
-        <section className="space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm sm:text-[15px] font-semibold text-[#6B7280]">
-              Vehicle information
-            </h3>
+        {/* ===== PERSONAL INFO ===== */}
+        <SectionCard
+          title="Your personal information"
+          open={openMap.contact}
+          onToggle={() => toggle("contact")}
+          buttonLabel="Change Personal Information"
+          onButton={() => onEditSection?.("contact")}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Pill value={firstName || "—"} />
+            <Pill value={lastName || "—"} />
           </div>
 
-          <div className="space-y-2">
-            <div className="w-full rounded-[12px] bg-[#F5F5F6] px-4 py-3 text-[14px] sm:text-[15px] text-[#111827]">
-              {vehicleTitle || "Not specified"}
-            </div>
-
-            <div className="w-full rounded-[12px] bg-[#F5F5F6] px-4 py-3 text-[14px] sm:text-[15px] text-[#111827]">
-              {colorText}
-            </div>
-
-            <div className="w-full rounded-[12px] bg-[#F5F5F6] px-4 py-3 text-[14px] sm:text-[15px] text-[#111827]">
-              {seatText}
-            </div>
-          </div>
-        </section>
-
-        {/* HISTORY & CONDITION */}
-        <section className="space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm sm:text-[15px] font-semibold text-[#6B7280]">
-              Vehicle history & condition
-            </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Pill value={phone || "—"} />
+            <Pill value={email || "—"} />
           </div>
 
-          <div className="w-full rounded-[12px] bg-[#F5F5F6] px-4 py-3 text-[13px] sm:text-[14px] text-[#111827] space-y-1">
-            {historyLines.length ? (
-              historyLines.map((line, idx) => <div key={idx}>{line}</div>)
-            ) : (
-              <div>Not specified</div>
-            )}
-          </div>
-        </section>
+          <Pill value={heardText} />
+          {extraInfo ? <Pill value={extraInfo} /> : null}
+        </SectionCard>
 
-        {/* SERVICES */}
-        <section className="space-y-2">
-          <h3 className="text-sm sm:text-[15px] font-semibold text-[#6B7280]">
-            Services you&apos;re interested in
-          </h3>
-
-          <div className="w-full rounded-[12px] bg-[#F5F5F6] px-4 py-3 text-[14px] sm:text-[15px] text-[#111827]">
-            {servicesText}
-          </div>
-
-          {multipleVehicles && vehicles?.length > 0 && (
-            <div className="w-full rounded-[12px] bg-[#F5F5F6] px-4 py-3 text-[13px] sm:text-[14px] text-[#111827] space-y-1">
-              {vehicles.map((v, i) => (
-                <div key={i}>
-                  <span className="font-semibold">Vehicle {i + 1}: </span>
-                  {v.model || "—"}
-                  {v.services?.length ? ` — ${v.services.join(", ")}` : ""}
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* LOCATION & TIMELINE */}
-        <section className="space-y-2">
-          <h3 className="text-sm sm:text-[15px] font-semibold text-[#6B7280]">
-            Location & timeline
-          </h3>
-
-          <div className="w-full rounded-[12px] bg-[#F5F5F6] px-4 py-3 text-[14px] sm:text-[15px] text-[#111827]">
-            {locationText}
+        {/* ===== CAR INFO ===== */}
+        <SectionCard
+          title="Your car information"
+          open={openMap.vehicle}
+          onToggle={() => toggle("vehicle")}
+          actions={[
+            {
+              label: "Change Car Information",
+              onClick: () => onEditSection?.("vehicle"),
+            },
+            {
+              label: "Change Multiple Vehicles",
+              onClick: () => onEditSection?.("multiple"),
+            },
+          ]}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Pill value={year ? `${year} year` : "—"} />
+            <Pill value={make || "—"} />
           </div>
 
-          <div className="w-full rounded-[12px] bg-[#F5F5F6] px-4 py-3 text-[14px] sm:text-[15px] text-[#111827]">
-            {completionDate || "Preferred completion date not specified"}
-          </div>
-        </section>
+          <Pill value={model || "—"} />
 
-        {/* CONTACT DETAILS */}
-        <section className="space-y-2">
-          <h3 className="text-sm sm:text-[15px] font-semibold text-[#6B7280]">
-            Your contact details
-          </h3>
-
-          <div className="space-y-2">
-            <div className="w-full rounded-[12px] bg-[#F5F5F6] px-4 py-3 text-[14px] sm:text-[15px] text-[#111827]">
-              {[firstName, lastName].filter(Boolean).join(" ") || "—"}
-            </div>
-            <div className="w-full rounded-[12px] bg-[#F5F5F6] px-4 py-3 text-[14px] sm:text-[15px] text-[#111827]">
-              {phone || "—"}
-            </div>
-            <div className="w-full rounded-[12px] bg-[#F5F5F6] px-4 py-3 text-[14px] sm:text-[15px] text-[#111827]">
-              {email || "—"}
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Pill value={primaryColor} />
+            <Pill value={primarySeat} />
           </div>
 
-          <div className="w-full rounded-[12px] bg-[#F5F5F6] px-4 py-3 text-[13px] sm:text-[14px] text-[#111827] space-y-1">
-            <div className="font-semibold">How did you hear about us?</div>
-            <div>{heardText}</div>
-          </div>
+          {multipleVehicles && vehiclesArr.length > 0 && (
+            <div className="space-y-2">
+              <div className="text-[12px] text-[#6B7280] font-medium">
+                Additional vehicles
+              </div>
 
-          {extraInfo && (
-            <div className="w-full rounded-[12px] bg-[#F5F5F6] px-4 py-3 text-[13px] sm:text-[14px] text-[#111827] space-y-1">
-              <div className="font-semibold">Additional information</div>
-              <div>{extraInfo}</div>
+              <div className="space-y-2">
+                {vehiclesArr.map((v, idx) => {
+                  const t = [v?.year, v?.make, v?.model]
+                    .filter(Boolean)
+                    .join(" ");
+                  return (
+                    <div
+                      key={idx}
+                      className="w-full rounded-[16px] bg-[#F4F4F5] px-4 py-3 text-[13px] text-[#111827]"
+                    >
+                      <span className="font-semibold">
+                        Vehicle {idx + 2}:{" "}
+                      </span>
+                      {t || "—"}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
-        </section>
+        </SectionCard>
 
-        {/* SUBMIT BUTTON */}
+        {/* ===== CONDITION ===== */}
+        <SectionCard
+          title="Vehicle condition"
+          open={openMap.condition}
+          onToggle={() => toggle("condition")}
+          buttonLabel="Change Vehicle Condition"
+          onButton={() => onEditSection?.("condition")}
+        >
+          <Pill value={lastDetailed ? `Last detailed: ${lastDetailed}` : "—"} />
+          <Pill value={conditionRating || "—"} />
+          <Pill value={flagsText} />
+        </SectionCard>
+
+        {/* ===== SERVICES ===== */}
+        <SectionCard
+          title="Services"
+          open={openMap.services}
+          onToggle={() => toggle("services")}
+          buttonLabel="Change Services"
+          onButton={() => onEditSection?.("services")}
+        >
+          <Pill value={servicesText} />
+          {servicesOther ? <Pill value={`Other: ${servicesOther}`} /> : null}
+        </SectionCard>
+
+        {/* ===== LOCATION & TIMELINE ===== */}
+        <SectionCard
+          title="Service location & timeline"
+          open={openMap.location}
+          onToggle={() => toggle("location")}
+          buttonLabel="Change Location & Timeline"
+          onButton={() => onEditSection?.("location")}
+        >
+          <Pill value={locationText} />
+
+          {/* ✅ pickup address показуємо тільки якщо pickup */}
+          {showPickupAddr ? <Pill value={pickupAddr} /> : null}
+
+          <Pill value={completionDate || "—"} />
+        </SectionCard>
+
+        {/* SUBMIT */}
         <button
           type="button"
           onClick={onSubmit}

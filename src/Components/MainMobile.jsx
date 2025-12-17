@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Head from "./Head.jsx";
 import Services from "./Services.jsx";
 import { Link } from "react-router-dom";
@@ -56,20 +56,41 @@ const SLIDES = [
 
 const MainMobile = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [autoPlay, setAutoPlay] = useState(true);
+  const intervalRef = useRef(null);
 
   // AUTO ROTATION — 5s
   useEffect(() => {
-    const interval = setInterval(() => {
+    if (!autoPlay) return;
+
+    intervalRef.current = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % SLIDES.length);
     }, 5000);
-    return () => clearInterval(interval);
-  }, []);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [autoPlay]);
+
+  const stopAutoPlay = () => {
+    if (!autoPlay) return;
+    setAutoPlay(false);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  };
 
   const goNext = () => {
+    stopAutoPlay();
     setCurrentImageIndex((prev) => (prev + 1) % SLIDES.length);
   };
 
   const goPrev = () => {
+    stopAutoPlay();
     setCurrentImageIndex((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
   };
 
@@ -77,7 +98,6 @@ const MainMobile = () => {
 
   return (
     <div className="bg-[rgba(235,235,235,1)] min-h-screen pb-8 overflow-x-hidden">
-      <Head />
 
       {/* HERO */}
       <main className="relative min-h-[100dvh] overflow-hidden">
@@ -89,23 +109,34 @@ const MainMobile = () => {
               src={slide.image}
               alt={slide.alt}
               className={`
-                absolute inset-0
-                w-full h-full
-                object-cover
-                transition-opacity duration-700
-                ${index === currentImageIndex ? "opacity-100" : "opacity-0"}
-              `}
+        absolute inset-0
+        w-full h-full
+        transition-opacity duration-700
+        ${index === currentImageIndex ? "opacity-100" : "opacity-0"}
+
+        /* ✅ щоб “як на прикладі”: машина знизу, картинка не надто збільшена */
+        object-cover object-bottom
+        scale-[1.00]
+      `}
             />
           ))}
 
-          {/* 🔥 Сильніше затемнення */}
+          {/* ✅ 1) Основний градієнт (чорний верх → прозоріше вниз) */}
           <div
             className="
-              absolute inset-0
-              bg-black/60
-              backdrop-blur-[0.5 px]
-              transition-all duration-500
-            "
+      absolute inset-0
+      pointer-events-none
+      bg-[linear-gradient(180deg,rgba(0,0,0,0.96)_0%,rgba(0,0,0,0.80)_35%,rgba(0,0,0,0.55)_62%,rgba(0,0,0,0.35)_100%)]
+    "
+          />
+
+          {/* ✅ 2) Віньєтка по краях + легке затемнення низу (як “рамка” на скріні) */}
+          <div
+            className="
+      absolute inset-0
+      pointer-events-none
+      bg-[radial-gradient(120%_90%_at_50%_20%,rgba(0,0,0,0)_0%,rgba(0,0,0,0.55)_70%,rgba(0,0,0,0.78)_100%)]
+    "
           />
         </div>
 
@@ -115,17 +146,18 @@ const MainMobile = () => {
             <div className="space-y-4">
               <h1
                 className="text-[40px] font-extrabold leading-[100%] text-white pr-4"
-                style={{ fontFamily: 'Manrope, sans-serif' }}
+                style={{ fontFamily: "Manrope, sans-serif" }}
               >
                 WELCOME TO DANILETS
               </h1>
 
               <p
                 className="text-[20px] text-[rgba(230,230,235,1)] max-w-[85%]"
-                style={{ fontFamily: 'Manrope, sans-serif' }}
+                style={{ fontFamily: "Manrope, sans-serif" }}
               >
-                Columbus' trusted provider of premium auto detailing and commercial
-                cleaning services tailored with precision and delivered with excellence.
+                Columbus' trusted provider of premium auto detailing and
+                commercial cleaning services tailored with precision and
+                delivered with excellence.
               </p>
 
               <Link

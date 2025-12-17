@@ -1,16 +1,15 @@
-// src/Components/Booking/Cleaning/StepCleaningPropertyDetails.jsx
-import React from "react";
+// src/Components/NewBooking/Cleaning/StepCleaningPropertyDetails.jsx
+import React, { useMemo } from "react";
 import { FiChevronLeft } from "react-icons/fi";
 import ProgressBar from "../ProgressBar";
 
 const GOLD_GRADIENT =
   "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
 
-const StepCleaningPropertyDetails = ({
+export default function StepCleaningPropertyDetails({
   visible,
   onBack,
   onNext,
-
   propertyType,
 
   // residential
@@ -29,153 +28,144 @@ const StepCleaningPropertyDetails = ({
   frequency,
   setFrequency,
 
-  totalSteps = 4,
-}) => {
+  renderProgress,
+  progressStepIndex = 3,
+  totalSteps = 10,
+}) {
   if (!visible) return null;
 
   const isResidential = propertyType === "residential";
   const isCommercial = propertyType === "commercial";
 
-  let canContinue = false;
-
-  if (isResidential) {
-    canContinue = !!bedrooms && !!bathrooms;
-  } else if (isCommercial) {
-    canContinue =
-      !!companyName && !!companyAddress && !!squareFeet && !!frequency;
-  }
-
-  const FREQ_OPTIONS = [
-    { key: "one_time", label: "One-time" },
-    { key: "daily", label: "Daily" },
-    { key: "weekly", label: "Weekly" },
-    { key: "monthly", label: "Monthly" },
-    { key: "other", label: "Other" },
-  ];
+  const canContinue = useMemo(() => {
+    if (isResidential) return String(bedrooms || "").trim() && String(bathrooms || "").trim();
+    if (isCommercial) return String(companyName || "").trim() && String(companyAddress || "").trim();
+    return false;
+  }, [isResidential, isCommercial, bedrooms, bathrooms, companyName, companyAddress]);
 
   return (
     <div className="w-full max-w-full min-w-0 text-left">
-      <div className="bg-white/90 backdrop-blur rounded-[24px] p-4 sm:p-5 shadow space-y-5">
+      <div className="bg-white/90 backdrop-blur rounded-[24px] p-4 sm:p-6 shadow space-y-5">
         {/* Header */}
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}
-            className="w-9 h-9 rounded-full bg-[#F2F2F2] inline-flex items-center justify-center"
+            className="w-10 h-10 rounded-full bg-[#F2F2F2] inline-flex items-center justify-center"
             aria-label="Back"
+            type="button"
           >
             <FiChevronLeft className="text-[18px] text-[#18181B]" />
           </button>
-          <h2 className="text-[20px] sm:text-[22px] font-extrabold text-[#18181B]">
-            Property details
-          </h2>
+
+          <div>
+            <h2 className="text-[26px] font-extrabold text-[#111827]">Property details</h2>
+            <p className="text-[14px] text-[#6B7280] mt-1">
+              {isResidential ? "Tell us about the home size." : "Tell us about your business."}
+            </p>
+          </div>
         </div>
 
-        <ProgressBar activeCount={2} total={totalSteps} />
+        {/* ✅ Progress MUST be under title */}
+        {renderProgress ? renderProgress(progressStepIndex) : (
+          <ProgressBar activeCount={progressStepIndex} total={totalSteps} />
+        )}
 
-        {/* ------- Residential ------- */}
-        {isResidential && (
-          <section className="bg-white rounded-[20px] border border-[#E5E7EB] p-4 space-y-2">
-            <div className="text-sm text-[#6B7280] font-medium">
-              How many bedrooms and bathrooms? *
-            </div>
-            <div className="grid grid-cols-2 gap-2">
+        {/* Fields */}
+        {isResidential ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-semibold text-[#111827]">Bedrooms</label>
               <input
                 value={bedrooms}
                 onChange={(e) => setBedrooms(e.target.value)}
-                type="number"
-                min="0"
-                placeholder="Bedrooms"
-                className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none"
+                className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                placeholder="e.g. 3"
+                inputMode="numeric"
               />
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold text-[#111827]">Bathrooms</label>
               <input
                 value={bathrooms}
                 onChange={(e) => setBathrooms(e.target.value)}
-                type="number"
-                min="0"
-                placeholder="Bathrooms"
-                className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none"
+                className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                placeholder="e.g. 2"
+                inputMode="numeric"
               />
             </div>
-          </section>
-        )}
-
-        {/* ------- Commercial ------- */}
-        {isCommercial && (
+          </div>
+        ) : (
           <div className="space-y-4">
-            <section className="bg-white rounded-[20px] border border-[#E5E7EB] p-4 space-y-4">
-              <div className="space-y-2">
-                <div className="text-sm text-[#6B7280] font-medium">
-                  Company name *
-                </div>
-                <input
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none"
-                />
-              </div>
+            <div>
+              <label className="text-sm font-semibold text-[#111827]">Company Name</label>
+              <input
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                placeholder="Your company"
+              />
+            </div>
 
-              <div className="space-y-2">
-                <div className="text-sm text-[#6B7280] font-medium">
-                  Company address *
-                </div>
-                <input
-                  value={companyAddress}
-                  onChange={(e) => setCompanyAddress(e.target.value)}
-                  className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none"
-                />
-              </div>
+            <div>
+              <label className="text-sm font-semibold text-[#111827]">Company Address</label>
+              <input
+                value={companyAddress}
+                onChange={(e) => setCompanyAddress(e.target.value)}
+                className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                placeholder="Address"
+              />
+            </div>
 
-              <div className="space-y-2">
-                <div className="text-sm text-[#6B7280] font-medium">
-                  How many square feet? *
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-[#111827]">Square Feet</label>
                 <input
                   value={squareFeet}
                   onChange={(e) => setSquareFeet(e.target.value)}
-                  type="number"
-                  min="0"
-                  className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none"
+                  className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  placeholder="e.g. 2500"
+                  inputMode="numeric"
                 />
               </div>
-            </section>
 
-            <section className="bg-white rounded-[20px] border border-[#E5E7EB] p-4 space-y-3">
-              <div className="text-sm text-[#6B7280] font-medium">
-                Frequency *
+              <div>
+                <label className="text-sm font-semibold text-[#111827]">Cleaning Frequency</label>
+                <input
+                  value={frequency}
+                  onChange={(e) => setFrequency(e.target.value)}
+                  className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  placeholder="Weekly / Monthly ..."
+                />
               </div>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-[#111827] mt-1">
-                {FREQ_OPTIONS.map((opt) => (
-                  <label
-                    key={opt.key}
-                    className="inline-flex items-center gap-2 cursor-pointer"
-                  >
-                    <input
-                      type="radio"
-                      name="cleaning-frequency"
-                      className="w-4 h-4"
-                      checked={frequency === opt.key}
-                      onChange={() => setFrequency(opt.key)}
-                    />
-                    <span>{opt.label}</span>
-                  </label>
-                ))}
-              </div>
-            </section>
+            </div>
           </div>
         )}
 
-        <button
-          onClick={onNext}
-          disabled={!canContinue}
-          className={`w-full h-[52px] rounded-[88px] font-semibold text-black shadow inline-flex items-center justify-center gap-2
-            ${!canContinue ? "opacity-60 cursor-not-allowed" : ""}`}
-          style={{ background: GOLD_GRADIENT }}
-        >
-          Continue <span className="text-lg">›</span>
-        </button>
+        {/* Bottom nav */}
+        <div className="flex items-center justify-between pt-2">
+          <button
+            type="button"
+            onClick={onBack}
+            className="h-[46px] px-6 rounded-full border border-[#D1D5DB] text-sm font-semibold text-[#111827]"
+          >
+            Back
+          </button>
+
+          <button
+            type="button"
+            onClick={onNext}
+            disabled={!canContinue}
+            className={[
+              "h-[46px] px-8 rounded-full text-sm font-semibold text-black",
+              !canContinue ? "opacity-60 cursor-not-allowed" : "",
+            ].join(" ")}
+            style={{ background: GOLD_GRADIENT }}
+          >
+            Continue
+          </button>
+        </div>
       </div>
     </div>
   );
-};
-
-export default StepCleaningPropertyDetails;
+}

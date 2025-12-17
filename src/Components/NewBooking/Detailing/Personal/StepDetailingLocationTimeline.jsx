@@ -1,7 +1,11 @@
 // src/Components/Booking/StepDetailingLocationTimeline.jsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FiChevronLeft } from "react-icons/fi";
 import ProgressBar from "../../ProgressBar";
+import { AddressAutocomplete } from "../Business/AddressAutocomplete"; 
+// ⚠️ шлях перевір: якщо AddressAutocomplete лежить в src/Components/AddressAutocomplete.jsx
+// тоді буде: import { AddressAutocomplete } from "../AddressAutocomplete";
+// якщо він в src/Components/Booking/AddressAutocomplete.jsx -> "./AddressAutocomplete"
 
 const GOLD_GRADIENT =
   "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
@@ -20,6 +24,38 @@ const LOCATION_OPTIONS = [
   },
 ];
 
+// --- Google Places loader (щоб autocomplete працював) ---
+let __gmapsPromise = null;
+function loadGooglePlaces() {
+  const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+  if (window.google?.maps?.places) return Promise.resolve(true);
+  if (__gmapsPromise) return __gmapsPromise;
+  if (!key) return Promise.resolve(false);
+
+  __gmapsPromise = new Promise((resolve) => {
+    const existing = document.querySelector('script[data-gmaps="places"]');
+    if (existing) {
+      existing.addEventListener("load", () => resolve(true));
+      existing.addEventListener("error", () => resolve(false));
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.setAttribute("data-gmaps", "places");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(
+      key
+    )}&libraries=places`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.head.appendChild(script);
+  });
+
+  return __gmapsPromise;
+}
+
 const StepDetailingLocationTimeline = ({
   visible,
   onBack,
@@ -28,12 +64,45 @@ const StepDetailingLocationTimeline = ({
   serviceLocation, // "drop_off" | "pickup" | ""
   setServiceLocation,
 
+  // ✅ нове: адреса для pick-up
+  pickupAddress,
+  setPickupAddress,
+
   renderProgress,
   totalSteps = 6,
 }) => {
-  if (!visible) return null;
+  // ✅ хуки завжди зверху (не робимо return null до них)
+  const [placesReady, setPlacesReady] = useState(false);
 
-  const canContinue = !!serviceLocation;
+  useEffect(() => {
+    let cancelled = false;
+    if (!visible) return;
+
+    loadGooglePlaces().then((ok) => {
+      if (cancelled) return;
+      setPlacesReady(!!ok);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [visible]);
+
+  const inputClass =
+    "w-full h-[52px] rounded-[16px] bg-[#F4F4F5] px-4 text-[15px] outline-none";
+
+  const addr = pickupAddress ?? "";
+
+  const canContinue =
+    !!serviceLocation &&
+    (serviceLocation !== "pickup" || addr.trim().length > 0);
+
+  const handleContinue = () => {
+    if (!canContinue) return;
+    onNext?.();
+  };
+
+  if (!visible) return null;
 
   return (
     <div className="w-full max-w-full min-w-0 text-left">
@@ -47,12 +116,12 @@ const StepDetailingLocationTimeline = ({
           >
             <FiChevronLeft className="text-[18px] text-[#18181B]" />
           </button>
-          <h2 className="text-[18px] sm:text-[20px] font-extrabold text-[#18181B]">
-            Service location
+          <h2 className="text-[20px] sm:text-[22px] lg:text-[24px] font-extrabold text-[#18181B] uppercase">
+            Service Location
           </h2>
         </div>
 
-        {/* Прогрес: 4 секція (або свій номер) */}
+        {/* Прогрес */}
         {renderProgress ? (
           renderProgress(4)
         ) : (
@@ -68,6 +137,7 @@ const StepDetailingLocationTimeline = ({
           <div className="space-y-2">
             {LOCATION_OPTIONS.map((opt) => {
               const active = serviceLocation === opt.key;
+
               return (
                 <button
                   key={opt.key}
@@ -93,17 +163,49 @@ const StepDetailingLocationTimeline = ({
           </div>
         </section>
 
-        {/* Підказка для pick-up */}
+        {/* ✅ Address when pickup */}
         {serviceLocation === "pickup" && (
-          <div className="text-[12px] sm:text-[13px] text-[#6B7280]">
-            We&apos;ll confirm your exact address and scheduling details after
-            you submit your request.
-          </div>
+          <section className="space-y-2">
+            <div className="text-sm text-[#6B7280] font-medium">
+              Pick-up Address *
+            </div>
+
+            {placesReady ? (
+              <AddressAutocomplete
+                value={addr}
+                onChange={(v) => setPickupAddress?.(v)}
+                onSelectAddress={(formatted) => setPickupAddress?.(formatted)}
+                placeholder="Start typing pick-up address…"
+                inputClass={inputClass}
+                // componentRestrictions={{ country: "us" }}
+              />
+            ) : (
+              <input
+                value={addr}
+                onChange={(e) => setPickupAddress?.(e.target.value)}
+                className={inputClass}
+                placeholder="Enter pick-up address"
+                autoComplete="new-password"
+                name="pickup_address__no_autofill"
+              />
+            )}
+
+            {!addr.trim() && (
+              <p className="text-xs text-red-500">
+                Please enter your pick-up address.
+              </p>
+            )}
+
+            <div className="text-[12px] sm:text-[13px] text-[#6B7280]">
+              We&apos;ll confirm your exact address and scheduling details after
+              you submit your request.
+            </div>
+          </section>
         )}
 
-        {/* Кнопка Continue */}
+        {/* Continue */}
         <button
-          onClick={onNext}
+          onClick={handleContinue}
           disabled={!canContinue}
           className={`w-full h-[52px] rounded-[88px] font-semibold text-black shadow inline-flex items-center justify-between px-6
             ${!canContinue ? "opacity-60 cursor-not-allowed" : ""}`}
