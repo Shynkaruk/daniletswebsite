@@ -396,7 +396,7 @@ const Head = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-[200000] font-sans pointer-events-none">
+    <header className="fixed top-0 left-0 right-0 z-[200000]">
       {/* top-4 робимо через padding, щоб не було “підстрибування” fixed */}
       <div className="pt-4 pointer-events-auto">
         <MobileHead

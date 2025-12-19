@@ -30,19 +30,19 @@ export default function AuthModal({
   }, [initialTab, open]);
 
   // закриття по Escape / кліку поза карткою
-  useEffect(() => {
-    if (!open) return;
-    const onEsc = (e) => e.key === "Escape" && onClose?.();
-    const onDown = (e) => {
-      if (cardRef.current && !cardRef.current.contains(e.target)) onClose?.();
-    };
-    document.addEventListener("keydown", onEsc);
-    document.addEventListener("mousedown", onDown);
-    return () => {
-      document.removeEventListener("keydown", onEsc);
-      document.removeEventListener("mousedown", onDown);
-    };
-  }, [open, onClose]);
+  // useEffect(() => {
+  //   if (!open) return;
+  //   const onEsc = (e) => e.key === "Escape" && onClose?.();
+  //   const onDown = (e) => {
+  //     if (cardRef.current && !cardRef.current.contains(e.target)) onClose?.();
+  //   };
+  //   document.addEventListener("keydown", onEsc);
+  //   document.addEventListener("mousedown", onDown);
+  //   return () => {
+  //     document.removeEventListener("keydown", onEsc);
+  //     document.removeEventListener("mousedown", onDown);
+  //   };
+  // }, [open, onClose]);
 
   // Apple login — редірект на бекенд
   const handleAppleLogin = () => {
@@ -51,126 +51,132 @@ export default function AuthModal({
 
   if (!open) return null;
 
-  return (
+return (
+  <div
+    className="fixed inset-0 z-[1000] text-[#18181B]"
+    aria-modal="true"
+    role="dialog"
+  >
+    {/* dim (backdrop) — закриває модалку тільки по кліку на фон */}
     <div
-      className="fixed inset-0 z-[1000] text-[#18181B]"
-      aria-modal="true"
-      role="dialog"
-    >
-      {/* dim */}
-      <div className="absolute inset-0 bg-black/50" />
+      className="absolute inset-0 bg-black/50"
+      onMouseDown={() => onClose?.()}
+      onTouchStart={() => onClose?.()}
+    />
 
-      {/* card */}
-      <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div
-          ref={cardRef}
-          className="w-full max-w-[380px] rounded-[24px] bg-white shadow-xl p-4 sm:p-5 text-[#18181B]"
-        >
-          {/* header */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-[18px] font-extrabold">
-              {tab === "login" ? "Log In" : "Sign Up"}
-            </div>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-full bg-[#F4F4F5] flex items-center justify-center"
-              aria-label="Close"
-            >
-              <FaTimes className="text-[#18181B]" />
-            </button>
+    {/* card */}
+    <div className="absolute inset-0 flex items-center justify-center p-4">
+      <div
+        ref={cardRef}
+        // важливо: кліки всередині картки НЕ повинні закривати модалку
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        className="w-full max-w-[380px] rounded-[24px] bg-white shadow-xl p-4 sm:p-5 text-[#18181B]"
+      >
+        {/* header */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-[18px] font-extrabold">
+            {tab === "login" ? "Log In" : "Sign Up"}
           </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-[#F4F4F5] flex items-center justify-center"
+            aria-label="Close"
+          >
+            <FaTimes className="text-[#18181B]" />
+          </button>
+        </div>
 
-          {/* tabs */}
-          <div className="bg-[#F2F2F2] rounded-full p-1 mb-3 flex">
-            {["login", "signup"].map((key) => {
-              const active = tab === key;
-              return (
-                <button
-                  key={key}
-                  onClick={() => setTab(key)}
-                  className={`flex-1 py-2 rounded-full font-semibold text-sm transition ${
-                    active ? "bg-white shadow text-[#18181B]" : "text-[#5E5E61]"
-                  }`}
-                >
-                  {key === "login" ? "Log In" : "Sign Up"}
-                </button>
-              );
-            })}
-          </div>
+        {/* tabs */}
+        <div className="bg-[#F2F2F2] rounded-full p-1 mb-3 flex">
+          {["login", "signup"].map((key) => {
+            const active = tab === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setTab(key)}
+                className={`flex-1 py-2 rounded-full font-semibold text-sm transition ${
+                  active ? "bg-white shadow text-[#18181B]" : "text-[#5E5E61]"
+                }`}
+              >
+                {key === "login" ? "Log In" : "Sign Up"}
+              </button>
+            );
+          })}
+        </div>
 
-          {/* forms */}
-          {tab === "login" ? (
-            <LoginForm
-              onSuccess={(u) => {
-                onAuth?.(u);
+        {/* forms */}
+        {tab === "login" ? (
+          <LoginForm
+            onSuccess={(u) => {
+              onAuth?.(u);
+              onClose?.();
+              window.location.href = "/account";
+            }}
+          />
+        ) : (
+          <SignupForm
+            onSuccess={(u, email) => {
+              setPendingUser(u);
+              setOtpEmail(email);
+              setOtpOpen(true);
+            }}
+          />
+        )}
+
+        {/* OR */}
+        <div className="relative my-3">
+          <div className="h-px bg-[#E5E7EB]" />
+          <span className="absolute left-1/2 -translate-x-1/2 -top-2 bg-white px-2 text-xs text-[#6B7280]">
+            OR
+          </span>
+        </div>
+
+        {/* socials */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="h-11 rounded-[12px] bg-[#F4F4F5] font-semibold flex items-center justify-center">
+            <GoogleCustomButton
+              onDone={(user) => {
+                onAuth?.(user);
                 onClose?.();
-                // після логіну завжди ведемо в акаунт
                 window.location.href = "/account";
               }}
             />
-          ) : (
-            <SignupForm
-              onSuccess={(u, email) => {
-                // користувач створений — запустили OTP
-                setPendingUser(u);
-                setOtpEmail(email);
-                setOtpOpen(true);
-              }}
-            />
-          )}
-
-          {/* OR */}
-          <div className="relative my-3">
-            <div className="h-px bg-[#E5E7EB]" />
-            <span className="absolute left-1/2 -translate-x-1/2 -top-2 bg-white px-2 text-xs text-[#6B7280]">
-              OR
-            </span>
           </div>
 
-          {/* socials */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="h-11 rounded-[12px] bg-[#F4F4F5] font-semibold flex items-center justify-center">
-              <GoogleCustomButton
-                onDone={(user) => {
-                  onAuth?.(user);
-                  onClose?.();
-                  window.location.href = "/account";
-                }}
-              />
-            </div>
-
-            {/* Apple auth */}
-            <button
-              onClick={handleAppleLogin}
-              className="h-11 rounded-[12px] bg-[#F4F4F5] font-semibold flex items-center justify-center gap-2 text-[#18181B]"
-            >
-              <FaApple className="text-[#18181B]" />
-              <span>Apple</span>
-            </button>
-          </div>
+          {/* Apple auth */}
+          <button
+            type="button"
+            onClick={handleAppleLogin}
+            className="h-11 rounded-[12px] bg-[#F4F4F5] font-semibold flex items-center justify-center gap-2 text-[#18181B]"
+          >
+            <FaApple className="text-[#18181B]" />
+            <span>Apple</span>
+          </button>
         </div>
       </div>
-
-      {/* OTP модалка — окремо від сітки, поверх усього */}
-      <OtpModal
-        open={otpOpen}
-        email={otpEmail}
-        mode="verify" // режим підтвердження email після реєстрації
-        onClose={() => setOtpOpen(false)}
-        onVerified={() => {
-          // після успішної верифікації логінимо юзера
-          if (pendingUser) {
-            onAuth?.(pendingUser);
-          }
-          setPendingUser(null);
-          setOtpEmail("");
-          setOtpOpen(false);
-          onClose?.();
-          if (!onAuth) window.location.reload();
-        }}
-      />
     </div>
-  );
+
+    {/* OTP модалка */}
+    <OtpModal
+      open={otpOpen}
+      email={otpEmail}
+      mode="verify"
+      onClose={() => setOtpOpen(false)}
+      onVerified={() => {
+        if (pendingUser) onAuth?.(pendingUser);
+        setPendingUser(null);
+        setOtpEmail("");
+        setOtpOpen(false);
+        onClose?.();
+        if (!onAuth) window.location.reload();
+      }}
+    />
+  </div>
+);
+
 }
 
 /* ---------- Login ---------- */
