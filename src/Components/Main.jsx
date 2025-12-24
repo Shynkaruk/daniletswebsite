@@ -11,6 +11,7 @@ import ActionMini from "./ActionMini.jsx";
 import FAQ from "./FAQ.jsx";
 import Footer from "./Footer.jsx";
 import StatsBlock from "./StatsBlock.jsx";
+import LayoutContainer from "./LayoutContainer";
 
 const SLIDES = [
   {
@@ -91,9 +92,7 @@ const Main = () => {
 
   const goPrev = () => {
     stopAutoPlay();
-    setCurrentImageIndex(
-      (prev) => (prev - 1 + SLIDES.length) % SLIDES.length
-    );
+    setCurrentImageIndex((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
   };
 
   const currentSlide = SLIDES[currentImageIndex];
@@ -269,13 +268,25 @@ const Main = () => {
           </div>
         </div>
       </main>
-
+<LayoutContainer>
       <Services className="relative z-10 mt-[-100px]" />
-      <StatsBlock />
-      <OurCoreValues />
-      <OurReviews />
-      <ActionMini />
-      <FAQ />
+      </LayoutContainer>
+<LayoutContainer>
+  <StatsBlock />
+</LayoutContainer>
+
+<LayoutContainer>
+  <OurCoreValues />
+</LayoutContainer>
+<LayoutContainer>
+  <OurReviews />
+</LayoutContainer>
+<LayoutContainer>
+  <ActionMini />
+</LayoutContainer>
+<LayoutContainer>
+  <FAQ />
+</LayoutContainer>
       <Footer />
     </div>
   );

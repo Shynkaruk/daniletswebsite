@@ -3,7 +3,7 @@ import { FaChevronDown } from "react-icons/fa";
 import { useLocation } from "react-router-dom";
 import faqIcon from "../assets/icons/icon-faq.png";
 
-const FAQ = () => {
+const FAQ = ({ className = "" }) => {
   const [openIndex, setOpenIndex] = useState(null);
   const location = useLocation();
 
@@ -11,7 +11,6 @@ const FAQ = () => {
   const isCleaningPage = location.pathname.startsWith("/services/cleaning");
   const isLegalFaqPage = location.pathname.startsWith("/legal/faq");
 
-  // ⭐ DEFAULT FAQ (Home / About Us) — 1:1 з розділом 4.0
   const defaultFaqItems = [
     {
       question: "What areas do you serve?",
@@ -35,7 +34,6 @@ const FAQ = () => {
     },
   ];
 
-  // ⭐ DETAILING FAQ (оновлено за 3.3)
   const detailingFaqItems = [
     {
       question: "What detailing services do you provide?",
@@ -69,33 +67,35 @@ Vehicles with ceramic coating require less frequent washes but benefit from peri
     },
   ];
 
-  // ⭐ CLEANING FAQ (оновлено за 2.5)
   const cleaningFaqItems = [
     {
       question: "What types of commercial spaces do you clean?",
-      answer: `We clean offices, retail spaces, corporate buildings, Airbnb properties, and more. Whether you need regular maintenance or one-time deep cleaning, we tailor our services to your business needs.`,
+      answer:
+        "We clean offices, retail spaces, corporate buildings, Airbnb properties, and more. Whether you need regular maintenance or one-time deep cleaning, we tailor our services to your business needs.",
     },
     {
       question: "How do I get a quote for cleaning services?",
-      answer: `Simply fill out our interest form with details about your space and cleaning needs. We'll get back to you as soon as possible, then set up a meeting to see the facility and provide a detailed quote. You can also call or text us at (614) 980-7380 for immediate assistance.`,
+      answer:
+        "Simply fill out our interest form with details about your space and cleaning needs. We'll get back to you as soon as possible, then set up a meeting to see the facility and provide a detailed quote. You can also call or text us at (614) 980-7380 for immediate assistance.",
     },
     {
       question: "Do you provide cleaning supplies and equipment?",
-      answer: `Yes, we provide all supplies and equipment needed for the job. If you have specific product preferences or requirements, we can use your equipment as well.`,
+      answer:
+        "Yes, we provide all supplies and equipment needed for the job. If you have specific product preferences or requirements, we can use your equipment as well.",
     },
     {
       question: "Can you work around our business hours?",
-      answer: `Absolutely. We offer flexible scheduling including after-hours, early morning, and weekend services to minimize disruption to your business operations.`,
+      answer:
+        "Absolutely. We offer flexible scheduling including after-hours, early morning, and weekend services to minimize disruption to your business operations.",
     },
     {
       question: "Do you offer recurring cleaning services?",
-      answer: `Yes, we provide customized recurring cleaning schedules—daily, weekly, bi-weekly, or monthly—whatever works best for your business. Consistent service, reliable results, every single time.`,
+      answer:
+        "Yes, we provide customized recurring cleaning schedules—daily, weekly, bi-weekly, or monthly—whatever works best for your business. Consistent service, reliable results, every single time.",
     },
   ];
 
-  // ⭐ SELECT WHICH FAQ TO DISPLAY
   let faqItems;
-
   if (isLegalFaqPage) {
     faqItems = [...defaultFaqItems, ...detailingFaqItems, ...cleaningFaqItems];
   } else if (isDetailingPage) {
@@ -103,18 +103,17 @@ Vehicles with ceramic coating require less frequent washes but benefit from peri
   } else if (isCleaningPage) {
     faqItems = cleaningFaqItems;
   } else {
-    // About Us / Home / інші — загальний FAQ
     faqItems = defaultFaqItems;
   }
 
   const toggleAccordion = (index) => {
-    setOpenIndex(openIndex === index ? null : index);
+    setOpenIndex((prev) => (prev === index ? null : index));
   };
 
   return (
-    <div className="relative w-full max-w-[1850px] mx-auto mt-4 sm:mt-8 px-4 sm:px-6 lg:px-8">
+    <section className={`relative w-full mt-4 sm:mt-8 ${className}`}>
       <div className="w-full bg-white rounded-[24px] sm:rounded-[32px] flex flex-col lg:flex-row px-4 sm:px-8 lg:px-12 pt-6 sm:pt-10 pb-4">
-        {/* Left section */}
+        {/* Left */}
         <div className="w-full lg:w-[40%] flex flex-col gap-4 sm:gap-6 mb-6 lg:mb-0">
           <img
             src={faqIcon}
@@ -137,17 +136,18 @@ Vehicles with ceramic coating require less frequent washes but benefit from peri
           </p>
         </div>
 
-        {/* Right section */}
+        {/* Right */}
         <div className="w-full lg:flex-1 flex flex-col gap-3 sm:gap-4 lg:ml-12">
           {faqItems.map((item, index) => (
             <div
-              key={index}
+              key={`${item.question}-${index}`}
               className="bg-[#F2F2F2] rounded-[16px] sm:rounded-[24px] transition-all"
             >
-              {/* QUESTION */}
-              <div
-                className="flex justify-between items-center py-3 sm:py-4 lg:py-5 px-4 sm:px-6 cursor-pointer"
+              <button
+                type="button"
+                className="w-full flex justify-between items-center py-3 sm:py-4 lg:py-5 px-4 sm:px-6 cursor-pointer text-left"
                 onClick={() => toggleAccordion(index)}
+                aria-expanded={openIndex === index}
               >
                 <h3 className="text-[18px] sm:text-[24px] lg:text-[28px] font-bold">
                   {item.question}
@@ -158,9 +158,8 @@ Vehicles with ceramic coating require less frequent washes but benefit from peri
                     openIndex === index ? "rotate-180" : ""
                   }`}
                 />
-              </div>
+              </button>
 
-              {/* ANSWER */}
               {openIndex === index && (
                 <div className="px-4 sm:px-6 pb-4 sm:pb-5">
                   <p className="text-[14px] sm:text-[16px] lg:text-[18px] leading-[140%] text-[#52525B] whitespace-pre-line">
@@ -172,7 +171,7 @@ Vehicles with ceramic coating require less frequent washes but benefit from peri
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

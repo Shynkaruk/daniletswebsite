@@ -1,6 +1,6 @@
 import React from "react";
 
-const StatsBlock = () => {
+const StatsBlock = ({ className = "" }) => {
   const stats = [
     { value: "500+", label: "Customers Served" },
     { value: "100%", label: "Family Owned" },
@@ -9,13 +9,9 @@ const StatsBlock = () => {
   ];
 
   return (
-    // Контейнер як у інших блоків: відступи зліва/справа ~64px на великому екрані
-    <section className="w-full max-w-[1880px] mx-auto px-4 sm:px-6 lg:px-10 mt-8 lg:mt-10">
-      {/* Сам чорний піл — широкий і досить високий */}
+    <section className={`w-full mt-8 lg:mt-10 ${className}`}>
       <div className="w-full bg-[#1A1A1A] rounded-[32px] px-6 md:px-10 lg:px-16 py-7 md:py-9 lg:py-10">
-        {/* Мобілка: grid 2x2, ПК: ряд з 4 елементів */}
         <div className="relative grid grid-cols-2 gap-4 sm:gap-5 md:flex md:items-center md:justify-between md:gap-0">
-
           {/* Хрест тільки на мобільній / планшетній версії */}
           <div className="absolute inset-0 flex items-center justify-center md:hidden pointer-events-none">
             <div className="w-full h-[1px] bg-white/30" />
@@ -29,7 +25,6 @@ const StatsBlock = () => {
               key={item.label}
               className="relative flex-1 flex flex-col items-center justify-center text-center py-3 md:py-4"
             >
-              {/* Вертикальний роздільник між блоками тільки на ПК */}
               {index !== 0 && (
                 <div className="hidden md:block absolute left-0 top-1/2 -translate-y-1/2 h-12 lg:h-14 w-px bg-white/25" />
               )}
@@ -40,6 +35,7 @@ const StatsBlock = () => {
               >
                 {item.value}
               </h3>
+
               <p
                 className="mt-1 text-[13px] sm:text-[14px] md:text-[16px] lg:text-[17px] font-normal text-white/85"
                 style={{ fontFamily: "Manrope, sans-serif", fontWeight: 400 }}

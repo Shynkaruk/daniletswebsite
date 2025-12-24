@@ -1,29 +1,36 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import avatarIcon from "../assets/icons/avatar-icon.png";
 import RightArrowIcon from "../assets/icons/angle-right-icon.png";
 import LeftArrowIcon from "../assets/icons/angle-left-icon.png";
 import { apiGet } from "../lib/api";
 
-const OurReviews = () => {
-  const location = useLocation();
-  const isDetailingPage = location.pathname.includes("/services/detailing");
-  const isCleaningPage = location.pathname.includes("/services/cleaning");
+const VISIBLE_CARDS = 4;
 
-  // Якщо на одній зі сторінок — перемикач ховаємо
+const OurReviews = ({ className = "" }) => {
+  const location = useLocation();
+
+  const isDetailingPage = useMemo(
+    () => location.pathname.includes("/services/detailing"),
+    [location.pathname]
+  );
+  const isCleaningPage = useMemo(
+    () => location.pathname.includes("/services/cleaning"),
+    [location.pathname]
+  );
+
   const hideTabs = isDetailingPage || isCleaningPage;
 
   const [reviewsByService, setReviewsByService] = useState({
     Detailing: [],
     Cleaning: [],
   });
-  const [loading, setLoading] = useState(true);
 
+  const [loading, setLoading] = useState(true);
   const [selectedService, setSelectedService] = useState("Detailing");
   const [startIndex, setStartIndex] = useState(0);
-  const visibleCards = 4;
 
-  // якщо переходимо на сторінку Detailing / Cleaning — фіксуємо сервіс
+  // 1) Фіксуємо selectedService на сторінках detailing/cleaning
   useEffect(() => {
     if (isDetailingPage) {
       setSelectedService("Detailing");
@@ -34,106 +41,137 @@ const OurReviews = () => {
     }
   }, [isDetailingPage, isCleaningPage]);
 
+  // 2) Фетчимо дані при зміні route
   useEffect(() => {
+    let cancelled = false;
+
     const fetchReviews = async () => {
+      setLoading(true);
+
       try {
         if (isDetailingPage) {
-          // тільки Detailing для сторінки /services/detailing
           const detJson = await apiGet("/api/reviews/google/detailing");
+          if (cancelled) return;
 
           setReviewsByService({
-            Detailing: detJson.reviews || [],
+            Detailing: detJson?.reviews || [],
             Cleaning: [],
           });
+        } else if (isCleaningPage) {
+          // якщо у тебе є окремий google endpoint — заміни на нього:
+          // const cleanJson = await apiGet("/api/reviews/google/cleaning");
+          const cleanJson = await apiGet("/api/reviews/cleaning");
+          if (cancelled) return;
+
+          setReviewsByService({
+            Detailing: [],
+            Cleaning: cleanJson?.reviews || [],
+          });
         } else {
-          // загальний випадок: тягнемо і Detailing, і Cleaning
           const [detJson, cleanJson] = await Promise.all([
             apiGet("/api/reviews/detailing"),
             apiGet("/api/reviews/cleaning"),
           ]);
+          if (cancelled) return;
 
           setReviewsByService({
-            Detailing: detJson.reviews || [],
-            Cleaning: cleanJson.reviews || [],
+            Detailing: detJson?.reviews || [],
+            Cleaning: cleanJson?.reviews || [],
           });
         }
       } catch (error) {
-        console.error("Error loading reviews:", error);
+        if (!cancelled) console.error("Error loading reviews:", error);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchReviews();
-  }, [isDetailingPage]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [location.pathname, isDetailingPage, isCleaningPage]);
 
   const filteredReviews = reviewsByService[selectedService] || [];
 
-  const safeVisibleCards =
-    filteredReviews.length < visibleCards
-      ? filteredReviews.length || 0
-      : visibleCards;
+  const safeVisibleCards = Math.min(VISIBLE_CARDS, filteredReviews.length);
+
+  // 3) Якщо змінився сервіс — скидаємо індекс (на головній це важливо)
+  useEffect(() => {
+    setStartIndex(0);
+  }, [selectedService]);
+
+  // 4) Якщо дані змінились і startIndex виліз за межі — підрізаємо
+  useEffect(() => {
+    if (filteredReviews.length === 0) {
+      if (startIndex !== 0) setStartIndex(0);
+      return;
+    }
+
+    const maxStart = Math.max(0, filteredReviews.length - safeVisibleCards);
+    if (startIndex > maxStart) setStartIndex(0);
+  }, [filteredReviews.length, safeVisibleCards, startIndex]);
+
+  const visibleItems = useMemo(() => {
+    if (safeVisibleCards === 0) return [];
+    return filteredReviews.slice(startIndex, startIndex + safeVisibleCards);
+  }, [filteredReviews, startIndex, safeVisibleCards]);
 
   const handlePrev = () => {
     if (filteredReviews.length <= safeVisibleCards) return;
 
-    setStartIndex((prevIndex) =>
-      prevIndex === 0
-        ? filteredReviews.length - safeVisibleCards
-        : prevIndex - 1
+    setStartIndex((prev) =>
+      prev === 0 ? filteredReviews.length - safeVisibleCards : prev - 1
     );
   };
 
   const handleNext = () => {
     if (filteredReviews.length <= safeVisibleCards) return;
 
-    setStartIndex((prevIndex) =>
-      prevIndex + safeVisibleCards >= filteredReviews.length ? 0 : prevIndex + 1
+    setStartIndex((prev) =>
+      prev + safeVisibleCards >= filteredReviews.length ? 0 : prev + 1
     );
   };
 
-  const visibleItems = filteredReviews.slice(
-    startIndex,
-    startIndex + safeVisibleCards
-  );
-
+  // Tabs underline positioning
   const buttonRefs = useRef({});
   const [activePosition, setActivePosition] = useState({ left: 0, width: 0 });
 
   useEffect(() => {
-    // оновлюємо позицію підсвітки тільки якщо є таби (тобто не на Detailing/Cleaning)
-    if (!hideTabs) {
-      const activeButton = buttonRefs.current[selectedService];
-      if (activeButton) {
-        const { offsetLeft, offsetWidth } = activeButton;
-        setActivePosition({ left: offsetLeft, width: offsetWidth });
-      }
-    }
+    if (hideTabs) return;
+    const activeButton = buttonRefs.current[selectedService];
+    if (!activeButton) return;
+
+    const update = () => {
+      const { offsetLeft, offsetWidth } = activeButton;
+      setActivePosition({ left: offsetLeft, width: offsetWidth });
+    };
+
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
   }, [selectedService, hideTabs]);
 
   if (loading) {
     return (
-      <div className="w-[100%] max-w-[2100px] mx-auto py-12 px-4 md:px-16">
+      <section className={`w-full py-12 ${className}`}>
         <h2 className="text-4xl md:text-5xl font-bold text-black mb-4">
           Reviews
         </h2>
         <p className="text-lg text-[#52525B]">Loading Google Reviews...</p>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className="w-[100%] max-w-[2100px] mx-auto py-12">
-      {/* Заголовок + (умовно) перемикачі */}
-      <div className="flex flex-col md:flex-row md:justify-between items-start gap-4 mb-8 px-4 md:px-16">
-        <h2 className="text-4xl md:text-5xl font-bold text-black ml-2">
-          Reviews
-        </h2>
+    <section className={`w-full py-12 ${className}`}>
+      {/* Header + tabs */}
+      <div className="flex flex-col md:flex-row md:justify-between items-start gap-4 mb-8">
+        <h2 className="text-4xl md:text-5xl font-bold text-black">Reviews</h2>
 
-        {/* Перемикач показуємо тільки якщо ми НЕ на /services/detailing або /services/cleaning */}
         {!hideTabs && (
           <div className="relative inline-flex items-center bg-white rounded-full px-1 py-1">
-            {/* Підсвітка активного табу */}
             <div
               className="absolute top-1 bottom-1 bg-[rgba(242,242,242,1)] rounded-full transition-all duration-300 ease-in-out z-0"
               style={{
@@ -141,17 +179,12 @@ const OurReviews = () => {
                 width: `${activePosition.width}px`,
               }}
             />
-
-            {/* Таби */}
-            <div className="relative flex z-10 space-x-1">
+            <div className="relative flex z-10 gap-1">
               {["Detailing", "Cleaning"].map((service) => (
                 <button
                   key={service}
                   ref={(el) => (buttonRefs.current[service] = el)}
-                  onClick={() => {
-                    setSelectedService(service);
-                    setStartIndex(0);
-                  }}
+                  onClick={() => setSelectedService(service)}
                   className="text-[14px] md:text-[24px] font-semibold text-[#18181B] py-4 px-9 rounded-full leading-none transition"
                   style={{ fontFamily: "Manrope, sans-serif" }}
                 >
@@ -163,80 +196,79 @@ const OurReviews = () => {
         )}
       </div>
 
-      {/* Картки */}
-      <div className="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4 px-4 md:px-12">
+      {/* Cards */}
+      <div className="flex flex-col md:flex-row justify-center gap-4">
         {visibleItems.length === 0 && (
           <p className="text-lg text-[#52525B]">Reviews coming soon</p>
         )}
 
         {visibleItems.map((item, index) => (
           <div
-            key={item.id ?? index}
+            key={item?.id ?? `${selectedService}-${startIndex}-${index}`}
             className="flex flex-col w-full md:w-[436px] min-h-[260px] bg-white rounded-[32px] p-6"
           >
             <div className="flex items-center mb-4">
-              {item.profilePhotoUrl ? (
-                <img
-                  src={item.profilePhotoUrl}
-                  alt="Avatar"
-                  className="w-[80px] h-[80px] rounded-full mr-3 object-cover"
-                />
-              ) : (
-                <img
-                  src={avatarIcon}
-                  alt="Avatar"
-                  className="w-[80px] h-[80px] rounded-full mr-3"
-                />
-              )}
+              <img
+                src={item?.profilePhotoUrl || avatarIcon}
+                alt="Avatar"
+                className="w-[80px] h-[80px] rounded-full mr-3 object-cover"
+              />
+
               <div className="flex flex-col">
                 <h3
                   className="text-[20px] font-bold leading-[28px] text-[#18181B]"
                   style={{ fontFamily: "Manrope, sans-serif" }}
                 >
-                  {item.name}
+                  {item?.name || "Anonymous"}
                 </h3>
-                {item.rating && (
+
+                {typeof item?.rating === "number" && (
                   <span className="text-sm text-[#F59E0B]">
                     ⭐ {item.rating}/5
                   </span>
                 )}
-                {item.relativeTime && (
+
+                {item?.relativeTime && (
                   <span className="text-xs text-[#A1A1AA]">
                     {item.relativeTime}
                   </span>
                 )}
               </div>
             </div>
+
             <p
               className="text-[16px] font-normal leading-[140%] text-[#52525B]"
               style={{ fontFamily: "Manrope, sans-serif" }}
             >
-              {item.review}
+              {item?.review || ""}
             </p>
           </div>
         ))}
       </div>
 
-      {/* Стрілки */}
+      {/* Arrows */}
       {filteredReviews.length > safeVisibleCards && (
-        <div className="flex justify-start mt-4 px-4 md:px-16">
-          <div className="flex space-x-[8px]">
+        <div className="flex justify-start mt-4">
+          <div className="flex gap-2">
             <button
               onClick={handlePrev}
-              className="w-[68px] h-[52px] rounded-[88px] bg-white flex items-center justify-center py-4 px-6"
+              className="w-[68px] h-[52px] rounded-[88px] bg-white flex items-center justify-center"
+              aria-label="Previous reviews"
             >
-              <img src={LeftArrowIcon} alt="Arrow Left" className="w-5 h-5" />
+              <img src={LeftArrowIcon} alt="" className="w-5 h-5" />
             </button>
+
             <button
               onClick={handleNext}
-              className="w-[68px] h-[52px] rounded-[88px] bg-white flex items-center justify-center py-4 px-6"
+              className="w-[68px] h-[52px] rounded-[88px] bg-white flex items-center justify-center"
+              aria-label="Next reviews"
             >
-              <img src={RightArrowIcon} alt="Arrow Right" className="w-5 h-5" />
+              <img src={RightArrowIcon} alt="" className="w-5 h-5" />
             </button>
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 };
 
