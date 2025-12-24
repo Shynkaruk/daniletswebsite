@@ -150,7 +150,7 @@ const StepDetailingBusinessDetails = ({
         {/* Section 4: Service Frequency */}
         <section className="space-y-2">
           <div className="text-sm text-[#6B7280] font-medium">
-            How often do you need detailing services? *
+            How often do you need detailing services?
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {SERVICE_FREQUENCY_OPTIONS.map((opt) => {

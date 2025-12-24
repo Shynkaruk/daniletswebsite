@@ -52,7 +52,7 @@ export default function StepDetailingBusinessServiceFrequency({
 
           <div>
             <h2 className="text-[20px] sm:text-[22px] lg:text-[24px] font-extrabold text-[#18181B]">
-              Service frequency
+              Service Frequency
             </h2>
             <p className="text-[11px] sm:text-[12px] text-[#9CA3AF]">
               Step {progressStepIndex} of {totalSteps}
@@ -70,7 +70,7 @@ export default function StepDetailingBusinessServiceFrequency({
         {/* QUESTION BLOCK */}
         <section className="space-y-4">
           <div className="text-sm text-[#6B7280] font-medium">
-            How often do you need detailing services? *
+            How often do you need detailing services?
           </div>
 
           {/* OPTIONS */}

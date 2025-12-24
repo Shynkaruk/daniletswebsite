@@ -266,7 +266,7 @@ export default function StepDetailingBusinessReview({
 
         {/* ==== BLOCK 3: SERVICE FREQUENCY ==== */}
         <section className="space-y-4">
-          <h3 className={sectionTitleClass}>Service frequency</h3>
+          <h3 className={sectionTitleClass}>Service Frequency</h3>
 
           <div className={infoBoxClass}>{frequencyText}</div>
 

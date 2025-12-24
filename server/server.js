@@ -25,6 +25,7 @@ import googleCodeRouter from "./routes/authGoogle.js";
 import googleReviewsRouter from "./routes/reviews.js";
 import { sendOtpEmail } from "./email.js";
 import contactRouter from "./routes/contact.js";
+import contactsFormRouter from "./routes/contactsform.js";
 import checkoutRouter from "./routes/checkout.js";
 
 const app = express();
@@ -69,7 +70,13 @@ app.set("trust proxy", true);
 app.use(cors({ origin: "*", credentials: false }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+// один раз
 app.use("/api/contact", contactRouter);
+
+// ✅ новий роут для форми клієнтів
+app.use("/api/contactsform", contactsFormRouter);
+
 
 app.use("/api/reviews", googleReviewsRouter);
 app.use("/api", checkoutRouter);

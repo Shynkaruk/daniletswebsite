@@ -49,42 +49,44 @@ useEffect(() => {
 
   const services = ["Danilets Detailing", "Danilets Cleaning"];
 
-  const submit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess(false);
+const submit = async (e) => {
+  e.preventDefault();
+  setError("");
+  setSuccess(false);
 
-    if (!form.email || !form.description) {
-      setError("Please enter your email and a message.");
-      return;
-    }
+  if (!form.email || !form.description) {
+    setError("Please enter your email and a message.");
+    return;
+  }
 
-    try {
-      setLoading(true);
-      await apiSend("/api/contact", "POST", form);
-      setSuccess(true);
+  try {
+    setLoading(true);
 
-      // очищаємо форму
-      setForm({
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        service: initialService || "Danilets Detailing",
-        description: "",
-      });
+    await apiSend("/api/contactsform", "POST", {
+      ...form,
+      pagePath: location.pathname, // корисно в адмінці
+    });
 
-      // закриваємо модалку через 1.5 сек
-      setTimeout(() => {
-        onClose?.();
-      }, 1500);
-    } catch (err) {
-      console.error(err);
-      setError(err?.error || "Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    setSuccess(true);
+
+    setForm({
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      service: initialService || "Danilets Detailing",
+      description: "",
+    });
+
+    setTimeout(() => onClose?.(), 1500);
+  } catch (err) {
+    console.error(err);
+    setError(err?.error || "Something went wrong. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   if (!open) return null;
 

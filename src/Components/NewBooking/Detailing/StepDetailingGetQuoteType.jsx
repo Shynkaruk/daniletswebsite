@@ -73,41 +73,27 @@ const StepDetailingGetQuoteType = ({
             What type of detailing are you interested in?
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => handleSelect("personal")}
-              className={`h-[48px] rounded-[16px] border text-sm font-semibold
-                ${
-                  currentType === "personal"
-                    ? "border-transparent text-black"
-                    : "border-[#E5E7EB] text-[#4B5563] bg-white"
-                }`}
-              style={{
-                background:
-                  currentType === "personal" ? GOLD_GRADIENT : undefined,
-              }}
-            >
-              Personal
-            </button>
+{/* BUTTONS */}
+<div className="flex justify-center">
+  <div className="w-full sm:w-auto">
+    <button
+      type="button"
+      onClick={() => handleSelect("business")}
+      className={`h-[48px] w-full sm:w-[320px] rounded-[16px] border text-sm font-semibold
+        ${
+          currentType === "business"
+            ? "border-transparent text-black"
+            : "border-[#E5E7EB] text-[#4B5563] bg-white"
+        }`}
+      style={{
+        background: currentType === "business" ? GOLD_GRADIENT : undefined,
+      }}
+    >
+      Business
+    </button>
+  </div>
+</div>
 
-            <button
-              type="button"
-              onClick={() => handleSelect("business")}
-              className={`h-[48px] rounded-[16px] border text-sm font-semibold
-                ${
-                  currentType === "business"
-                    ? "border-transparent text-black"
-                    : "border-[#E5E7EB] text-[#4B5563] bg-white"
-                }`}
-              style={{
-                background:
-                  currentType === "business" ? GOLD_GRADIENT : undefined,
-              }}
-            >
-              Business
-            </button>
-          </div>
 
           <p className="text-xs sm:text-[13px] text-[#9CA3AF]">
             Personal is for your own vehicle. Business is for fleets,

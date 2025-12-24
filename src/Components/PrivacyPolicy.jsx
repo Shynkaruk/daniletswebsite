@@ -15,9 +15,7 @@ const PrivacyPolicy = () => {
   );
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -39,13 +37,21 @@ const PrivacyPolicy = () => {
         width: button.offsetWidth,
       });
     }
-  }, [selectedService]);
+  }, [selectedService, isMobile]);
+
+  // ✅ Явні роуті (без replace-логіки)
+  const TABS = [
+    { label: "Privacy Policy", to: "/legal/privacy-policy" },
+    { label: "Terms & Conditions", to: "/legal/terms-conditions" },
+    { label: "FAQ", to: "/legal/faq" },
+  ];
 
   return (
     <div className="bg-[#F5F5F5] min-h-screen">
       {isMobile ? <Head title={selectedService} /> : <Head />}
 
-      <div className="w-full max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-10 pt-6 lg:pt-10 md:mt-20">
+      {/* ✅ Компенсація fixed Header: опускаємо весь контент нижче */}
+      <div className="w-full max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-10 pt-[92px] md:pt-[120px]">
         {/* Навігація */}
         <nav className="text-gray-600 text-sm mb-4">
           <Link to="/" className="hover:text-yellow-600">
@@ -68,18 +74,15 @@ const PrivacyPolicy = () => {
             }}
           />
           <div className="flex space-x-[10px] z-10 min-w-max">
-            {["Privacy Policy", "Terms & Conditions", "FAQ"].map((item) => (
+            {TABS.map((tab) => (
               <Link
-                key={item}
-                to={`/legal/${item
-                  .toLowerCase()
-                  .replace(" & ", "-")
-                  .replace(" ", "-")}`}
-                ref={(el) => (buttonRefs.current[item] = el)}
+                key={tab.label}
+                to={tab.to}
+                ref={(el) => (buttonRefs.current[tab.label] = el)}
                 className="text-[16px] sm:text-[18px] font-bold leading-[38px] text-[#18181B] py-[10px] sm:py-[14px] px-6 sm:px-10 rounded-[88px] z-10 whitespace-nowrap"
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
-                {item}
+                {tab.label}
               </Link>
             ))}
           </div>
@@ -88,14 +91,13 @@ const PrivacyPolicy = () => {
         {/* Content */}
         <div className="text-[#18181B] space-y-6 max-w-full sm:max-w-[850px] lg:max-w-full pb-10">
           {selectedService === "FAQ" ? (
-            // ✅ Legal FAQ: рендеримо компонент FAQ
             <FAQ />
           ) : selectedService === "Terms & Conditions" ? (
-            // ✅ ТУТ ТІЛЬКИ TERMS & CONDITIONS
             <>
               <h2 className="font-bold text-2xl sm:text-3xl lg:text-[48px]">
                 Terms and Conditions
               </h2>
+
               <h3 className="font-semibold text-xl mt-4">
                 1. Acceptance of Terms
               </h3>
@@ -257,7 +259,6 @@ const PrivacyPolicy = () => {
               </p>
             </>
           ) : (
-            // ✅ PRIVACY POLICY (ТУТ МАЄ БУТИ ТЕКСТ, ЯКИЙ РОБИЛА РУСЛАНА)
             <>
               <h2 className="font-bold text-2xl sm:text-3xl lg:text-[48px]">
                 Privacy Policy
@@ -276,7 +277,6 @@ const PrivacyPolicy = () => {
                 Policy.
               </p>
 
-              {/* SECTION: Information We Collect */}
               <h3 className="font-semibold text-xl mt-6">
                 What Information We Collect
               </h3>
@@ -307,7 +307,6 @@ const PrivacyPolicy = () => {
                 automatically (via cookies and analytics tools).
               </p>
 
-              {/* SECTION: How We Use Your Information */}
               <h3 className="font-semibold text-xl mt-6">
                 How We Use Your Information
               </h3>
@@ -332,7 +331,6 @@ const PrivacyPolicy = () => {
                 parties without your explicit consent or a legal requirement.
               </p>
 
-              {/* SECTION: Data Sharing */}
               <h3 className="font-semibold text-xl mt-6">Data Sharing</h3>
 
               <p className="mt-2">
@@ -341,18 +339,17 @@ const PrivacyPolicy = () => {
 
               <ul className="list-disc pl-5 space-y-2 mt-2">
                 <li>
-                  With trusted **third-party service providers** (CRM tools,
-                  email delivery systems, payment processors) strictly for
-                  operational needs.
+                  With trusted <strong>third-party service providers</strong>{" "}
+                  (CRM tools, email delivery systems, payment processors)
+                  strictly for operational needs.
                 </li>
                 <li>With authorities if required by law.</li>
                 <li>
-                  With **IT specialists** for site maintenance — under
-                  confidentiality agreements.
+                  With <strong>IT specialists</strong> for site maintenance —
+                  under confidentiality agreements.
                 </li>
               </ul>
 
-              {/* SECTION: Cookies */}
               <h3 className="font-semibold text-xl mt-6">
                 Cookies and Analytics
               </h3>
@@ -374,7 +371,6 @@ const PrivacyPolicy = () => {
                 cookies to sell or disclose your personal data.
               </p>
 
-              {/* SECTION: Updates */}
               <h3 className="font-semibold text-xl mt-6">
                 Changes to This Policy
               </h3>
@@ -386,7 +382,6 @@ const PrivacyPolicy = () => {
                 stay informed.
               </p>
 
-              {/* Contact */}
               <h3 className="font-semibold text-xl mt-6">
                 Contact Information
               </h3>

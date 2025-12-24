@@ -15,17 +15,17 @@ const Detailing = () => {
   };
 
   return (
-<section
-  className="
+    <section
+      className="
     relative w-full 
     min-h-[100dvh] 
     overflow-x-hidden   /* тільки по X, не по Y */
     text-white
   "
-  style={{
-    background: "linear-gradient(90deg, #1C1C1C 46.13%)",
-  }}
->
+      style={{
+        background: "linear-gradient(90deg, #1C1C1C 46.13%)",
+      }}
+    >
       {/* Фон — мобільний */}
       <div className="absolute bottom-10 inset-0 z-0 pointer-events-none md:hidden flex justify-end items-end">
         <img
@@ -61,10 +61,11 @@ const Detailing = () => {
           {/* Опис */}
           <p
             className="mt-4 text-xl md:hidden max-w-md"
-            style={{ color: "#A1A1A5" }}
+            style={{ color: "rgba(255,255,255,0.92)" }}
           >
-Precision detailing for dealerships, fleets, and vehicle owners who demand excellence. From 
-commercial work to ceramic coatings—we deliver perfection in every detail. 
+            Precision detailing for dealerships, fleets, and vehicle owners who
+            demand excellence. From commercial work to ceramic coatings—we
+            deliver perfection in every detail.
           </p>
 
           <p

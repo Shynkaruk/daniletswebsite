@@ -54,7 +54,7 @@ export default function StepDetailingBusinessTimeline({
 
         <div className="space-y-2">
           <p className="text-sm text-[#6B7280]">
-            When would you like us to start? (required)
+            When would you like us to start?
           </p>
 
           <DatePicker

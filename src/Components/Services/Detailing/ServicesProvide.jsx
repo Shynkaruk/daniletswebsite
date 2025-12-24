@@ -1,15 +1,12 @@
 // src/components/detailing/ServicesProvide.jsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import carRed from "../../../assets/icons/carred.svg";
 import arrowRightIcon from "../../../assets/icons/arrows/arrow_right_black.svg";
 
 // ==== МЕДІА ДЛЯ КОЖНОГО СЕРВІСУ ====
 const mediaByServiceId = {
-  1: {
-    images: [],
-    videos: [],
-  },
+  1: { images: [], videos: [] },
   2: {
     images: [
       "/Services we provide/Fleets/IMG_0529.JPG",
@@ -41,15 +38,10 @@ const mediaByServiceId = {
     ],
     videos: [],
   },
-  5: {
-    images: [],
-    videos: [],
-  },
+  5: { images: [], videos: [] },
   6: {
     images: [],
-    videos: [
-      "/Services we provide/Other Services/01 - IMG_2127.webm",
-    ],
+    videos: ["/Services we provide/Other Services/01 - IMG_2127.webm"],
   },
 };
 
@@ -169,12 +161,8 @@ determine the best solution for your needs.
 const buildMediaArray = (serviceId) => {
   const media = mediaByServiceId[serviceId] || {};
   const result = [];
-  (media.images || []).forEach((src) =>
-    result.push({ type: "image", src })
-  );
-  (media.videos || []).forEach((src) =>
-    result.push({ type: "video", src })
-  );
+  (media.images || []).forEach((src) => result.push({ type: "image", src }));
+  (media.videos || []).forEach((src) => result.push({ type: "video", src }));
   return result;
 };
 
@@ -201,17 +189,23 @@ const ServicesProvide = () => {
 
   const handlePrev = () => {
     if (!modalMedia.length) return;
-    setActiveMediaIndex((prev) =>
-      prev === 0 ? modalMedia.length - 1 : prev - 1
-    );
+    setActiveMediaIndex((prev) => (prev === 0 ? modalMedia.length - 1 : prev - 1));
   };
 
   const handleNext = () => {
     if (!modalMedia.length) return;
-    setActiveMediaIndex((prev) =>
-      prev === modalMedia.length - 1 ? 0 : prev + 1
-    );
+    setActiveMediaIndex((prev) => (prev === modalMedia.length - 1 ? 0 : prev + 1));
   };
+
+  // Блокуємо скрол сторінки, поки модалка відкрита
+  useEffect(() => {
+    if (!modalOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [modalOpen]);
 
   return (
     <section className="relative w-[95%] max-w-[1792px] mx-auto bg-white rounded-[32px] py-10 px-4 md:px-10 shadow-md">
@@ -230,11 +224,7 @@ const ServicesProvide = () => {
             className="flex flex-col bg-[#F5F5F5] rounded-[24px] p-5 md:p-6 min-h-[220px] hover:shadow-lg transition-transform duration-200 hover:scale-[1.01]"
           >
             <div className="flex flex-col items-start mb-4">
-              <img
-                src={carRed}
-                alt=""
-                className="w-12 h-12 md:w-14 md:h-14 object-contain"
-              />
+              <img src={carRed} alt="" className="w-12 h-12 md:w-14 md:h-14 object-contain" />
 
               <h3
                 className="text-[24px] md:text-[36px] font-bold mt-3 text-black"
@@ -264,32 +254,32 @@ const ServicesProvide = () => {
               <span>Learn More</span>
 
               <span className="inline md:hidden">
-                <img
-                  src={arrowRightIcon}
-                  alt="arrow"
-                  className="w-[18px] h-[18px] object-contain"
-                />
+                <img src={arrowRightIcon} alt="arrow" className="w-[18px] h-[18px] object-contain" />
               </span>
 
               <span className="hidden md:inline">
-                <img
-                  src={arrowRightIcon}
-                  alt="arrow"
-                  className="w-[20px] h-[20px] object-contain"
-                />
+                <img src={arrowRightIcon} alt="arrow" className="w-[20px] h-[20px] object-contain" />
               </span>
             </button>
           </div>
         ))}
       </div>
 
-      {/* Модалка нового дизайну */}
+      {/* Модалка */}
       {modalOpen &&
         modalService &&
         typeof document !== "undefined" &&
         createPortal(
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[99999] px-4">
-            <div className="bg-white rounded-[28px] md:rounded-[32px] w-full max-w-[980px] max-h-[90vh] shadow-2xl flex flex-col overflow-hidden">
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[999999] px-4"
+            onMouseDown={closeModal}
+            onTouchStart={closeModal}
+          >
+            <div
+              className="bg-white rounded-[28px] md:rounded-[32px] w-full max-w-[980px] max-h-[90vh] shadow-2xl flex flex-col overflow-hidden"
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+            >
               {/* Header */}
               <div className="flex items-center justify-between px-5 md:px-7 pt-5 pb-3 border-b border-[#E4E4E7]">
                 <h3
@@ -301,14 +291,16 @@ const ServicesProvide = () => {
                 <button
                   onClick={closeModal}
                   className="w-8 h-8 flex items-center justify-center rounded-full bg-[#F4F4F5] text-[18px] font-semibold text-[#52525B] hover:bg-[#E4E4E7] transition"
+                  aria-label="Close"
+                  type="button"
                 >
                   ✕
                 </button>
               </div>
 
-              {/* Body (скролиться) */}
-              <div className="px-5 md:px-7 pb-6 pt-4 overflow-y-auto">
-                {/* Головне зображення / відео + стрілки */}
+              {/* Body */}
+              <div className="px-5 md:px-7 pb-6 pt-4 overflow-y-auto [-webkit-overflow-scrolling:touch]">
+                {/* Головне зображення/відео + стрілки */}
                 {modalMedia.length > 0 && (
                   <div className="relative mb-4">
                     <div className="w-full rounded-[20px] md:rounded-[24px] overflow-hidden bg-[#F4F4F5]">
@@ -316,12 +308,16 @@ const ServicesProvide = () => {
                         <img
                           src={modalMedia[activeMediaIndex].src}
                           alt={`${modalService.title} media`}
-                          className="w-full h-[220px] sm:h-[320px] md:h-[420px] object-cover"
+                          className="w-full h-[220px] sm:h-[320px] md:h-[420px] object-cover select-none"
+                          decoding="async"
+                          loading="lazy"
                         />
                       ) : (
                         <video
                           src={modalMedia[activeMediaIndex].src}
                           controls
+                          playsInline
+                          preload="metadata"
                           className="w-full h-[220px] sm:h-[320px] md:h-[420px] object-cover"
                         />
                       )}
@@ -332,12 +328,14 @@ const ServicesProvide = () => {
                         <button
                           onClick={handlePrev}
                           className="w-9 h-9 flex items-center justify-center rounded-full bg-white/90 shadow-md text-[18px] font-semibold hover:bg-white"
+                          type="button"
                         >
                           {"<"}
                         </button>
                         <button
                           onClick={handleNext}
                           className="w-9 h-9 flex items-center justify-center rounded-full bg-white/90 shadow-md text-[18px] font-semibold hover:bg-white"
+                          type="button"
                         >
                           {">"}
                         </button>
@@ -349,32 +347,70 @@ const ServicesProvide = () => {
                 {/* Мініатюри */}
                 {modalMedia.length > 1 && (
                   <div className="mb-5">
-                    <div className="flex gap-3 overflow-x-auto pb-1">
+                    {/* MOBILE: grid (без overflow-x) — фікс “колажів” на iOS */}
+                    <div className="grid grid-cols-4 gap-3 sm:hidden">
                       {modalMedia.map((item, idx) => (
                         <button
-                          key={item.src}
+                          key={`${item.type}-${item.src}-${idx}`}
+                          type="button"
                           onClick={() => setActiveMediaIndex(idx)}
-                          className={`min-w-[80px] sm:min-w-[96px] h-[70px] sm:h-[80px] rounded-[16px] overflow-hidden border ${
-                            idx === activeMediaIndex
-                              ? "border-[#18181B]"
-                              : "border-transparent"
-                          } bg-[#F4F4F5] flex-shrink-0`}
+                          className={`aspect-[4/3] w-full rounded-[14px] overflow-hidden border ${
+                            idx === activeMediaIndex ? "border-[#18181B]" : "border-transparent"
+                          } bg-[#F4F4F5]`}
                         >
                           {item.type === "image" ? (
                             <img
                               src={item.src}
                               alt=""
                               className="w-full h-full object-cover"
+                              loading="lazy"
+                              decoding="async"
                             />
                           ) : (
                             <video
                               src={item.src}
                               className="w-full h-full object-cover"
                               muted
+                              playsInline
+                              preload="metadata"
                             />
                           )}
                         </button>
                       ))}
+                    </div>
+
+                    {/* TABLET/DESKTOP: горизонтальний скрол як було */}
+                    <div className="hidden sm:block overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
+                      <div className="flex w-max gap-3">
+                        {modalMedia.map((item, idx) => (
+                          <button
+                            key={`${item.type}-${item.src}-${idx}`}
+                            type="button"
+                            onClick={() => setActiveMediaIndex(idx)}
+                            className={`w-[96px] h-[80px] rounded-[16px] overflow-hidden border ${
+                              idx === activeMediaIndex ? "border-[#18181B]" : "border-transparent"
+                            } bg-[#F4F4F5] flex-shrink-0`}
+                          >
+                            {item.type === "image" ? (
+                              <img
+                                src={item.src}
+                                alt=""
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                                decoding="async"
+                              />
+                            ) : (
+                              <video
+                                src={item.src}
+                                className="w-full h-full object-cover"
+                                muted
+                                playsInline
+                                preload="metadata"
+                              />
+                            )}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -385,9 +421,7 @@ const ServicesProvide = () => {
                     <div className="space-y-4">
                       {modalService.items.map((item) => (
                         <div key={item.title}>
-                          <p className="font-semibold mb-1 text-[#18181B]">
-                            {item.title}
-                          </p>
+                          <p className="font-semibold mb-1 text-[#18181B]">{item.title}</p>
                           <p>{item.description}</p>
                         </div>
                       ))}
@@ -396,17 +430,16 @@ const ServicesProvide = () => {
                     modalService.detailedDescription
                       .trim()
                       .split(/\n\s*\n/)
-                      .map((paragraph, idx) => (
-                        <p key={idx}>{paragraph.trim()}</p>
-                      ))
+                      .map((paragraph, idx) => <p key={idx}>{paragraph.trim()}</p>)
                   ) : null}
                 </div>
 
-                {/* Кнопка Close внизу (як на десктопі) */}
+                {/* Close */}
                 <div className="mt-6 flex justify-end">
                   <button
                     onClick={closeModal}
                     className="px-6 py-2 rounded-full border border-[#D4D4D8] text-sm md:text-[15px] hover:bg-[#F4F4F5] transition"
+                    type="button"
                   >
                     Close
                   </button>

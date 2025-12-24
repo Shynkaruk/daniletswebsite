@@ -185,7 +185,7 @@ const MainMobile = () => {
             "
           >
             <img src={diamondicon} alt="Diamond Icon" className="w-8 h-6" />
-            <span className="text-white text-[14px] font-semibold">
+            <span className="text-white text-base font-semibold">
               Lets is More
             </span>
           </div>

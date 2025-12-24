@@ -12,21 +12,27 @@ export default function StepCleaningPropertyDetails({
   onNext,
   propertyType,
 
-  // residential
+  // ✅ residential (НЕ ЗМІНЮЄМО)
   bedrooms,
   setBedrooms,
   bathrooms,
   setBathrooms,
 
-  // commercial
+  // ✅ commercial (Contact Information — як в документації)
+  firstName,
+  setFirstName,
+  lastName,
+  setLastName,
   companyName,
   setCompanyName,
   companyAddress,
   setCompanyAddress,
-  squareFeet,
-  setSquareFeet,
-  frequency,
-  setFrequency,
+  phoneNumber,
+  setPhoneNumber,
+  email,
+  setEmail,
+  hearAboutUs,
+  setHearAboutUs,
 
   renderProgress,
   progressStepIndex = 3,
@@ -38,10 +44,37 @@ export default function StepCleaningPropertyDetails({
   const isCommercial = propertyType === "commercial";
 
   const canContinue = useMemo(() => {
-    if (isResidential) return String(bedrooms || "").trim() && String(bathrooms || "").trim();
-    if (isCommercial) return String(companyName || "").trim() && String(companyAddress || "").trim();
+    if (isResidential) {
+      return (
+        String(bedrooms || "").trim() &&
+        String(bathrooms || "").trim()
+      );
+    }
+    if (isCommercial) {
+      return (
+        String(firstName || "").trim() &&
+        String(lastName || "").trim() &&
+        String(companyName || "").trim() &&
+        String(companyAddress || "").trim() &&
+        String(phoneNumber || "").trim() &&
+        String(email || "").trim() &&
+        String(hearAboutUs || "").trim()
+      );
+    }
     return false;
-  }, [isResidential, isCommercial, bedrooms, bathrooms, companyName, companyAddress]);
+  }, [
+    isResidential,
+    isCommercial,
+    bedrooms,
+    bathrooms,
+    firstName,
+    lastName,
+    companyName,
+    companyAddress,
+    phoneNumber,
+    email,
+    hearAboutUs,
+  ]);
 
   return (
     <div className="w-full max-w-full min-w-0 text-left">
@@ -58,23 +91,45 @@ export default function StepCleaningPropertyDetails({
           </button>
 
           <div>
-            <h2 className="text-[26px] font-extrabold text-[#111827]">Property details</h2>
-            <p className="text-[14px] text-[#6B7280] mt-1">
-              {isResidential ? "Tell us about the home size." : "Tell us about your business."}
-            </p>
+            {/* ✅ Residential НЕ чіпаємо: як було “Property details” */}
+            {isResidential ? (
+              <>
+                <h2 className="text-[26px] font-extrabold text-[#111827]">
+                  Property details
+                </h2>
+                <p className="text-[14px] text-[#6B7280] mt-1">
+                  Tell us about the home size.
+                </p>
+              </>
+            ) : (
+              <>
+                {/* ✅ Commercial: заголовок/секція як в документації */}
+                <h2 className="text-[26px] font-extrabold text-[#111827]">
+                  Contact Information
+                </h2>
+                <p className="text-[14px] text-[#6B7280] mt-1">
+                  Please provide your contact details.
+                </p>
+              </>
+            )}
           </div>
         </div>
 
-        {/* ✅ Progress MUST be under title */}
-        {renderProgress ? renderProgress(progressStepIndex) : (
+        {/* Progress MUST be under title */}
+        {renderProgress ? (
+          renderProgress(progressStepIndex)
+        ) : (
           <ProgressBar activeCount={progressStepIndex} total={totalSteps} />
         )}
 
         {/* Fields */}
         {isResidential ? (
+          // ✅ Residential block — НЕ ЗМІНЮЄМО
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-semibold text-[#111827]">Bedrooms</label>
+              <label className="text-sm font-semibold text-[#111827]">
+                Bedrooms
+              </label>
               <input
                 value={bedrooms}
                 onChange={(e) => setBedrooms(e.target.value)}
@@ -85,7 +140,9 @@ export default function StepCleaningPropertyDetails({
             </div>
 
             <div>
-              <label className="text-sm font-semibold text-[#111827]">Bathrooms</label>
+              <label className="text-sm font-semibold text-[#111827]">
+                Bathrooms
+              </label>
               <input
                 value={bathrooms}
                 onChange={(e) => setBathrooms(e.target.value)}
@@ -96,48 +153,94 @@ export default function StepCleaningPropertyDetails({
             </div>
           </div>
         ) : (
+          // ✅ Commercial block — Contact Information (без зірочок)
           <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-[#111827]">
+                  First Name
+                </label>
+                <input
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  placeholder="First name"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-[#111827]">
+                  Last Name
+                </label>
+                <input
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  placeholder="Last name"
+                />
+              </div>
+            </div>
+
             <div>
-              <label className="text-sm font-semibold text-[#111827]">Company Name</label>
+              <label className="text-sm font-semibold text-[#111827]">
+                Company Name
+              </label>
               <input
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
-                placeholder="Your company"
+                placeholder="Company name"
               />
             </div>
 
             <div>
-              <label className="text-sm font-semibold text-[#111827]">Company Address</label>
+              <label className="text-sm font-semibold text-[#111827]">
+                Company Address
+              </label>
               <input
                 value={companyAddress}
                 onChange={(e) => setCompanyAddress(e.target.value)}
                 className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
-                placeholder="Address"
+                placeholder="Company address"
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-semibold text-[#111827]">Square Feet</label>
-                <input
-                  value={squareFeet}
-                  onChange={(e) => setSquareFeet(e.target.value)}
-                  className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
-                  placeholder="e.g. 2500"
-                  inputMode="numeric"
-                />
-              </div>
+            <div>
+              <label className="text-sm font-semibold text-[#111827]">
+                Phone Number
+              </label>
+              <input
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                placeholder="Phone number"
+                inputMode="tel"
+              />
+            </div>
 
-              <div>
-                <label className="text-sm font-semibold text-[#111827]">Cleaning Frequency</label>
-                <input
-                  value={frequency}
-                  onChange={(e) => setFrequency(e.target.value)}
-                  className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
-                  placeholder="Weekly / Monthly ..."
-                />
-              </div>
+            <div>
+              <label className="text-sm font-semibold text-[#111827]">
+                Email
+              </label>
+              <input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                placeholder="Email"
+                inputMode="email"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold text-[#111827]">
+                How did you hear about us?
+              </label>
+              <input
+                value={hearAboutUs}
+                onChange={(e) => setHearAboutUs(e.target.value)}
+                className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                placeholder="Google, referral, social media..."
+              />
             </div>
           </div>
         )}

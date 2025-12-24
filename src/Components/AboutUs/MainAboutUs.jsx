@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Head from "./../Head.jsx";
-import familyPhoto from "../../assets/photo/family-photo3.png";
-import familyMobile from "../../assets/photo/bg_family_mobile.png"; // 👈 мобільний фон
+import familyPhoto from "../../assets/photo/family-photo5.png";
+import familyMobile from "../../assets/photo/bg_family_mobile.jpg"; // 👈 мобільний фон
 import diamondicon from "../../assets/icons/diamond-icon.svg";
 
 const MainAboutUs = () => {
@@ -14,82 +14,63 @@ const MainAboutUs = () => {
     <div className="bg-[#e5e5e5] min-h-screen pb-8 relative">
       <Head />
 
-      {/* MAIN SECTION */}
-      <main
-        className="
-          flex min-h-screen bg-cover bg-center relative
-          before:content-[''] before:absolute before:inset-0
-          before:bg-black/20 before:z-[1]
-        "
-        style={{
-          backgroundImage: `url(${familyPhoto})`,
-        }}
+<main className="relative min-h-screen w-full overflow-hidden">
+  {/* BACKGROUND (Desktop через img для ідеального контролю) */}
+  <div className="absolute inset-0 z-0 md:block">
+    <img
+      src={familyPhoto}
+      alt=""
+      className="w-full h-full object-cover"
+      style={{
+      }}
+    />
+  </div>
+
+  {/* BACKGROUND (Mobile через background-image, як тобі зайшло) */}
+  <div
+    className="absolute inset-0 z-0 md:hidden bg-no-repeat"
+    style={{
+      backgroundImage: `url(${familyMobile})`, // або familyMobile якщо треба
+      backgroundSize: "cover",
+      transform: "scale(1)",
+      backgroundPosition: "50%",
+    }}
+  />
+
+  {/* CONTENT */}
+  <div className="relative z-[3] w-[95%] max-w-[1792px] mx-auto md:pt-[120px] pt-[90px]  px-4 pb-16">
+    <div className="w-full md:w-2/3 lg:w-1/2 space-y-6">
+      <h1 className="text-[40px] sm:text-[40px] md:text-[80px] lg:text-[82px] xl:text-[90px] font-extrabold text-white">
+        Danilets Family
+      </h1>
+
+      <p
+        className="text-[16px] sm:text-[18px] md:text-[18px] lg:text-[22px] -mt-5 xl:text-[24px] font-medium leading-snug text-white max-w-[900px]"
+        style={{ fontFamily: "Manrope, sans-serif" }}
       >
-        {/* Мобільний фон */}
-        <style>
-          {`
-            @media (max-width: 768px) {
-              main {
-                background-image: url(${familyMobile}) !important;
-              }
-            }
-          `}
-        </style>
+        A family story of faith, resilience, and the American dream. From losing
+        everything to building something meaningful, every milestone shaped who
+        we are today.
+      </p>
 
-        {/* TEXT BLOCK */}
-        <div className="w-[95%] max-w-[1792px] mx-auto mt-[120px] px-4 mb-50 relative z-[2]">
-          <div className="w-full md:w-2/3 lg:w-1/2 space-y-6">
-            <h1
-              className="
-                text-[36px] sm:text-[56px] md:text-[56px] lg:text-[72px] xl:text-[90px]
-                font-extrabold text-white
-              "
-            >
-              Danilets Family
-            </h1>
+      <button
+        onClick={openPopup}
+        className="border border-white px-6 py-3 md:px-12 md:py-5 rounded-full text-white text-[16px] sm:text-[18px] font-semibold hover:bg-white hover:text-black transition"
+      >
+        Read More
+      </button>
+    </div>
+  </div>
 
-            <p
-              className="
-                text-[18px] sm:text-[18px] md:text-[20px] lg:text-[22px] xl:text-[24px]
-                font-medium leading-snug text-white max-w-[900px]
-              "
-              style={{ fontFamily: "Manrope, sans-serif" }}
-            >
-              A family story of faith, resilience, and the American dream. From
-              losing everything to building something meaningful, every
-              milestone shaped who we are today.
-            </p>
+  {/* LABEL */}
+  <div className="absolute z-[4] bottom-25 right-6 md:bottom-30 md:right-20 bg-[rgba(235,176,108,0.15)] rounded-full px-4 py-3 flex items-center gap-3">
+    <img src={diamondicon} alt="Diamond Icon" className="w-6 h-6 lg:w-8 lg:h-8" />
+    <span className="text-white text-[16px] sm:text-[18px] lg:text-[20px] font-semibold">
+      Lets is More
+    </span>
+  </div>
+</main>
 
-            <button
-              onClick={openPopup}
-              className="
-                border border-white px-6 py-3 rounded-full text-white
-                text-[16px] sm:text-[18px] font-semibold
-                hover:bg-white hover:text-black transition
-              "
-            >
-              Read More
-            </button>
-          </div>
-        </div>
-
-        {/* LABEL */}
-        <div
-          className="
-            absolute bottom-30 right-20 bg-[rgba(235,176,108,0.15)]
-            rounded-full px-4 py-3 flex items-center gap-3 z-[3]
-          "
-        >
-          <img
-            src={diamondicon}
-            alt="Diamond Icon"
-            className="w-6 h-6 lg:w-8 lg:h-8"
-          />
-          <span className="text-white text-[16px] sm:text-[18px] lg:text-[20px] font-semibold ">
-            Lets is More
-          </span>
-        </div>
-      </main>
 
       {/* POPUP */}
       {showPopup && <PopupStory onClose={closePopup} />}
@@ -97,14 +78,13 @@ const MainAboutUs = () => {
   );
 };
 
-
 /* ============================
    МОДАЛЬНЕ ВІКНО (БЕЗ ФОТО)
 =============================== */
 
 const PopupStory = ({ onClose }) => {
   return (
-    <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[9999999999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div
         className="
           relative bg-white rounded-2xl w-full max-w-[900px]
@@ -129,18 +109,17 @@ const PopupStory = ({ onClose }) => {
 
         {/* TEXT — НЕ ЗМІНЮВАВ */}
         <p className="mb-3">
-          Our story begins in 2009 when our family moved to the United
-          States, leaving everything behind. We lost our home and business,
-          and arrived in upstate New York with nothing but hope and faith in
-          God's plan.
+          Our story begins in 2009 when our family moved to the United States,
+          leaving everything behind. We lost our home and business, and arrived
+          in upstate New York with nothing but hope and faith in God's plan.
         </p>
 
         <p className="mb-3">
-          From 2010 to 2012, Nataly wasn't physically present in the
-          US—stuck in Europe, separated from her children, fighting to
-          reunite our family. After two years of perseverance and prayer,
-          she was finally able to return. In 2013, we moved to Columbus,
-          Ohio, where our American dream truly began.
+          From 2010 to 2012, Nataly wasn't physically present in the US—stuck in
+          Europe, separated from her children, fighting to reunite our family.
+          After two years of perseverance and prayer, she was finally able to
+          return. In 2013, we moved to Columbus, Ohio, where our American dream
+          truly began.
         </p>
 
         <h3 className="text-2xl font-semibold mt-6 mb-3">
@@ -148,26 +127,25 @@ const PopupStory = ({ onClose }) => {
         </h3>
 
         <p className="mb-3">
-          When we first arrived in Columbus, Nataly started working at a
-          hotel, making just $3.75 per room. During those difficult days,
-          she made a promise: "When I have my own company, I will never
-          treat my team members like this."
+          When we first arrived in Columbus, Nataly started working at a hotel,
+          making just $3.75 per room. During those difficult days, she made a
+          promise: "When I have my own company, I will never treat my team
+          members like this."
         </p>
 
         <p className="mb-3">
-          From 2013 to 2016, she worked for others while building her skills
-          and reputation. She then started working independently as a sole
+          From 2013 to 2016, she worked for others while building her skills and
+          reputation. She then started working independently as a sole
           proprietor, serving clients with the same dedication and care that
           would become our family trademark.
         </p>
 
         <p className="mb-3">
-          In 2020, everything changed. Nataly began hiring team members,
-          growing from a one-person operation to a full cleaning company.
-          That same year, Timothy came across a YouTube channel called
-          "Detailed Geek," ordered some equipment, and detailed his mom's
-          car. Elijah joined him in partnership, and Danilets Detailing was
-          born.
+          In 2020, everything changed. Nataly began hiring team members, growing
+          from a one-person operation to a full cleaning company. That same
+          year, Timothy came across a YouTube channel called "Detailed Geek,"
+          ordered some equipment, and detailed his mom's car. Elijah joined him
+          in partnership, and Danilets Detailing was born.
         </p>
 
         <h3 className="text-2xl font-semibold mt-6 mb-3">
@@ -184,21 +162,19 @@ const PopupStory = ({ onClose }) => {
           <li>2025: Rebranded to combine detailing and cleaning </li>
         </ul>
 
-        <h3 className="text-2xl font-semibold mt-6 mb-3">
-          Our Promise to You
-        </h3>
+        <h3 className="text-2xl font-semibold mt-6 mb-3">Our Promise to You</h3>
 
         <p className="mb-3">
           We know what it's like to start with nothing. We know the value of
-          hard work, integrity, and treating people with dignity. Every
-          customer we serve receives the same care and excellence we wished
-          for during our hardest days.
+          hard work, integrity, and treating people with dignity. Every customer
+          we serve receives the same care and excellence we wished for during
+          our hardest days.
         </p>
 
         <p>
           When you choose Danilets, you're not just hiring a service—you're
-          supporting a family that believes in the American dream, honors
-          God in everything we do, and treats every client like family.
+          supporting a family that believes in the American dream, honors God in
+          everything we do, and treats every client like family.
         </p>
 
         {/* Close button */}

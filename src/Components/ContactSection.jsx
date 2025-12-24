@@ -149,7 +149,7 @@ const ContactSection = () => {
 
     try {
       setIsSubmitting(true);
-      await apiSend("/api/contact", "POST", payload);
+      await apiSend("/api/contactsform", "POST", payload);
       setSent(true);
 
       setFormData({
@@ -287,17 +287,6 @@ const ContactSection = () => {
                     errors.message ? "border border-red-500" : ""
                   }`}
                 />
-
-                <div
-                  className="lg:col-span-2 flex items-center gap-3 px-4 py-3 rounded-[16px]"
-                  style={{ background: theme.infoBg }}
-                >
-                  <img src={theme.iconWarning} alt="" className="w-7 h-7" />
-                  <span className="text-[14px] text-[#333]">
-                    We’ll contact you using the phone number or email you
-                    provide.
-                  </span>
-                </div>
 
                 {sent && (
                   <div className="lg:col-span-2 flex items-center gap-3 px-4 py-3 rounded-[16px] bg-[#ecfdf3]">

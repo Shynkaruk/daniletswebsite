@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { FiChevronLeft, FiChevronRight, FiCalendar } from "react-icons/fi";
 
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
@@ -22,7 +23,6 @@ function formatISO(date) {
   return `${y}-${m}-${d}`;
 }
 
-// MM.DD.YYYY
 function formatDisplay(value) {
   if (!value) return "";
   const [y, m, d] = value.split("-");
@@ -72,8 +72,7 @@ const DatePicker = ({
 
   const handleSelect = (date) => {
     if (!date || isDisabled(date)) return;
-    const iso = formatISO(date);
-    onChange?.(iso);
+    onChange?.(formatISO(date));
     setOpen(false);
   };
 
@@ -90,7 +89,7 @@ const DatePicker = ({
         </div>
       )}
 
-      {/* "Інпут" */}
+      {/* Input */}
       <button
         type="button"
         onClick={() => setOpen(true)}
@@ -109,115 +108,116 @@ const DatePicker = ({
         <FiCalendar className="text-[18px] text-[#9CA3AF]" />
       </button>
 
-      {/* Модальне вікно з календарем */}
-      {open && (
-        <div className="fixed inset-0 z-[200] flex items-start justify-center pt-24 px-4">
-          {/* бекдроп */}
-          <div
-            className="absolute inset-0 bg-black/20"
-            onClick={() => setOpen(false)}
-          />
+{open &&
+  createPortal(
+    <div
+      className="fixed inset-0 flex items-start justify-center pt-24 px-4"
+      style={{ zIndex: 999999999 }}
+    >
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/30"
+        onClick={() => setOpen(false)}
+      />
 
-          {/* сам календар — дизайн той самий, що був у поповері */}
-          <div
-            className="
-              relative w-full max-w-sm
-              bg-white rounded-[20px] shadow-lg
-              border border-[#E5E7EB]
-            "
+      {/* Calendar */}
+      <div
+        className="
+          relative w-full
+          max-w-sm sm:max-w-lg md:max-w-xl lg:max-w-2xl
+          bg-white rounded-[20px]
+          shadow-xl border border-[#E5E7EB]
+        "
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-3 sm:px-4 py-2 border-b border-[#E5E7EB]">
+          <button
+            type="button"
+            onClick={() => canGoPrev && setViewDate(addMonths(viewDate, -1))}
+            disabled={!canGoPrev}
+            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center ${
+              canGoPrev ? "hover:bg-[#F4F4F5]" : "opacity-40 cursor-not-allowed"
+            }`}
           >
-            {/* Хедер */}
-            <div className="flex items-center justify-between px-3 py-2 border-b border-[#E5E7EB]">
-              <button
-                type="button"
-                onClick={() => canGoPrev && setViewDate(addMonths(viewDate, -1))}
-                disabled={!canGoPrev}
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  canGoPrev
-                    ? "hover:bg-[#F4F4F5]"
-                    : "opacity-40 cursor-not-allowed"
-                }`}
-              >
-                <FiChevronLeft />
-              </button>
-              <div className="text-[14px] font-semibold text-[#111827]">
-                {viewDate.toLocaleString("en-US", {
-                  month: "long",
-                  year: "numeric",
-                })}
-              </div>
-              <button
-                type="button"
-                onClick={() => canGoNext && setViewDate(addMonths(viewDate, 1))}
-                disabled={!canGoNext}
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  canGoNext
-                    ? "hover:bg-[#F4F4F5]"
-                    : "opacity-40 cursor-not-allowed"
-                }`}
-              >
-                <FiChevronRight />
-              </button>
-            </div>
+            <FiChevronLeft />
+          </button>
 
-            {/* Дні тижня */}
-            <div className="grid grid-cols-7 text-[11px] text-[#9CA3AF] px-3 pt-2">
-              {WEEKDAYS.map((d) => (
-                <div key={d} className="text-center pb-1">
-                  {d}
-                </div>
-              ))}
-            </div>
-
-            {/* Дні місяця */}
-            <div className="grid grid-cols-7 gap-1 px-2 pb-3 pt-1">
-              {calendarCells.map((cell, idx) => {
-                if (!cell) {
-                  return <div key={idx} className="h-8" />;
-                }
-                const disabled = isDisabled(cell);
-                const isSelected =
-                  selectedDate && +selectedDate === +startOfDay(cell);
-                const isToday = +today === +startOfDay(cell);
-
-                let classes =
-                  "w-8 h-8 rounded-full flex items-center justify-center text-[13px]";
-
-                if (isSelected) {
-                  classes += " text-black font-semibold shadow";
-                } else if (disabled) {
-                  classes += " text-[#D1D5DB] cursor-not-allowed";
-                } else {
-                  classes +=
-                    " text-[#111827] hover:bg-[#F4F4F5] cursor-pointer";
-                }
-
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    className={classes}
-                    style={
-                      isSelected
-                        ? {
-                            background:
-                              "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)",
-                          }
-                        : isToday && !disabled
-                        ? { border: "1px solid #E1C07B" }
-                        : undefined
-                    }
-                    onClick={() => handleSelect(cell)}
-                    disabled={disabled}
-                  >
-                    {cell.getDate()}
-                  </button>
-                );
-              })}
-            </div>
+          <div className="text-[14px] sm:text-[15px] font-semibold text-[#111827]">
+            {viewDate.toLocaleString("en-US", { month: "long", year: "numeric" })}
           </div>
+
+          <button
+            type="button"
+            onClick={() => canGoNext && setViewDate(addMonths(viewDate, 1))}
+            disabled={!canGoNext}
+            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center ${
+              canGoNext ? "hover:bg-[#F4F4F5]" : "opacity-40 cursor-not-allowed"
+            }`}
+          >
+            <FiChevronRight />
+          </button>
         </div>
-      )}
+
+        {/* Weekdays */}
+        <div className="grid grid-cols-7 text-[11px] sm:text-[12px] text-[#9CA3AF] px-3 sm:px-4 pt-2">
+          {WEEKDAYS.map((d) => (
+            <div key={d} className="text-center pb-1">
+              {d}
+            </div>
+          ))}
+        </div>
+
+        {/* Days */}
+        <div className="grid grid-cols-7 gap-1 sm:gap-2 px-2 sm:px-4 pb-4 pt-1">
+          {calendarCells.map((cell, idx) => {
+            if (!cell) return <div key={idx} className="h-8 sm:h-10" />;
+
+            const disabled = isDisabled(cell);
+            const isSelected = selectedDate && +selectedDate === +startOfDay(cell);
+            const isToday = +today === +startOfDay(cell);
+
+            let classes =
+              "rounded-full flex items-center justify-center font-medium";
+
+            // розмір кнопок дня: більші на ПК
+            classes += " w-8 h-8 text-[13px] sm:w-10 sm:h-10 sm:text-[14px]";
+
+            if (isSelected) {
+              classes += " text-black font-semibold shadow";
+            } else if (disabled) {
+              classes += " text-[#D1D5DB] cursor-not-allowed";
+            } else {
+              classes += " text-[#111827] hover:bg-[#F4F4F5] cursor-pointer";
+            }
+
+            return (
+              <button
+                key={idx}
+                type="button"
+                className={classes}
+                style={
+                  isSelected
+                    ? {
+                        background:
+                          "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)",
+                      }
+                    : isToday && !disabled
+                    ? { border: "1px solid #E1C07B" }
+                    : undefined
+                }
+                onClick={() => handleSelect(cell)}
+                disabled={disabled}
+              >
+                {cell.getDate()}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>,
+    document.body
+  )}
+
     </div>
   );
 };

@@ -89,10 +89,9 @@ const portfolioItems = [
   },
 ];
 
-// ====== MODAL З ГАЛЕРЕЄЮ (новий дизайн) ======
+// ====== MODAL З ГАЛЕРЕЄЮ (fixed iOS thumbnails) ======
 const Modal = ({ open, onClose, images }) => {
   const [index, setIndex] = useState(0);
-
   const hasImages = images && images.length > 0;
 
   const showPrev = useCallback(() => {
@@ -116,11 +115,16 @@ const Modal = ({ open, onClose, images }) => {
 
   useEffect(() => {
     if (!open) return;
+
+    // зберігаємо попередній overflow, щоб нічого не ламати
+    const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
     setIndex(0);
     window.addEventListener("keydown", onKeyDown);
+
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [open, onKeyDown]);
@@ -131,13 +135,14 @@ const Modal = ({ open, onClose, images }) => {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center px-4"
-      onClick={onClose}
+      className="fixed inset-0 z-[999999] flex items-center justify-center px-4"
+      onMouseDown={onClose}
+      onTouchStart={onClose}
     >
-      {/* Темний фон */}
+      {/* фон */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-[3px]" />
 
-      {/* Модалка */}
+      {/* модалка */}
       <div
         className="
           relative z-[101]
@@ -148,7 +153,8 @@ const Modal = ({ open, onClose, images }) => {
           shadow-[0_20px_60px_rgba(0,0,0,0.25)]
           flex flex-col overflow-hidden
         "
-        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 md:px-7 pt-5 pb-3 border-b border-[#E4E4E7]">
@@ -160,6 +166,7 @@ const Modal = ({ open, onClose, images }) => {
           </h3>
           <button
             onClick={onClose}
+            type="button"
             aria-label="Close"
             className="
               h-9 w-9
@@ -174,7 +181,7 @@ const Modal = ({ open, onClose, images }) => {
         </div>
 
         {/* Body */}
-        <div className="px-5 md:px-7 pb-6 pt-4 overflow-y-auto">
+        <div className="px-5 md:px-7 pb-6 pt-4 overflow-y-auto [-webkit-overflow-scrolling:touch]">
           {/* Головне фото + стрілки */}
           <div className="relative mb-4">
             <div className="w-full rounded-[20px] md:rounded-[24px] overflow-hidden bg-[#F4F4F5]">
@@ -195,12 +202,14 @@ const Modal = ({ open, onClose, images }) => {
             {images.length > 1 && (
               <div className="absolute left-4 bottom-4 flex items-center gap-2">
                 <button
+                  type="button"
                   onClick={showPrev}
                   className="w-9 h-9 flex items-center justify-center rounded-full bg-white/90 shadow-md text-[18px] font-semibold hover:bg-white"
                 >
                   {"<"}
                 </button>
                 <button
+                  type="button"
                   onClick={showNext}
                   className="w-9 h-9 flex items-center justify-center rounded-full bg-white/90 shadow-md text-[18px] font-semibold hover:bg-white"
                 >
@@ -218,25 +227,52 @@ const Modal = ({ open, onClose, images }) => {
               </div>
 
               <div className="mb-3">
-                <div className="flex gap-3 overflow-x-auto pb-1">
+                {/* ✅ MOBILE: grid (без overflow-x) — прибирає “колажі” на iOS */}
+                <div className="grid grid-cols-4 gap-3 sm:hidden">
                   {images.map((src, idx) => (
                     <button
-                      key={src}
+                      key={`${src}-${idx}`}
+                      type="button"
                       onClick={() => setIndex(idx)}
-                      className={`min-w-[80px] sm:min-w-[96px] h-[70px] sm:h-[80px] rounded-[16px] overflow-hidden border ${
-                        idx === index
-                          ? "border-[#18181B]"
-                          : "border-transparent"
-                      } bg-[#F4F4F5] flex-shrink-0`}
+                      className={`aspect-[4/3] w-full rounded-[14px] overflow-hidden border ${
+                        idx === index ? "border-[#18181B]" : "border-transparent"
+                      } bg-[#F4F4F5]`}
                     >
                       <img
                         src={src}
                         alt=""
                         className="w-full h-full object-cover"
                         loading="lazy"
+                        decoding="async"
                       />
                     </button>
                   ))}
+                </div>
+
+                {/* SM+: як було — горизонтальний скрол */}
+                <div className="hidden sm:block overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
+                  <div className="flex w-max gap-3">
+                    {images.map((src, idx) => (
+                      <button
+                        key={`${src}-${idx}`}
+                        type="button"
+                        onClick={() => setIndex(idx)}
+                        className={`min-w-[80px] sm:min-w-[96px] h-[70px] sm:h-[80px] rounded-[16px] overflow-hidden border ${
+                          idx === index
+                            ? "border-[#18181B]"
+                            : "border-transparent"
+                        } bg-[#F4F4F5] flex-shrink-0`}
+                      >
+                        <img
+                          src={src}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </>
@@ -253,12 +289,10 @@ const PortfolioCleaning = () => {
   return (
     <section className="px-4 sm:px-6 lg:px-10 py-10 lg:py-16 -mt-10 md:-mt-10">
       <div className="max-w-[1400px] mx-auto">
-        {/* Заголовок */}
         <h2 className="text-[32px] sm:text-[40px] lg:text-[52px] font-extrabold text-black mb-6 sm:mb-8 lg:mb-10">
           Portfolio
         </h2>
 
-        {/* Сітка */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
           {portfolioItems.map((item) => (
             <article
@@ -267,7 +301,6 @@ const PortfolioCleaning = () => {
               className="cursor-pointer bg-white rounded-[26px] shadow-[0_6px_22px_rgba(0,0,0,0.06)] overflow-hidden 
                          transform transition-transform duration-300 lg:hover:scale-[1.015] active:scale-[0.99]"
             >
-              {/* Фото */}
               <div className="p-2 sm:p-3 lg:p-3.5">
                 <div className="aspect-[4/3] w-full overflow-hidden rounded-[22px]">
                   <img
@@ -285,11 +318,8 @@ const PortfolioCleaning = () => {
                 </div>
               </div>
 
-              {/* CTA блок */}
               <div className="px-4 pb-4 flex items-center justify-between">
-                <span className="text-[13px] sm:text-[14px] text-[#6B6B6F]">
-                  Tap to view full gallery
-                </span>
+                <span className="text-[13px] sm:text-[14px] text-[#6B6B6F]" />
 
                 <button
                   type="button"

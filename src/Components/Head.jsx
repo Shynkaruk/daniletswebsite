@@ -384,50 +384,24 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
 };
 
 /* ==================== WRAPPER ==================== */
-const Head = () => {
-  const [isContactOpen, setIsContactOpen] = useState(false);
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [authTab, setAuthTab] = useState("login"); // "login" | "signup"
-  const [isSocialOpen, setIsSocialOpen] = useState(false);
-
-  const showAuth = (tab = "login") => {
-    setAuthTab(tab);
-    setIsAuthOpen(true);
-  };
-
+const Head = ({ onOpenAuth, onOpenContact, onOpenSocial }) => {
   return (
     <header className="fixed top-0 left-0 right-0 z-[200000]">
-      {/* top-4 робимо через padding, щоб не було “підстрибування” fixed */}
-      <div className="pt-4 pointer-events-auto">
+      <div className="pt-4">
         <MobileHead
-          onOpenContact={() => setIsContactOpen(true)}
-          onOpenAuth={showAuth}
-          onOpenSocial={() => setIsSocialOpen(true)}
+          onOpenAuth={onOpenAuth}
+          onOpenContact={onOpenContact}
+          onOpenSocial={onOpenSocial}
         />
         <DesktopHead
-          onOpenContact={() => setIsContactOpen(true)}
-          onOpenAuth={showAuth}
-          onOpenSocial={() => setIsSocialOpen(true)}
+          onOpenAuth={onOpenAuth}
+          onOpenContact={onOpenContact}
+          onOpenSocial={onOpenSocial}
         />
       </div>
-
-      {/* Модалки (вони самі fixed, тому працюють нормально) */}
-      <ContactForm
-        open={isContactOpen}
-        onClose={() => setIsContactOpen(false)}
-      />
-      <AuthModal
-        open={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
-        initialTab={authTab}
-      />
-      <SocialModal
-        open={isSocialOpen}
-        onClose={() => setIsSocialOpen(false)}
-        initialTab="Detailing"
-      />
     </header>
   );
 };
+
 
 export default Head;

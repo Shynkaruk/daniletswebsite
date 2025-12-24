@@ -130,6 +130,7 @@ async function seedAdmin() {
   console.log(`[db] Seeded admin: ${email} / ${pass}`);
 }
 
+
 const otpCodeSchema = new mongoose.Schema({
   email: { type: String, required: true, index: true },
   code: { type: String, required: true },        // 6-значний код

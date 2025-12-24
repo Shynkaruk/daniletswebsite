@@ -178,8 +178,8 @@ export default function StepDetailingBusinessContactInfo({
           </button>
 
           <div>
-            <h2 className="text-[20px] sm:text-[22px] lg:text-[24px] font-extrabold text-[#18181B] uppercase">
-              CONTACT INFORMATION
+            <h2 className="text-[20px] sm:text-[22px] lg:text-[24px] font-extrabold text-[#18181B]">
+              Contact Information
             </h2>
             <p className="text-[11px] sm:text-[12px] text-[#9CA3AF]">
               Step {progressStepIndex} of {totalSteps}

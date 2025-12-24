@@ -1,5 +1,5 @@
 // src/components/cleaning/ServicesProvideCleaning.jsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import arrowRightIcon from "../../../assets/icons/arrows/arrow_right_black.svg";
 
 // ==== МЕДІА ДЛЯ КОЖНОГО СЕРВІСУ (BOX 1–4 з Portfolio_Cleaning) ====
@@ -128,14 +128,24 @@ const ServicesProvideCleaning = () => {
     );
   };
 
+  // блокуємо скрол сторінки, коли модалка відкрита
+  useEffect(() => {
+    if (!modalOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [modalOpen]);
+
   return (
     <section className="w-full bg-[#F5F5F7] pt-16 md:pt-28 pb-10 md:pb-16">
       <div className="w-[min(1600px,100%)] mx-auto px-4 md:px-8">
-        {/* Контейнер із картками */}
         <div className="relative z-10 -mt-35 md:-mt-60 bg-white rounded-[32px] px-4 py-6 md:px-10 md:py-10 shadow-sm">
           <h2 className="text-[28px] sm:text-[36px] md:text-[48px] font-bold text-black mb-6">
             Services We Provide
           </h2>
+
           <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
             {cleaningServices.map((service) => (
               <button
@@ -155,14 +165,12 @@ const ServicesProvideCleaning = () => {
                   <span className="text-lg">✓</span>
                 </div>
 
-                {/* Заголовок фіксованої висоти */}
                 <div className="min-h-[72px] flex items-start">
                   <h3 className="text-[24px] md:text-[28px] font-semibold leading-tight">
                     {service.title}
                   </h3>
                 </div>
 
-                {/* Сабтайтл фіксованої висоти */}
                 <div className="mt-2 min-h-[96px] md:min-h-[110px] flex items-start">
                   <p className="text-[15px] md:text-[16px] text-[#6B7280] leading-snug">
                     {service.short}
@@ -192,7 +200,6 @@ const ServicesProvideCleaning = () => {
                       className="w-[18px] h-[18px] object-contain"
                     />
                   </span>
-
                   <span className="hidden md:inline">
                     <img
                       src={arrowRightIcon}
@@ -207,10 +214,18 @@ const ServicesProvideCleaning = () => {
         </div>
       </div>
 
-      {/* Модалка — той самий стиль, що й у Detailing */}
+      {/* Модалка */}
       {modalOpen && modalService && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[200] px-4">
-          <div className="bg-white rounded-[28px] md:rounded-[32px] w-full max-w-[980px] max-h-[90vh] shadow-2xl flex flex-col overflow-hidden">
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[99999999] px-4"
+          onMouseDown={closeModal}
+          onTouchStart={closeModal}
+        >
+          <div
+            className="bg-white rounded-[28px] md:rounded-[32px] w-full max-w-[980px] max-h-[90vh] shadow-2xl flex flex-col overflow-hidden"
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+          >
             {/* Header */}
             <div className="flex items-center justify-between px-5 md:px-7 pt-5 pb-3 border-b border-[#E4E4E7]">
               <h3
@@ -221,14 +236,16 @@ const ServicesProvideCleaning = () => {
               </h3>
               <button
                 onClick={closeModal}
+                type="button"
+                aria-label="Close"
                 className="w-8 h-8 flex items-center justify-center rounded-full bg-[#F4F4F5] text-[18px] font-semibold text-[#52525B] hover:bg-[#E4E4E7] transition"
               >
                 ✕
               </button>
             </div>
 
-            {/* Body (scroll) */}
-            <div className="px-5 md:px-7 pb-6 pt-4 overflow-y-auto">
+            {/* Body */}
+            <div className="px-5 md:px-7 pb-6 pt-4 overflow-y-auto [-webkit-overflow-scrolling:touch]">
               {/* Головне фото + стрілки */}
               {modalMedia.length > 0 && (
                 <div className="relative mb-4">
@@ -236,8 +253,9 @@ const ServicesProvideCleaning = () => {
                     <img
                       src={modalMedia[activeMediaIndex]}
                       alt={`${modalService.title} photo`}
-                      className="w-full h-[220px] sm:h-[320px] md:h-[420px] object-cover"
+                      className="w-full h-[220px] sm:h-[320px] md:h-[420px] object-cover select-none"
                       loading="lazy"
+                      decoding="async"
                     />
                   </div>
 
@@ -245,12 +263,14 @@ const ServicesProvideCleaning = () => {
                     <div className="absolute left-4 bottom-4 flex items-center gap-2">
                       <button
                         onClick={handlePrev}
+                        type="button"
                         className="w-9 h-9 flex items-center justify-center rounded-full bg-white/90 shadow-md text-[18px] font-semibold hover:bg-white"
                       >
                         {"<"}
                       </button>
                       <button
                         onClick={handleNext}
+                        type="button"
                         className="w-9 h-9 flex items-center justify-center rounded-full bg-white/90 shadow-md text-[18px] font-semibold hover:bg-white"
                       >
                         {">"}
@@ -260,28 +280,57 @@ const ServicesProvideCleaning = () => {
                 </div>
               )}
 
-              {/* Thumbnails */}
+              {/* Thumbnails (ФІКС мобілки) */}
               {modalMedia.length > 1 && (
                 <div className="mb-3">
-                  <div className="flex gap-3 overflow-x-auto pb-1">
+                  {/* MOBILE: grid — без overflow-x (це прибирає “колажі” на iOS) */}
+                  <div className="grid grid-cols-4 gap-3 sm:hidden">
                     {modalMedia.map((src, idx) => (
                       <button
-                        key={src}
+                        key={`${src}-${idx}`}
+                        type="button"
                         onClick={() => setActiveMediaIndex(idx)}
-                        className={`min-w-[80px] sm:min-w-[96px] h-[70px] sm:h-[80px] rounded-[16px] overflow-hidden border ${
+                        className={`aspect-[4/3] w-full rounded-[14px] overflow-hidden border ${
                           idx === activeMediaIndex
                             ? "border-[#18181B]"
                             : "border-transparent"
-                        } bg-[#F4F4F5] flex-shrink-0`}
+                        } bg-[#F4F4F5]`}
                       >
                         <img
                           src={src}
                           alt=""
                           className="w-full h-full object-cover"
                           loading="lazy"
+                          decoding="async"
                         />
                       </button>
                     ))}
+                  </div>
+
+                  {/* SM+: горизонтальний скрол як був, але стабільніше */}
+                  <div className="hidden sm:block overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
+                    <div className="flex w-max gap-3">
+                      {modalMedia.map((src, idx) => (
+                        <button
+                          key={`${src}-${idx}`}
+                          type="button"
+                          onClick={() => setActiveMediaIndex(idx)}
+                          className={`w-[96px] h-[80px] rounded-[16px] overflow-hidden border ${
+                            idx === activeMediaIndex
+                              ? "border-[#18181B]"
+                              : "border-transparent"
+                          } bg-[#F4F4F5] flex-shrink-0`}
+                        >
+                          <img
+                            src={src}
+                            alt=""
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -296,10 +345,11 @@ const ServicesProvideCleaning = () => {
                   ))}
               </div>
 
-              {/* Кнопка Close внизу */}
+              {/* Close */}
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={closeModal}
+                  type="button"
                   className="px-6 py-2 rounded-full border border-[#D4D4D8] text-sm md:text-[15px] hover:bg-[#F4F4F5] transition"
                 >
                   Close

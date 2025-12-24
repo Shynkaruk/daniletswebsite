@@ -1,6 +1,6 @@
 import React from "react";
 import Head from "../../Head";
-import bgImageMobile from "../../../assets/photo/cleaningn_bg.png";
+import bgImageMobile from "../../../assets/photo/bg_cleaning.png";
 import bgImagePC from "../../../assets/photo/cleaningn_bg.png";
 import iconBuble from "../../../assets/icons/cleaning_bage.svg";
 import LogoRed from "../../../assets/icons/cleaning_logo.svg";
@@ -16,15 +16,18 @@ const Cleaning = () => {
     <section
       className="relative w-full min-h-[100dvh] overflow-hidden text-white flex flex-col justify-between"
       style={{
-        background: "linear-gradient(90deg, #1C1C1C 46.13%)",
       }}
     >
       {/* Фон — мобільний */}
-      <div className="absolute bottom-15 inset-0 z-0 pointer-events-none md:hidden flex justify-end items-end">
+      <div className="absolute bottom-20 inset-0 z-0 pointer-events-none md:hidden flex justify-end items-end">
         <img
           src={bgImageMobile}
           alt="Mobile background"
           className="w-full object-cover"
+          style={{
+          transform: "scale(2.2)",
+          transformOrigin: "60% 80%",   
+          }}
         />
       </div>
 

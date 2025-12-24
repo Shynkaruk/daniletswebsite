@@ -14,7 +14,7 @@ export default function StepCleaningPropertyType({
 
   renderProgress,
   progressStepIndex = 2,
-  totalSteps = 10,
+  totalSteps = 9,
 }) {
   if (!visible) return null;
 
@@ -37,8 +37,10 @@ export default function StepCleaningPropertyType({
           >
             <FiChevronLeft className="text-[18px] text-[#18181B]" />
           </button>
+
+          {/* Section title exactly as in the document */}
           <h2 className="text-[20px] sm:text-[22px] font-extrabold text-[#18181B]">
-            Cleaning details
+            Get Quote
           </h2>
         </div>
 
@@ -49,8 +51,9 @@ export default function StepCleaningPropertyType({
         )}
 
         <section className="space-y-2 mt-1">
+          {/* Question text exactly as in the document (no asterisk) */}
           <div className="text-sm text-[#6B7280] font-medium">
-            What type of property is this? *
+            Is this for a residential or commercial property?
           </div>
 
           <div className="grid grid-cols-2 gap-2">

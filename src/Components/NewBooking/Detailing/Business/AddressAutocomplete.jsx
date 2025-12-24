@@ -6,7 +6,13 @@ export function AddressAutocomplete({
   onChange,
   onSelectAddress,
   placeholder = "Start typing address…",
+
+  // ✅ old API
   inputClass,
+
+  // ✅ NEW: allow className like normal inputs
+  className,
+
   componentRestrictions,
 }) {
   const inputRef = useRef(null);
@@ -35,13 +41,12 @@ export function AddressAutocomplete({
     if (!el) return;
     const r = el.getBoundingClientRect();
     setPos({
-      top: r.bottom, // прямо під інпутом
+      top: r.bottom,
       left: r.left,
       width: r.width,
     });
   };
 
-  // init google services
   useEffect(() => {
     if (!window.google?.maps?.places) return;
 
@@ -57,11 +62,12 @@ export function AddressAutocomplete({
 
     if (!placesServiceRef.current) {
       const dummy = document.createElement("div");
-      placesServiceRef.current = new window.google.maps.places.PlacesService(dummy);
+      placesServiceRef.current = new window.google.maps.places.PlacesService(
+        dummy
+      );
     }
   }, []);
 
-  // close on outside click
   useEffect(() => {
     if (!open) return;
 
@@ -77,14 +83,13 @@ export function AddressAutocomplete({
     return () => document.removeEventListener("pointerdown", onDocDown);
   }, [open]);
 
-  // keep dropdown pinned to input (scroll/resize)
   useEffect(() => {
     if (!open) return;
 
     computePos();
 
     const onScrollResize = () => computePos();
-    window.addEventListener("scroll", onScrollResize, true); // capture = true
+    window.addEventListener("scroll", onScrollResize, true);
     window.addEventListener("resize", onScrollResize);
 
     return () => {
@@ -148,14 +153,17 @@ export function AddressAutocomplete({
         sessionToken: token,
       },
       (place) => {
-        // новий токен на наступну сесію
         sessionTokenRef.current =
           new window.google.maps.places.AutocompleteSessionToken();
 
         const formatted =
           place?.formatted_address || pred?.description || place?.name || "";
 
-        if (formatted) onSelectAddress?.(formatted);
+        // ✅ set input value after selection too
+        if (formatted) {
+          onChange?.(formatted);
+          onSelectAddress?.(formatted);
+        }
 
         setItems([]);
         close();
@@ -190,7 +198,6 @@ export function AddressAutocomplete({
     }
   };
 
-  // ✅ styles
   const dropdownStyle = {
     position: "fixed",
     top: pos.top,
@@ -219,6 +226,9 @@ export function AddressAutocomplete({
       }
     : undefined;
 
+  // ✅ if user passed className instead of inputClass — we still style the input
+  const finalInputClass = inputClass ?? className ?? "";
+
   return (
     <div className="relative">
       <input
@@ -230,7 +240,6 @@ export function AddressAutocomplete({
           fetchPredictions(next);
         }}
         onClick={() => {
-          // якщо вже є текст — спробуємо відкрити
           if (value?.trim()?.length >= 2) {
             computePos();
             fetchPredictions(value);
@@ -243,7 +252,7 @@ export function AddressAutocomplete({
           }
         }}
         onKeyDown={onKeyDown}
-        className={inputClass}
+        className={finalInputClass}
         style={inputOpenStyle}
         placeholder={placeholder}
         autoComplete="new-password"
@@ -312,7 +321,9 @@ export function AddressAutocomplete({
                     >
                       <span
                         className="mt-[2px] w-4 h-4 rounded-full flex-shrink-0 border border-[#D6B46A]"
-                        style={{ background: active ? "#D6B46A" : "transparent" }}
+                        style={{
+                          background: active ? "#D6B46A" : "transparent",
+                        }}
                       />
                       <div className="min-w-0">
                         <div className="font-semibold text-[#111827] truncate">

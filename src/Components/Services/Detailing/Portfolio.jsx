@@ -112,7 +112,7 @@ const Modal = ({ open, onClose, images }) => {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center px-4"
+      className="fixed inset-0 z-[9999999] flex items-center justify-center px-4"
       onClick={onClose}
     >
       {/* Темний фон */}
@@ -271,7 +271,6 @@ const Portfolio = () => {
               {/* Нова зона з CTA */}
               <div className="px-4 pb-4 flex items-center justify-between">
                 <span className="text-[13px] sm:text-[14px] text-[#6B6B6F]">
-                  Tap to view full gallery
                 </span>
 
                 <button

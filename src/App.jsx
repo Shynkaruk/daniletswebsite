@@ -15,7 +15,7 @@ import AdminRequests from "./Accounts/AdminRequests.jsx";
 import Account from "./Accounts/Account.jsx";
 import ScrollToTop from "./ScrollToTop.jsx";
 import BookingSuccess from "./Components/payments/BookingSuccess.jsx";
-import Layout from './Components/Layout.jsx'
+import Layout from "./Components/Layout.jsx";
 
 const App = () => {
   const [isMobile, setIsMobile] = useState(
@@ -39,21 +39,22 @@ const App = () => {
     <Router>
       <ScrollToTop />
       <Routes>
-        <Route element={<Layout />}></Route>
-        <Route path="/" element={isMobile ? <MainMobile /> : <Main />} />
-        <Route path="/home" element={isMobile ? <MainMobile /> : <Main />} />
-        <Route path="/about-us" element={<AboutUs />} />
-        <Route path="/contact" element={<ContactForm />} />
-        <Route path="/newsletter" element={<Newsletter />} />
-        <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="/legal/terms-conditions" element={<PrivacyPolicy />} />
-        <Route path="/legal/faq" element={<PrivacyPolicy />} />
-        <Route path="/services/cleaning" element={<Cleaning />} />
-        <Route path="/services/detailing" element={<DetailingPage />} />
-        <Route path="/book-online" element={<Booking />} />
-        <Route path="/admin" element={<AdminRequests />} />
-        <Route path="/account" element={<Account />} />
-        <Route path="/booking/success" element={<BookingSuccess/>}/>
+        <Route element={<Layout />}>
+          <Route path="/" element={isMobile ? <MainMobile /> : <Main />} />
+          <Route path="/home" element={isMobile ? <MainMobile /> : <Main />} />
+          <Route path="/about-us" element={<AboutUs />} />
+          <Route path="/contact" element={<ContactForm />} />
+          <Route path="/newsletter" element={<Newsletter />} />
+          <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/legal/terms-conditions" element={<PrivacyPolicy />} />
+          <Route path="/legal/faq" element={<PrivacyPolicy />} />
+          <Route path="/services/cleaning" element={<Cleaning />} />
+          <Route path="/services/detailing" element={<DetailingPage />} />
+          <Route path="/book-online" element={<Booking />} />
+          <Route path="/admin" element={<AdminRequests />} />
+          <Route path="/account" element={<Account />} />
+          <Route path="/booking/success" element={<BookingSuccess />} />
+        </Route>
       </Routes>
     </Router>
   );
