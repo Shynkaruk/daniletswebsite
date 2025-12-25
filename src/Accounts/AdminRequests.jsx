@@ -582,31 +582,40 @@ const deleteBooking = async (row) => {
 };
 
 
-  const saveEdits = async () => {
-    if (!selectedRow) return;
+const saveEdits = async () => {
+  if (!selectedRow) return;
 
-    try {
-      await adminReqApi.save({
-        id: selectedRow.id,
-        status: editStatus,
-        notes_admin: editAdminNote,
-      });
+  const id = selectedRow?.id || selectedRow?._id;
 
-      await loadBookings();
-      await loadCounts();
+  if (!id) {
+    console.error("Save failed: selectedRow has no id/_id", selectedRow);
+    setError?.("Cannot save: missing request id.");
+    return;
+  }
 
-      const fresh = await adminReqApi.list({
-        service_type: selectedRow.service_type,
-        status: statusFilter || undefined,
-      });
-      const found = Array.isArray(fresh)
-        ? fresh.find((x) => x.id === selectedRow.id)
-        : null;
-      if (found) setSelectedRow(found);
-    } catch (e) {
-      alert(e?.error || e?.message || "Failed to save changes.");
-    }
-  };
+  try {
+    setError?.(null);
+
+    await adminReqApi.save({
+      id, // ✅ гарантовано не undefined
+      status: editStatus,
+      notes_admin: editAdminNote,
+    });
+
+    await Promise.all([loadBookings(), loadCounts()]);
+
+    // ✅ підтягнути оновлену заявку і відкрити її в модалці
+    // краще через get(id), а не list+find
+    const found = await adminReqApi.get(id);
+
+    // ✅ нормалізуємо, щоб selectedRow завжди мав id
+    setSelectedRow({ ...found, id: found?.id || found?._id });
+  } catch (e) {
+    console.error("Save failed:", e);
+    setError?.(e?.message || e?.error || "Failed to save changes.");
+  }
+};
+
 
   const activeTitle =
     MENU_ITEMS.find((i) => i.key === activeMenu)?.label || "Requests";
