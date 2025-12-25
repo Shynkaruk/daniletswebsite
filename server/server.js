@@ -8,6 +8,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import axios from "axios";
 import bcrypt from "bcryptjs";
 import { fileURLToPath } from "url";
@@ -1922,8 +1923,15 @@ app.get("/api/admin/requests", auth, requireAdmin, async (req, res) => {
     .sort({ created_at: -1 })
     .lean();
 
-  res.json(rows);
+  const normalized = rows.map((r) => ({
+    ...r,
+    id: r._id.toString(),
+    _id: undefined,
+  }));
+
+  res.json(normalized);
 });
+
 
 
 app.get("/api/admin/requests/:id", auth, requireAdmin, async (req, res) => {
@@ -2056,16 +2064,26 @@ app.put("/api/admin/requests/:id", auth, requireAdmin, async (req, res) => {
   }
 });
 
+
 app.delete("/api/admin/requests/:id", auth, requireAdmin, async (req, res) => {
   const id = req.params.id;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: "invalid id" });
+  }
+
   try {
-    await RequestModel.deleteOne({ _id: id });
+    const result = await RequestModel.deleteOne({ _id: id });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: "not found" });
+    }
     res.json({ ok: true });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "failed to delete request" });
   }
 });
+
 
 // ---- запуск ----
 initDb()

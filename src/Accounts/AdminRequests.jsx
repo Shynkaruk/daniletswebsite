@@ -485,6 +485,7 @@ export default function AdminRequests() {
 
   const [editStatus, setEditStatus] = useState("");
   const [editAdminNote, setEditAdminNote] = useState("");
+  
 
   useEffect(() => {
     if (!selectedRow) return;
@@ -559,17 +560,27 @@ export default function AdminRequests() {
     );
   }, [rowsWithParsed, search]);
 
-  const deleteBooking = async (row) => {
-    if (!window.confirm("Delete this request?")) return;
-    try {
-      await adminReqApi.remove(row.id);
-      if (selectedRow?.id === row.id) setSelectedRow(null);
-      await loadBookings();
-      await loadCounts();
-    } catch (e) {
-      alert(e?.error || e?.message || "Failed to delete request.");
-    }
-  };
+const [deleteError, setDeleteError] = useState(null);
+
+const deleteBooking = async (row) => {
+  if (!window.confirm("Delete this request?")) return;
+
+  const id = row?.id || row?._id;
+  if (!id) return;
+
+  try {
+    setDeleteError(null);
+    await adminReqApi.remove(id);
+
+    if ((selectedRow?.id || selectedRow?._id) === id) setSelectedRow(null);
+
+    await Promise.all([loadBookings(), loadCounts()]);
+  } catch (e) {
+    console.error("Delete failed:", e);
+    setDeleteError(e.message || "Failed to delete request.");
+  }
+};
+
 
   const saveEdits = async () => {
     if (!selectedRow) return;
@@ -663,7 +674,7 @@ export default function AdminRequests() {
 
         {error ? (
           <div className="w-full lg:max-w-[520px] p-3 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm">
-            {error}
+            {deleteError}
           </div>
         ) : null}
       </div>

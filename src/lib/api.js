@@ -223,18 +223,33 @@ export const contentApi = {
       `${API}/api/content/by-key/${encodeURIComponent(key)}?lang=${lang}`
     );
   },
-  async list(params = {}) {
-    const q = new URLSearchParams(params).toString();
-    return getJson(`${API}/api/content?${q}`);
-  },
-  async save(row) {
-    const isUpdate = !!row.id;
-    const url = isUpdate
-      ? `${API}/api/content/${row.id}`
-      : `${API}/api/content`;
-    const method = isUpdate ? "PUT" : "POST";
-    return sendJson(url, method, row);
-  },
+async list(params = {}) {
+  const q = new URLSearchParams(params).toString();
+  const data = await getJson(`${API}/api/admin/requests?${q}`);
+
+  return Array.isArray(data)
+    ? data.map((r) => ({ ...r, id: r.id || r._id }))
+    : data;
+},
+
+
+async save(row) {
+  const id = row?.id || row?._id;        // ✅ беремо id або _id
+  const isUpdate = Boolean(id);
+
+  const url = isUpdate
+    ? `${API}/api/admin/requests/${id}`  // ✅ PUT update
+    : `${API}/api/admin/requests`;       // ✅ POST create
+
+  const method = isUpdate ? "PUT" : "POST";
+
+  // ✅ щоб не відправляти _id назад (інколи Mongoose бурчить)
+  const payload = { ...row, id };
+  delete payload._id;
+
+  return sendJson(url, method, payload);
+},
+
   async remove(id) {
     const r = await fetch(`${API}/api/content/${id}`, {
       method: "DELETE",
@@ -371,24 +386,63 @@ export async function apiSend(path, method = "POST", body = {}) {
 export const adminReqApi = {
   async list(params = {}) {
     const q = new URLSearchParams(params).toString();
-    return getJson(`${API}/api/admin/requests?${q}`);
+    const data = await getJson(`${API}/api/admin/requests?${q}`);
+
+    // ✅ нормалізація: щоб скрізь був row.id
+    if (Array.isArray(data)) {
+      return data.map((r) => ({ ...r, id: r.id || r._id }));
+    }
+    return data;
   },
+
   async get(id) {
+    if (!id || id === "undefined") {
+      throw new Error("Missing request id");
+    }
     return getJson(`${API}/api/admin/requests/${id}`);
   },
+
   async save(row) {
-    const isUpdate = !!row.id;
+    const id = row?.id || row?._id; // ✅ підтримка _id
+    const isUpdate = !!id;
+
     const url = isUpdate
-      ? `${API}/api/admin/requests/${row.id}`
+      ? `${API}/api/admin/requests/${id}`
       : `${API}/api/admin/requests`;
+
     const method = isUpdate ? "PUT" : "POST";
-    return sendJson(url, method, row);
+
+    // ✅ важливо: не відправляй _id назад у бекенд як поле
+    const payload = { ...row, id };
+    delete payload._id;
+
+    return sendJson(url, method, payload);
   },
+
   async remove(id) {
+    // ✅ захист від undefined/порожнього
+    if (!id || id === "undefined") {
+      // без alert: просто кидаємо помилку, а UI хай вирішує як показати
+      throw new Error("Missing request id");
+    }
+
     const r = await fetch(`${API}/api/admin/requests/${id}`, {
       method: "DELETE",
       headers: { ...authHeaders() },
     });
-    return parseJsonSafe(r);
+
+    const data = await parseJsonSafe(r);
+
+    // ✅ якщо бекенд вернув 4xx/5xx — кидаємо помилку наверх
+    if (!r.ok) {
+      const msg = data?.error || data?.message || `HTTP ${r.status}`;
+      const err = new Error(msg);
+      err.status = r.status;
+      err.data = data;
+      throw err;
+    }
+
+    return data;
   },
 };
+
