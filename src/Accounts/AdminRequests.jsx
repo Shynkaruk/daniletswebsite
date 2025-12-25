@@ -151,6 +151,19 @@ const AIRBNB_LINEN_LABELS = {
   unsure: "Not sure",
 };
 
+const STATUS_META = {
+  new: { label: "New", cls: "bg-blue-50 text-blue-700 border-blue-200" },
+  in_progress: {
+    label: "In progress",
+    cls: "bg-amber-50 text-amber-700 border-amber-200",
+  },
+  completed: {
+    label: "Completed",
+    cls: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  },
+  rejected: { label: "Rejected", cls: "bg-red-50 text-red-700 border-red-200" },
+};
+
 function prettifyKey(v) {
   if (v === undefined || v === null) return "";
   const s = String(v);
@@ -195,6 +208,20 @@ const Field = ({ label, value }) => {
 const FieldRow = ({ children }) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{children}</div>
 );
+
+function StatusBadge({ value }) {
+  const meta = STATUS_META[value] || {
+    label: value || "—",
+    cls: "bg-gray-50 text-gray-700 border-gray-200",
+  };
+  return (
+    <span
+      className={`inline-flex items-center px-3 h-8 rounded-full border text-sm font-semibold ${meta.cls}`}
+    >
+      {meta.label}
+    </span>
+  );
+}
 
 const Section = ({ title, children, right }) => (
   <div className="bg-white rounded-[24px] border border-[#E5E7EB] p-5 shadow-sm">
@@ -485,7 +512,6 @@ export default function AdminRequests() {
 
   const [editStatus, setEditStatus] = useState("");
   const [editAdminNote, setEditAdminNote] = useState("");
-  
 
   useEffect(() => {
     if (!selectedRow) return;
@@ -560,62 +586,60 @@ export default function AdminRequests() {
     );
   }, [rowsWithParsed, search]);
 
-const [deleteError, setDeleteError] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
 
-const deleteBooking = async (row) => {
-  if (!window.confirm("Delete this request?")) return;
+  const deleteBooking = async (row) => {
+    if (!window.confirm("Delete this request?")) return;
 
-  const id = row?.id || row?._id;
-  if (!id) return;
+    const id = row?.id || row?._id;
+    if (!id) return;
 
-  try {
-    setDeleteError(null);
-    await adminReqApi.remove(id);
+    try {
+      setDeleteError(null);
+      await adminReqApi.remove(id);
 
-    if ((selectedRow?.id || selectedRow?._id) === id) setSelectedRow(null);
+      if ((selectedRow?.id || selectedRow?._id) === id) setSelectedRow(null);
 
-    await Promise.all([loadBookings(), loadCounts()]);
-  } catch (e) {
-    console.error("Delete failed:", e);
-    setDeleteError(e.message || "Failed to delete request.");
-  }
-};
+      await Promise.all([loadBookings(), loadCounts()]);
+    } catch (e) {
+      console.error("Delete failed:", e);
+      setDeleteError(e.message || "Failed to delete request.");
+    }
+  };
 
+  const saveEdits = async () => {
+    if (!selectedRow) return;
 
-const saveEdits = async () => {
-  if (!selectedRow) return;
+    const id = selectedRow?.id || selectedRow?._id;
 
-  const id = selectedRow?.id || selectedRow?._id;
+    if (!id) {
+      console.error("Save failed: selectedRow has no id/_id", selectedRow);
+      setError?.("Cannot save: missing request id.");
+      return;
+    }
 
-  if (!id) {
-    console.error("Save failed: selectedRow has no id/_id", selectedRow);
-    setError?.("Cannot save: missing request id.");
-    return;
-  }
+    try {
+      setError?.(null);
 
-  try {
-    setError?.(null);
+      await adminReqApi.save({
+        id, // ✅ гарантовано не undefined
+        status: editStatus,
+        notes_admin: editAdminNote,
+      });
 
-    await adminReqApi.save({
-      id, // ✅ гарантовано не undefined
-      status: editStatus,
-      notes_admin: editAdminNote,
-    });
+      await Promise.all([loadBookings(), loadCounts()]);
 
-    await Promise.all([loadBookings(), loadCounts()]);
+      // ✅ підтягнути оновлену заявку і відкрити її в модалці
+      // краще через get(id), а не list+find
+      const found = await adminReqApi.get(id);
 
-    // ✅ підтягнути оновлену заявку і відкрити її в модалці
-    // краще через get(id), а не list+find
-    const found = await adminReqApi.get(id);
-
-    // ✅ нормалізуємо, щоб selectedRow завжди мав id
-    setSelectedRow({ ...found, id: found?.id || found?._id });
-  } catch (e) {
-    console.error("Save failed:", e);
-    setError?.(e?.message || e?.error || "Failed to save changes.");
-  }
-};
-
+      // ✅ нормалізуємо, щоб selectedRow завжди мав id
+      setSelectedRow({ ...found, id: found?.id || found?._id });
+    } catch (e) {
+      console.error("Save failed:", e);
+      setError?.(e?.message || e?.error || "Failed to save changes.");
+    }
+  };
 
   const activeTitle =
     MENU_ITEMS.find((i) => i.key === activeMenu)?.label || "Requests";
@@ -665,25 +689,40 @@ const saveEdits = async () => {
             className="w-full sm:max-w-[420px] h-11 px-4 rounded-2xl border bg-white text-sm outline-none"
           />
 
-          <div className="flex gap-2 items-center">
-            <span className="text-sm text-[#4B5563]">Status:</span>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-11 px-3 rounded-2xl border bg-white text-sm outline-none"
-            >
-              <option value="">All</option>
-              <option value="new">New</option>
-              <option value="in_progress">In progress</option>
-              <option value="completed">Completed</option>
-              <option value="rejected">Rejected</option>
-            </select>
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-sm text-[#4B5563] mr-1">Status:</span>
+
+            {[
+              { key: "", label: "All" },
+              { key: "new", label: "New" },
+              { key: "in_progress", label: "In progress" },
+              { key: "completed", label: "Completed" },
+              { key: "rejected", label: "Rejected" },
+            ].map((s) => {
+              const active = statusFilter === s.key;
+
+              return (
+                <button
+                  key={s.key}
+                  type="button"
+                  onClick={() => setStatusFilter(s.key)}
+                  className={[
+                    "h-10 px-4 rounded-full border text-sm font-semibold transition",
+                    active
+                      ? "bg-[#111827] text-white border-[#111827]"
+                      : "bg-white text-[#111827] hover:bg-gray-50",
+                  ].join(" ")}
+                >
+                  {s.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {error ? (
+        {deleteError || error ? (
           <div className="w-full lg:max-w-[520px] p-3 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm">
-            {deleteError}
+            {deleteError || error}
           </div>
         ) : null}
       </div>
