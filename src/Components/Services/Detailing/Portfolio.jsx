@@ -155,7 +155,7 @@ const Modal = ({ open, onClose, images }) => {
         </div>
 
         {/* Body */}
-        <div className="px-5 md:px-7 pb-6 pt-4 overflow-y-auto">
+        <div className="px-5 md:px-7 pb-6 pt-4 overflow-y-auto overflow-x-hidden [-webkit-overflow-scrolling:touch]">
           {/* Головне фото + стрілки */}
           <div className="relative mb-4">
             <div className="w-full rounded-[20px] md:rounded-[24px] overflow-hidden bg-[#F4F4F5]">
@@ -193,34 +193,53 @@ const Modal = ({ open, onClose, images }) => {
 
           {/* Мініатюри */}
           {images.length > 1 && (
-            <div className="mb-1 flex justify-between items-center">
-              <div className="text-xs sm:text-sm text-[#71717A]">
-                {index + 1} / {images.length}
-              </div>
-            </div>
-          )}
-
-          {images.length > 1 && (
             <div className="mb-3">
-              <div className="flex gap-3 overflow-x-auto pb-1">
+              {/* MOBILE: grid (iOS fix) */}
+              <div className="grid grid-cols-4 gap-3 sm:hidden">
                 {images.map((src, idx) => (
                   <button
-                    key={src}
+                    key={`${src}-${idx}`}
+                    type="button"
                     onClick={() => setIndex(idx)}
-                    className={`min-w-[80px] sm:min-w-[96px] h-[70px] sm:h-[80px] rounded-[16px] overflow-hidden border ${
-                      idx === index
-                        ? "border-[#18181B]"
-                        : "border-transparent"
-                    } bg-[#F4F4F5] flex-shrink-0`}
+                    className={`aspect-[4/3] w-full rounded-[14px] overflow-hidden border ${
+                      idx === index ? "border-[#18181B]" : "border-transparent"
+                    } bg-[#F4F4F5]`}
                   >
                     <img
                       src={src}
                       alt=""
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover block"
                       loading="lazy"
+                      decoding="async"
                     />
                   </button>
                 ))}
+              </div>
+
+              {/* TABLET/DESKTOP */}
+              <div className="hidden sm:block overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
+                <div className="flex w-max gap-3">
+                  {images.map((src, idx) => (
+                    <button
+                      key={`${src}-${idx}`}
+                      type="button"
+                      onClick={() => setIndex(idx)}
+                      className={`w-[96px] h-[80px] rounded-[16px] overflow-hidden border ${
+                        idx === index
+                          ? "border-[#18181B]"
+                          : "border-transparent"
+                      } bg-[#F4F4F5] flex-shrink-0`}
+                    >
+                      <img
+                        src={src}
+                        alt=""
+                        className="w-full h-full object-cover block"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -267,12 +286,8 @@ const Portfolio = () => {
                   />
                 </div>
               </div>
-
               {/* Нова зона з CTA */}
-              <div className="px-4 pb-4 flex items-center justify-between">
-                <span className="text-[13px] sm:text-[14px] text-[#6B6B6F]">
-                </span>
-
+              <div className="p-2 sm:p-3 lg:p-3.5 pb-4">
                 <button
                   type="button"
                   onClick={(e) => {
@@ -280,14 +295,16 @@ const Portfolio = () => {
                     setSelectedItem(item);
                   }}
                   className="
-                    inline-flex items-center justify-center
-                    px-4 py-2
-                    rounded-full
-                    text-[13px] sm:text-[14px] font-semibold
-                    text-black
-                    hover:brightness-110
-                    transition
-                  "
+      w-full block
+      flex items-center justify-between
+      h-[44px] sm:h-[48px]
+      px-5
+      rounded-full
+      text-[13px] sm:text-[14px] font-semibold
+      text-black
+      hover:brightness-110
+      transition
+    "
                   style={{
                     background:
                       "linear-gradient(107.27deg, #8B3434 -27.97%, #A84E4E -12.13%, #F29292 22.69%, #FF9E9E 45.99%, #E17B7B 77.51%)",
@@ -298,7 +315,7 @@ const Portfolio = () => {
                   <img
                     src={arrowRightIcon}
                     alt="arrow"
-                    className="ml-2 w-[18px] h-[18px] object-contain"
+                    className="w-[18px] h-[18px] object-contain"
                   />
                 </button>
               </div>

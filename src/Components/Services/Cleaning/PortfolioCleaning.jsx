@@ -60,7 +60,7 @@ const portfolioItems = [
   },
   {
     id: 5,
-    cover: "/Portfolio_Cleaning/Box 5/Main.jpg",
+    cover: "/Portfolio_Cleaning/Box 5/IMG_8485.jpg",
     images: [
       "/Portfolio_Cleaning/Box 5/IMG_8485.jpg",
       "/Portfolio_Cleaning/Box 5/IMG_8487.jpg",
@@ -318,38 +318,39 @@ const PortfolioCleaning = () => {
                 </div>
               </div>
 
-              <div className="px-4 pb-4 flex items-center justify-between">
-                <span className="text-[13px] sm:text-[14px] text-[#6B6B6F]" />
-
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedItem(item);
-                  }}
-                  className="
-                    inline-flex items-center justify-center
-                    px-4 py-2
-                    rounded-full
-                    text-[13px] sm:text-[14px] font-semibold
-                    text-black
-                    hover:brightness-110
-                    transition
-                  "
-                  style={{
-                    background:
-                      "linear-gradient(107.27deg, #8B3434 -27.97%, #A84E4E -12.13%, #F29292 22.69%, #FF9E9E 45.99%, #E17B7B 77.51%)",
-                    fontFamily: "Manrope, sans-serif",
-                  }}
-                >
-                  <span>View Gallery</span>
-                  <img
-                    src={arrowRightIcon}
-                    alt="arrow"
-                    className="ml-2 w-[18px] h-[18px] object-contain"
-                  />
-                </button>
-              </div>
+{/* CTA (FULL WIDTH як у Detailing Portfolio) */}
+<div className="p-2 sm:p-3 lg:p-3.5 pb-4">
+  <button
+    type="button"
+    onClick={(e) => {
+      e.stopPropagation();
+      setSelectedItem(item);
+    }}
+    className="
+      w-full block
+      flex items-center justify-between
+      h-[44px] sm:h-[48px]
+      px-5
+      rounded-full
+      text-[13px] sm:text-[14px] font-semibold
+      text-black
+      hover:brightness-110
+      transition
+    "
+    style={{
+      background:
+        "linear-gradient(107.27deg, #8B3434 -27.97%, #A84E4E -12.13%, #F29292 22.69%, #FF9E9E 45.99%, #E17B7B 77.51%)",
+      fontFamily: "Manrope, sans-serif",
+    }}
+  >
+    <span>View Gallery</span>
+    <img
+      src={arrowRightIcon}
+      alt="arrow"
+      className="w-[18px] h-[18px] object-contain"
+    />
+  </button>
+</div>
             </article>
           ))}
         </div>
