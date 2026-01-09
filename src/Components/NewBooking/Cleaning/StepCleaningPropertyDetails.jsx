@@ -97,9 +97,6 @@ export default function StepCleaningPropertyDetails({
                 <h2 className="text-[26px] font-extrabold text-[#111827]">
                   Property details
                 </h2>
-                <p className="text-[14px] text-[#6B7280] mt-1">
-                  Tell us about the home size.
-                </p>
               </>
             ) : (
               <>

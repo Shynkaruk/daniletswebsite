@@ -8,7 +8,9 @@ const GOLD_GRADIENT =
 
 function toggleInArray(arr, value) {
   const safe = Array.isArray(arr) ? arr : [];
-  return safe.includes(value) ? safe.filter((x) => x !== value) : [...safe, value];
+  return safe.includes(value)
+    ? safe.filter((x) => x !== value)
+    : [...safe, value];
 }
 
 function CheckRow({ label, checked, onToggle }) {
@@ -22,9 +24,7 @@ function CheckRow({ label, checked, onToggle }) {
           ? "border-transparent text-black"
           : "border-[#E5E7EB] text-[#111827] bg-white",
       ].join(" ")}
-      style={{
-        background: checked ? GOLD_GRADIENT : undefined,
-      }}
+      style={{ background: checked ? GOLD_GRADIENT : undefined }}
     >
       <span className="text-[16px] font-semibold">{label}</span>
 
@@ -34,14 +34,11 @@ function CheckRow({ label, checked, onToggle }) {
           checked ? "bg-black border-black" : "bg-white border-[#D1D5DB]",
         ].join(" ")}
       >
-        {checked ? (
-          <span className="text-white text-[14px] leading-none">✓</span>
-        ) : null}
+        {checked ? <span className="text-white text-[14px] leading-none">✓</span> : null}
       </span>
     </button>
   );
 }
-
 
 const AREAS_OPTIONS = [
   "Kitchen",
@@ -62,8 +59,13 @@ export default function StepCleaningAreas({
   propertyType,
   areas,
   setAreas,
+
+  // ✅ нове (як у варіанті 1)
+  areasOther,
+  setAreasOther,
+
   renderProgress,
-  progressStepIndex = 4, // ✅ для cleaning: Areas = 4-й сегмент (якщо PropertyType=1)
+  progressStepIndex = 4,
   totalSteps = 10,
 }) {
   if (!visible) return null;
@@ -71,10 +73,28 @@ export default function StepCleaningAreas({
   const isResidential = propertyType === "residential";
   const safeAreas = Array.isArray(areas) ? areas : [];
 
+  const isOtherSelected = safeAreas.includes("Other");
+  const otherOk = !isOtherSelected || (areasOther || "").trim().length > 1;
+
   const canContinue = useMemo(() => {
     if (!isResidential) return true;
-    return safeAreas.length > 0;
-  }, [isResidential, safeAreas.length]);
+    if (safeAreas.length === 0) return false;
+    if (!otherOk) return false;
+    return true;
+  }, [isResidential, safeAreas.length, otherOk]);
+
+  const handleToggle = (name) => {
+    setAreas((prev) => {
+      const next = toggleInArray(prev, name);
+
+      // ✅ якщо зняли Other — чистимо поле
+      if (name === "Other" && Array.isArray(prev) && prev.includes("Other")) {
+        if (typeof setAreasOther === "function") setAreasOther("");
+      }
+
+      return next;
+    });
+  };
 
   return (
     <div className="w-full max-w-full min-w-0 text-left">
@@ -90,12 +110,16 @@ export default function StepCleaningAreas({
             <FiChevronLeft className="text-[18px] text-[#18181B]" />
           </button>
           <div>
-            <h2 className="text-[22px] font-extrabold text-[#18181B]">Project details</h2>
+            <h2 className="text-[22px] font-extrabold text-[#18181B]">
+              Project details
+            </h2>
           </div>
         </div>
 
         {/* Progress */}
-        {renderProgress ? renderProgress(progressStepIndex) : (
+        {renderProgress ? (
+          renderProgress(progressStepIndex)
+        ) : (
           <ProgressBar activeCount={progressStepIndex} total={totalSteps} />
         )}
 
@@ -103,7 +127,7 @@ export default function StepCleaningAreas({
         {isResidential ? (
           <section className="space-y-3">
             <div className="text-sm text-[#6B7280] font-medium">
-              What areas do you need cleaned? (select all that apply) *
+              What areas do you need cleaned? (select all that apply)
             </div>
 
             <div className="space-y-3">
@@ -112,10 +136,30 @@ export default function StepCleaningAreas({
                   key={name}
                   label={name}
                   checked={safeAreas.includes(name)}
-                  onToggle={() => setAreas((prev) => toggleInArray(prev, name))}
+                  onToggle={() => handleToggle(name)}
                 />
               ))}
             </div>
+
+            {/* ✅ поле для Other */}
+            {isOtherSelected && (
+              <div className="pt-2 space-y-2">
+                <div className="text-sm text-[#6B7280] font-medium">
+                  Please specify
+                </div>
+                <input
+                  value={areasOther || ""}
+                  onChange={(e) => setAreasOther(e.target.value)}
+                  className="w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  placeholder="Write what other areas you need cleaned..."
+                />
+                {!otherOk && (
+                  <div className="text-[12px] text-red-500">
+                    Please describe “Other” to continue.
+                  </div>
+                )}
+              </div>
+            )}
           </section>
         ) : (
           <section className="bg-white rounded-[20px] border border-[#E5E7EB] p-4">

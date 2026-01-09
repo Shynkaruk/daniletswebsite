@@ -344,7 +344,7 @@ export default function StepCleaningReview({
           "
           style={{ background: GOLD_GRADIENT }}
         >
-          {isSubmitting ? "Submitting..." : "Submit cleaning request"}
+          {isSubmitting ? "Submitting..." : "Submit"}
         </button>
       </div>
     </div>

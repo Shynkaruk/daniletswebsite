@@ -8,7 +8,9 @@ const GOLD_GRADIENT =
 
 function toggleInArray(arr, value) {
   const safe = Array.isArray(arr) ? arr : [];
-  return safe.includes(value) ? safe.filter((x) => x !== value) : [...safe, value];
+  return safe.includes(value)
+    ? safe.filter((x) => x !== value)
+    : [...safe, value];
 }
 
 function CheckRow({ label, checked, onToggle }) {
@@ -22,9 +24,7 @@ function CheckRow({ label, checked, onToggle }) {
           ? "border-transparent text-black"
           : "border-[#E5E7EB] text-[#111827] bg-white",
       ].join(" ")}
-      style={{
-        background: checked ? GOLD_GRADIENT : undefined,
-      }}
+      style={{ background: checked ? GOLD_GRADIENT : undefined }}
     >
       <span className="text-[16px] font-semibold">{label}</span>
 
@@ -34,14 +34,11 @@ function CheckRow({ label, checked, onToggle }) {
           checked ? "bg-black border-black" : "bg-white border-[#D1D5DB]",
         ].join(" ")}
       >
-        {checked ? (
-          <span className="text-white text-[14px] leading-none">✓</span>
-        ) : null}
+        {checked ? <span className="text-white text-[14px] leading-none">✓</span> : null}
       </span>
     </button>
   );
 }
-
 
 const GENERAL_TASKS_OPTIONS = [
   "Floor Cleaning",
@@ -63,6 +60,11 @@ export default function StepCleaningGeneralTasks({
   propertyType,
   generalTasks,
   setGeneralTasks,
+
+  // ✅ нове
+  generalTasksOther,
+  setGeneralTasksOther,
+
   renderProgress,
   progressStepIndex = 5,
   totalSteps = 10,
@@ -72,10 +74,29 @@ export default function StepCleaningGeneralTasks({
   const isResidential = propertyType === "residential";
   const safe = Array.isArray(generalTasks) ? generalTasks : [];
 
+  const isOtherSelected = safe.includes("Other");
+  const otherOk = !isOtherSelected || (generalTasksOther || "").trim().length > 1;
+
   const canContinue = useMemo(() => {
     if (!isResidential) return true;
-    return safe.length > 0;
-  }, [isResidential, safe.length]);
+    if (safe.length === 0) return false;
+    if (!otherOk) return false;
+    return true;
+  }, [isResidential, safe.length, otherOk]);
+
+  const handleToggle = (name) => {
+    setGeneralTasks((prev) => {
+      const prevSafe = Array.isArray(prev) ? prev : [];
+      const next = toggleInArray(prevSafe, name);
+
+      // ✅ якщо зняли Other — чистимо поле
+      if (name === "Other" && prevSafe.includes("Other")) {
+        if (typeof setGeneralTasksOther === "function") setGeneralTasksOther("");
+      }
+
+      return next;
+    });
+  };
 
   return (
     <div className="w-full max-w-full min-w-0 text-left">
@@ -89,17 +110,21 @@ export default function StepCleaningGeneralTasks({
           >
             <FiChevronLeft className="text-[18px] text-[#18181B]" />
           </button>
-          <h2 className="text-[22px] font-extrabold text-[#18181B]">Project details</h2>
+          <h2 className="text-[22px] font-extrabold text-[#18181B]">
+            Project details
+          </h2>
         </div>
 
-        {renderProgress ? renderProgress(progressStepIndex) : (
+        {renderProgress ? (
+          renderProgress(progressStepIndex)
+        ) : (
           <ProgressBar activeCount={progressStepIndex} total={totalSteps} />
         )}
 
         {isResidential ? (
           <section className="space-y-3">
             <div className="text-sm text-[#6B7280] font-medium">
-              What will we be doing? (select all that apply) *
+              What will we be doing? (select all that apply)
             </div>
 
             <div className="space-y-3">
@@ -108,14 +133,36 @@ export default function StepCleaningGeneralTasks({
                   key={name}
                   label={name}
                   checked={safe.includes(name)}
-                  onToggle={() => setGeneralTasks((prev) => toggleInArray(prev, name))}
+                  onToggle={() => handleToggle(name)}
                 />
               ))}
             </div>
+
+            {/* ✅ поле для Other */}
+            {isOtherSelected && (
+              <div className="pt-2 space-y-2">
+                <div className="text-sm text-[#6B7280] font-medium">
+                  Please specify
+                </div>
+                <input
+                  value={generalTasksOther || ""}
+                  onChange={(e) => setGeneralTasksOther(e.target.value)}
+                  className="w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  placeholder="Write what other general tasks you need..."
+                />
+                {!otherOk && (
+                  <div className="text-[12px] text-red-500">
+                    Please describe “Other” to continue.
+                  </div>
+                )}
+              </div>
+            )}
           </section>
         ) : (
           <section className="bg-white rounded-[20px] border border-[#E5E7EB] p-4">
-            <div className="text-sm text-[#6B7280] font-medium">Continue to next step.</div>
+            <div className="text-sm text-[#6B7280] font-medium">
+              Continue to next step.
+            </div>
           </section>
         )}
 

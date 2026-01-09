@@ -26,6 +26,10 @@ export default function StepCleaningProjectType({
   projectType,
   setProjectType,
 
+  // ✅ нове
+  projectTypeOther,
+  setProjectTypeOther,
+
   renderProgress,
   progressStepIndex = 3,
   totalSteps = 10,
@@ -43,7 +47,10 @@ export default function StepCleaningProjectType({
       : [];
   }, [isResidential, isCommercial]);
 
-  const canContinue = !!projectType;
+  const isOther = projectType === "other";
+  const otherOk = !isOther || (projectTypeOther || "").trim().length > 1;
+
+  const canContinue = !!projectType && otherOk;
 
   return (
     <div className="w-full max-w-full min-w-0 text-left">
@@ -70,17 +77,23 @@ export default function StepCleaningProjectType({
 
         <section className="space-y-2">
           <div className="text-sm text-[#6B7280] font-medium">
-            Type of project (select one) *
+            What type of project is this? (select one)*
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {options.map((opt) => {
               const active = projectType === opt.key;
+
               return (
                 <button
                   key={opt.key}
                   type="button"
-                  onClick={() => setProjectType(opt.key)}
+                  onClick={() => {
+                    setProjectType(opt.key);
+
+                    // ✅ якщо вибрали не Other — чистимо поле
+                    if (opt.key !== "other") setProjectTypeOther?.("");
+                  }}
                   className={`min-h-[44px] rounded-[16px] border text-sm font-semibold px-3 text-left
                     ${
                       active
@@ -94,6 +107,26 @@ export default function StepCleaningProjectType({
               );
             })}
           </div>
+
+          {/* ✅ поле для Other */}
+          {isOther && (
+            <div className="pt-2 space-y-2">
+              <div className="text-sm text-[#6B7280] font-medium">
+                Please specify
+              </div>
+              <input
+                value={projectTypeOther || ""}
+                onChange={(e) => setProjectTypeOther(e.target.value)}
+                className="w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                placeholder="Write your project type..."
+              />
+              {!otherOk && (
+                <div className="text-[12px] text-red-500">
+                  Please describe your project type to continue.
+                </div>
+              )}
+            </div>
+          )}
         </section>
 
         <button

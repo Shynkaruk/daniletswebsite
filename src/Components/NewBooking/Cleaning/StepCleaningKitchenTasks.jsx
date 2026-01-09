@@ -1,4 +1,3 @@
-// src/Components/NewBooking/Cleaning/StepCleaningKitchenTasks.jsx
 import React, { useMemo } from "react";
 import { FiChevronLeft } from "react-icons/fi";
 import ProgressBar from "../ProgressBar";
@@ -8,7 +7,9 @@ const GOLD_GRADIENT =
 
 function toggleInArray(arr, value) {
   const safe = Array.isArray(arr) ? arr : [];
-  return safe.includes(value) ? safe.filter((x) => x !== value) : [...safe, value];
+  return safe.includes(value)
+    ? safe.filter((x) => x !== value)
+    : [...safe, value];
 }
 
 function CheckRow({ label, checked, onToggle }) {
@@ -22,9 +23,7 @@ function CheckRow({ label, checked, onToggle }) {
           ? "border-transparent text-black"
           : "border-[#E5E7EB] text-[#111827] bg-white",
       ].join(" ")}
-      style={{
-        background: checked ? GOLD_GRADIENT : undefined,
-      }}
+      style={{ background: checked ? GOLD_GRADIENT : undefined }}
     >
       <span className="text-[16px] font-semibold">{label}</span>
 
@@ -34,14 +33,11 @@ function CheckRow({ label, checked, onToggle }) {
           checked ? "bg-black border-black" : "bg-white border-[#D1D5DB]",
         ].join(" ")}
       >
-        {checked ? (
-          <span className="text-white text-[14px] leading-none">✓</span>
-        ) : null}
+        {checked ? <span className="text-white text-[14px] leading-none">✓</span> : null}
       </span>
     </button>
   );
 }
-
 
 const KITCHEN_TASKS_OPTIONS = [
   "Surface Cleaning (Cabinets, Counters, and Appliances)",
@@ -60,6 +56,11 @@ export default function StepCleaningKitchenTasks({
   propertyType,
   kitchenTasks,
   setKitchenTasks,
+
+  // ✅ нове
+  kitchenTasksOther,
+  setKitchenTasksOther,
+
   renderProgress,
   progressStepIndex = 6,
   totalSteps = 10,
@@ -69,10 +70,29 @@ export default function StepCleaningKitchenTasks({
   const isResidential = propertyType === "residential";
   const safe = Array.isArray(kitchenTasks) ? kitchenTasks : [];
 
+  const isOtherSelected = safe.includes("Other");
+  const otherOk = !isOtherSelected || (kitchenTasksOther || "").trim().length > 1;
+
   const canContinue = useMemo(() => {
     if (!isResidential) return true;
-    return safe.length > 0;
-  }, [isResidential, safe.length]);
+    if (safe.length === 0) return false;
+    if (!otherOk) return false;
+    return true;
+  }, [isResidential, safe.length, otherOk]);
+
+  const handleToggle = (name) => {
+    setKitchenTasks((prev) => {
+      const prevSafe = Array.isArray(prev) ? prev : [];
+      const next = toggleInArray(prevSafe, name);
+
+      // ✅ якщо зняли Other — чистимо поле
+      if (name === "Other" && prevSafe.includes("Other")) {
+        if (typeof setKitchenTasksOther === "function") setKitchenTasksOther("");
+      }
+
+      return next;
+    });
+  };
 
   return (
     <div className="w-full max-w-full min-w-0 text-left">
@@ -89,14 +109,16 @@ export default function StepCleaningKitchenTasks({
           <h2 className="text-[22px] font-extrabold text-[#18181B]">Project details</h2>
         </div>
 
-        {renderProgress ? renderProgress(progressStepIndex) : (
+        {renderProgress ? (
+          renderProgress(progressStepIndex)
+        ) : (
           <ProgressBar activeCount={progressStepIndex} total={totalSteps} />
         )}
 
         {isResidential ? (
           <section className="space-y-3">
             <div className="text-sm text-[#6B7280] font-medium">
-              What will we be doing in the kitchen? (select all that apply) *
+              What will we be doing in the kitchen? (select all that apply)
             </div>
 
             <div className="space-y-3">
@@ -105,10 +127,30 @@ export default function StepCleaningKitchenTasks({
                   key={name}
                   label={name}
                   checked={safe.includes(name)}
-                  onToggle={() => setKitchenTasks((prev) => toggleInArray(prev, name))}
+                  onToggle={() => handleToggle(name)}
                 />
               ))}
             </div>
+
+            {/* ✅ поле для Other */}
+            {isOtherSelected && (
+              <div className="pt-2 space-y-2">
+                <div className="text-sm text-[#6B7280] font-medium">
+                  Please specify
+                </div>
+                <input
+                  value={kitchenTasksOther || ""}
+                  onChange={(e) => setKitchenTasksOther(e.target.value)}
+                  className="w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  placeholder="Write what other kitchen tasks you need..."
+                />
+                {!otherOk && (
+                  <div className="text-[12px] text-red-500">
+                    Please describe “Other” to continue.
+                  </div>
+                )}
+              </div>
+            )}
           </section>
         ) : (
           <section className="bg-white rounded-[20px] border border-[#E5E7EB] p-4">

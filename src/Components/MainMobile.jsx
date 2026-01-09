@@ -11,6 +11,7 @@ import ActionMini from "./ActionMini.jsx";
 import FAQ from "./FAQ.jsx";
 import Footer from "./Footer.jsx";
 import StatsBlock from "./StatsBlock.jsx";
+import LayoutContainer from "./LayoutContainer.jsx";
 
 // 📌 СЛАЙДИ ДЛЯ МОБІЛЬНОЇ ВЕРСІЇ — ПІДКЛЮЧЕНО З public/Top_of_Page
 // ❗ Шляхи відносно public, тому без import
@@ -231,12 +232,25 @@ const MainMobile = () => {
         </div>
       </main>
 
-      <Services className="relative z-10 mt-[-40px]" />
-      <StatsBlock />
-      <OurCoreValues />
-      <OurReviews />
-      <ActionMini />
-      <FAQ />
+<LayoutContainer>
+      <Services className="relative z-10 mt-[-100px]" />
+      </LayoutContainer>
+<LayoutContainer>
+  <StatsBlock />
+</LayoutContainer>
+
+<LayoutContainer>
+  <OurCoreValues />
+</LayoutContainer>
+<LayoutContainer>
+  <OurReviews />
+</LayoutContainer>
+<LayoutContainer>
+  <ActionMini />
+</LayoutContainer>
+<LayoutContainer>
+  <FAQ />
+</LayoutContainer>
       <Footer />
     </div>
   );

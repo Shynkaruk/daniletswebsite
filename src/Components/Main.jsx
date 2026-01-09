@@ -268,25 +268,25 @@ const Main = () => {
           </div>
         </div>
       </main>
-<LayoutContainer>
-      <Services className="relative z-10 mt-[-100px]" />
+      <LayoutContainer>
+        <Services className="relative z-10 mt-[-100px]" />
       </LayoutContainer>
-<LayoutContainer>
-  <StatsBlock />
-</LayoutContainer>
+      <LayoutContainer>
+        <StatsBlock />
+      </LayoutContainer>
 
-<LayoutContainer>
-  <OurCoreValues />
-</LayoutContainer>
-<LayoutContainer>
-  <OurReviews />
-</LayoutContainer>
-<LayoutContainer>
-  <ActionMini />
-</LayoutContainer>
-<LayoutContainer>
-  <FAQ />
-</LayoutContainer>
+      <LayoutContainer>
+        <OurCoreValues />
+      </LayoutContainer>
+      <LayoutContainer>
+        <OurReviews />
+      </LayoutContainer>
+      <LayoutContainer>
+        <ActionMini />
+      </LayoutContainer>
+      <LayoutContainer>
+        <FAQ />
+      </LayoutContainer>
       <Footer />
     </div>
   );

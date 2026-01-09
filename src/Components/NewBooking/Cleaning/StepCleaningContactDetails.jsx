@@ -272,18 +272,6 @@ export default function StepCleaningContactDetails({
               ))}
             </div>
           </div>
-
-          <div className="space-y-2">
-            <div className="text-sm text-[#6B7280] font-medium">
-              Anything else we should know?
-            </div>
-            <textarea
-              value={extraInfo}
-              onChange={(e) => setExtraInfo(e.target.value)}
-              rows={4}
-              className="w-full rounded-[18px] bg-[#F4F4F5] px-4 py-3 text-[14px] outline-none resize-none"
-            />
-          </div>
         </section>
 
         <button

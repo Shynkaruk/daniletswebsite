@@ -192,10 +192,16 @@ const Booking = () => {
     <ProgressBar activeCount={activeIndex} total={CLEANING_TOTAL_STEPS} />
   );
   const renderPersonalDetailingProgress = (activeIndex) => (
-    <ProgressBar activeCount={activeIndex} total={DETAILING_PERSONAL_STEPS_COUNT} />
+    <ProgressBar
+      activeCount={activeIndex}
+      total={DETAILING_PERSONAL_STEPS_COUNT}
+    />
   );
   const renderBusinessDetailingProgress = (activeIndex) => (
-    <ProgressBar activeCount={activeIndex} total={DETAILING_BUSINESS_STEPS_COUNT} />
+    <ProgressBar
+      activeCount={activeIndex}
+      total={DETAILING_BUSINESS_STEPS_COUNT}
+    />
   );
 
   // Google Places
@@ -311,7 +317,8 @@ const Booking = () => {
     semi_trucks: "",
     other: "",
   });
-  const [businessVehicleOtherLabel, setBusinessVehicleOtherLabel] = useState("");
+  const [businessVehicleOtherLabel, setBusinessVehicleOtherLabel] =
+    useState("");
 
   const [businessServiceLocation, setBusinessServiceLocation] = useState("");
   const [businessServices, setBusinessServices] = useState([]);
@@ -334,12 +341,16 @@ const Booking = () => {
   /** ---------- CLEANING RESIDENTIAL (старий) ---------- */
   const [propertyType, setPropertyType] = useState(""); // residential | commercial
   const [projectType, setProjectType] = useState(""); // deep_clean | ...
+  const [projectTypeOther, setProjectTypeOther] = useState("");
 
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
   const [areas, setAreas] = useState([]);
+  const [areasOther, setAreasOther] = useState("");
   const [generalTasks, setGeneralTasks] = useState([]);
+  const [generalTasksOther, setGeneralTasksOther] = useState("");
   const [kitchenTasks, setKitchenTasks] = useState([]);
+  const [kitchenTasksOther, setKitchenTasksOther] = useState("");
   const [resBudget, setResBudget] = useState("");
   const [extraDetails, setExtraDetails] = useState("");
 
@@ -591,7 +602,9 @@ const Booking = () => {
         : []
       : [];
 
-    const conditionFlagsArr = Array.isArray(conditionFlags) ? conditionFlags : [];
+    const conditionFlagsArr = Array.isArray(conditionFlags)
+      ? conditionFlags
+      : [];
     const detServicesArr = Array.isArray(detServices) ? detServices : [];
     const vehiclesArr = Array.isArray(vehiclesDetails) ? vehiclesDetails : [];
 
@@ -640,14 +653,20 @@ const Booking = () => {
       `Name: ${firstName} ${lastNameState}`,
       `Phone: ${phone}`,
       `Email: ${email}`,
-      heardAboutArr.length ? `Heard about us: ${heardAboutArr.join(", ")}` : null,
+      heardAboutArr.length
+        ? `Heard about us: ${heardAboutArr.join(", ")}`
+        : null,
       query ? `Customer address: ${query}` : null,
       color ? `Color: ${color}` : null,
       seatMaterial ? `Seat material: ${seatMaterial}` : null,
-      detYear && detMake && detModel ? `Vehicle: ${detYear} ${detMake} ${detModel}` : null,
+      detYear && detMake && detModel
+        ? `Vehicle: ${detYear} ${detMake} ${detModel}`
+        : null,
       lastDetailed ? `Last detailed: ${lastDetailed}` : null,
       conditionRating ? `Condition rating: ${conditionRating}` : null,
-      conditionFlagsArr.length ? `Condition flags: ${conditionFlagsArr.join(", ")}` : null,
+      conditionFlagsArr.length
+        ? `Condition flags: ${conditionFlagsArr.join(", ")}`
+        : null,
       conditionOtherText ? `Condition other: ${conditionOtherText}` : null,
       detServicesArr.length ? `Services: ${detServicesArr.join(", ")}` : null,
       servicesOtherText ? `Services other: ${servicesOtherText}` : null,
@@ -655,7 +674,9 @@ const Booking = () => {
         ? `Multiple vehicles: Yes, count: ${detVehiclesCount || "n/a"}`
         : "Multiple vehicles: No",
       `Location type: ${loc.location_type}`,
-      detCompletionDate ? `Preferred completion date: ${detCompletionDate}` : null,
+      detCompletionDate
+        ? `Preferred completion date: ${detCompletionDate}`
+        : null,
       additionalInfo ? `Additional info: ${additionalInfo}` : null,
     ]
       .filter(Boolean)
@@ -713,34 +734,55 @@ const Booking = () => {
 
     const vehiclesCountNum = Number(businessVehiclesCount) || 0;
     if (vehiclesCountNum <= 0) {
-      openInfoModal("Vehicle count missing", "Please enter how many vehicles need detailing.");
+      openInfoModal(
+        "Vehicle count missing",
+        "Please enter how many vehicles need detailing."
+      );
       return;
     }
 
     if (!businessType) {
-      openInfoModal("Business type missing", "Please select what type of business you are.");
+      openInfoModal(
+        "Business type missing",
+        "Please select what type of business you are."
+      );
       return;
     }
     if (businessType === "Other" && !businessTypeOther.trim()) {
-      openInfoModal("Business type not specified", "Please specify your business type in the 'Other' field.");
+      openInfoModal(
+        "Business type not specified",
+        "Please specify your business type in the 'Other' field."
+      );
       return;
     }
 
     if (!serviceFrequency) {
-      openInfoModal("Service frequency missing", "Please select how often you need detailing services.");
+      openInfoModal(
+        "Service frequency missing",
+        "Please select how often you need detailing services."
+      );
       return;
     }
     if (serviceFrequency === "Other" && !serviceFrequencyOther.trim()) {
-      openInfoModal("Service frequency not specified", "Please specify the frequency in the 'Other' field.");
+      openInfoModal(
+        "Service frequency not specified",
+        "Please specify the frequency in the 'Other' field."
+      );
       return;
     }
 
     if (!hearAbout) {
-      openInfoModal("Discovery source missing", "Please tell us how you heard about us.");
+      openInfoModal(
+        "Discovery source missing",
+        "Please tell us how you heard about us."
+      );
       return;
     }
     if (hearAbout === "Other" && !hearAboutOther.trim()) {
-      openInfoModal("Discovery source not specified", "Please specify how you heard about us in the 'Other' field.");
+      openInfoModal(
+        "Discovery source not specified",
+        "Please specify how you heard about us in the 'Other' field."
+      );
       return;
     }
 
@@ -749,36 +791,60 @@ const Booking = () => {
       0
     );
     if (totalFleetVehicles <= 0) {
-      openInfoModal("Fleet vehicles missing", "Please enter at least one vehicle in your fleet.");
+      openInfoModal(
+        "Fleet vehicles missing",
+        "Please enter at least one vehicle in your fleet."
+      );
       return;
     }
 
-    if (Number(businessVehicleTypes.other || 0) > 0 && !businessVehicleOtherLabel.trim()) {
-      openInfoModal("Other vehicle type not specified", "Please specify what 'Other' vehicle type is.");
+    if (
+      Number(businessVehicleTypes.other || 0) > 0 &&
+      !businessVehicleOtherLabel.trim()
+    ) {
+      openInfoModal(
+        "Other vehicle type not specified",
+        "Please specify what 'Other' vehicle type is."
+      );
       return;
     }
 
     if (!businessServiceLocation) {
-      openInfoModal("Service location missing", "Please select where you would like the services to be performed.");
+      openInfoModal(
+        "Service location missing",
+        "Please select where you would like the services to be performed."
+      );
       return;
     }
 
     if (!businessServices.length) {
-      openInfoModal("Services not selected", "Please select at least one service for your fleet.");
+      openInfoModal(
+        "Services not selected",
+        "Please select at least one service for your fleet."
+      );
       return;
     }
     if (businessServices.includes("Other") && !businessServicesOther.trim()) {
-      openInfoModal("Other services not specified", "Please specify which 'Other' services you need.");
+      openInfoModal(
+        "Other services not specified",
+        "Please specify which 'Other' services you need."
+      );
       return;
     }
 
     if (!businessStartDate) {
-      openInfoModal("Timeline missing", "Please select when you would like us to start.");
+      openInfoModal(
+        "Timeline missing",
+        "Please select when you would like us to start."
+      );
       return;
     }
 
     if (!preferredContactMethod || !contactTimePreference) {
-      openInfoModal("Contact preferences missing", "Please select your preferred contact method and best time to reach you.");
+      openInfoModal(
+        "Contact preferences missing",
+        "Please select your preferred contact method and best time to reach you."
+      );
       return;
     }
 
@@ -789,7 +855,10 @@ const Booking = () => {
     let pickup_address = null;
     let dropoff_address = null;
 
-    if (businessServiceLocation === "customer_dropoff" || businessServiceLocation === "drop_off") {
+    if (
+      businessServiceLocation === "customer_dropoff" ||
+      businessServiceLocation === "drop_off"
+    ) {
       location_type = "shop";
       service_address = shopAddress;
     } else if (businessServiceLocation === "pickup_dropoff") {
@@ -856,7 +925,9 @@ const Booking = () => {
               : businessType
           }`
         : null,
-      businessVehiclesCount ? `Number of vehicles (approx): ${businessVehiclesCount}` : null,
+      businessVehiclesCount
+        ? `Number of vehicles (approx): ${businessVehiclesCount}`
+        : null,
       serviceFrequency
         ? `Service frequency: ${
             serviceFrequency === "Other" && serviceFrequencyOther
@@ -872,13 +943,23 @@ const Booking = () => {
           }`
         : null,
       totalFleetVehicles ? `Fleet vehicles total: ${totalFleetVehicles}` : null,
-      businessServiceLocation ? `Service location: ${businessServiceLocation}` : null,
-      businessServices?.length ? `Requested services: ${businessServices.join(", ")}` : null,
-      businessServices.includes("Other") && businessServicesOther ? `Other services: ${businessServicesOther}` : null,
+      businessServiceLocation
+        ? `Service location: ${businessServiceLocation}`
+        : null,
+      businessServices?.length
+        ? `Requested services: ${businessServices.join(", ")}`
+        : null,
+      businessServices.includes("Other") && businessServicesOther
+        ? `Other services: ${businessServicesOther}`
+        : null,
       businessStartDate ? `Preferred start date: ${businessStartDate}` : null,
       baseAddress ? `Customer location (base): ${baseAddress}` : null,
-      preferredContactMethod ? `Preferred contact method: ${preferredContactMethod}` : null,
-      contactTimePreference ? `Best time to contact: ${contactTimePreference}` : null,
+      preferredContactMethod
+        ? `Preferred contact method: ${preferredContactMethod}`
+        : null,
+      contactTimePreference
+        ? `Best time to contact: ${contactTimePreference}`
+        : null,
       businessNotes ? `Notes: ${businessNotes}` : null,
     ].filter(Boolean);
 
@@ -905,7 +986,10 @@ const Booking = () => {
       setLastRequestId(saved?.id || null);
       setShowSuccessModal(true);
     } catch (e) {
-      const m = e?.error || e?.message || "Failed to submit business detailing request.";
+      const m =
+        e?.error ||
+        e?.message ||
+        "Failed to submit business detailing request.";
       openInfoModal("Submission failed", m);
     } finally {
       setSubmitting(false);
@@ -970,7 +1054,9 @@ const Booking = () => {
       "Cleaning quote request (Residential)",
       propertyType ? `Property type: ${propertyType}` : null,
       projectType ? `Project type: ${projectType}` : null,
-      bedrooms || bathrooms ? `Bedrooms: ${bedrooms || 0}, Bathrooms: ${bathrooms || 0}` : null,
+      bedrooms || bathrooms
+        ? `Bedrooms: ${bedrooms || 0}, Bathrooms: ${bathrooms || 0}`
+        : null,
       areas?.length ? `Areas: ${areas.join(", ")}` : null,
       generalTasks?.length ? `Tasks: ${generalTasks.join(", ")}` : null,
       kitchenTasks?.length ? `Kitchen tasks: ${kitchenTasks.join(", ")}` : null,
@@ -1032,7 +1118,10 @@ const Booking = () => {
     }
 
     if (!propertyType || propertyType !== "commercial") {
-      openInfoModal("Property type", "Commercial flow requires property type = commercial.");
+      openInfoModal(
+        "Property type",
+        "Commercial flow requires property type = commercial."
+      );
       return;
     }
 
@@ -1064,7 +1153,9 @@ const Booking = () => {
 
     const notesParts = [
       "Cleaning quote request (Commercial)",
-      projectType ? `Project type: ${PROJECT_TYPE_LABELS[projectType] || projectType}` : null,
+      projectType
+        ? `Project type: ${PROJECT_TYPE_LABELS[projectType] || projectType}`
+        : null,
 
       c.companyName ? `Company: ${c.companyName}` : null,
       c.companyAddress ? `Company address: ${c.companyAddress}` : null,
@@ -1094,7 +1185,9 @@ const Booking = () => {
         : null,
 
       query ? `Service address: ${query}` : null,
-      `Customer: ${c.firstName || ""} ${c.lastName || ""}, ${c.phone || ""}, ${c.email || ""}`,
+      `Customer: ${c.firstName || ""} ${c.lastName || ""}, ${c.phone || ""}, ${
+        c.email || ""
+      }`,
     ].filter(Boolean);
 
     const payload = {
@@ -1121,7 +1214,9 @@ const Booking = () => {
       setShowSuccessModal(true);
     } catch (e) {
       const m =
-        e?.error || e?.message || "Failed to submit commercial cleaning request.";
+        e?.error ||
+        e?.message ||
+        "Failed to submit commercial cleaning request.";
       openInfoModal("Submission failed", m);
     } finally {
       setSubmitting(false);
@@ -1601,6 +1696,8 @@ const Booking = () => {
                     onNext={() => setCleaningStep(4)}
                     propertyType={propertyType}
                     projectType={projectType}
+                    projectTypeOther={projectTypeOther}
+                    setProjectTypeOther={setProjectTypeOther}
                     setProjectType={setProjectType}
                     renderProgress={renderCleaningProgress}
                     progressStepIndex={2}
@@ -1645,6 +1742,8 @@ const Booking = () => {
                     propertyType={propertyType}
                     areas={areas}
                     setAreas={setAreas}
+                    areasOther={areasOther}
+                    setAreasOther={setAreasOther}
                     renderProgress={renderCleaningProgress}
                     progressStepIndex={4}
                     totalSteps={CLEANING_TOTAL_STEPS}
@@ -1658,6 +1757,8 @@ const Booking = () => {
                     propertyType={propertyType}
                     generalTasks={generalTasks}
                     setGeneralTasks={setGeneralTasks}
+                    generalTasksOther={generalTasksOther}
+                    setGeneralTasksOther={setGeneralTasksOther}
                     renderProgress={renderCleaningProgress}
                     progressStepIndex={5}
                     totalSteps={CLEANING_TOTAL_STEPS}
@@ -1671,6 +1772,8 @@ const Booking = () => {
                     propertyType={propertyType}
                     kitchenTasks={kitchenTasks}
                     setKitchenTasks={setKitchenTasks}
+                    kitchenTasksOther={kitchenTasksOther}
+                    setKitchenTasksOther={setKitchenTasksOther}
                     renderProgress={renderCleaningProgress}
                     progressStepIndex={6}
                     totalSteps={CLEANING_TOTAL_STEPS}
@@ -1780,14 +1883,12 @@ const Booking = () => {
                     setPhone={(v) => setCC({ phone: v })}
                     email={c.email || ""}
                     setEmail={(v) => setCC({ email: v })}
-
                     hearAbout={c.hearAbout || ""}
                     setHearAbout={(v) => setCC({ hearAbout: v })}
                     referralName={c.referralName || ""}
                     setReferralName={(v) => setCC({ referralName: v })}
                     hearOther={c.hearAboutOther || ""}
                     setHearOther={(v) => setCC({ hearAboutOther: v })}
-
                     renderProgress={renderCleaningProgress}
                     progressStepIndex={2}
                     totalSteps={CLEANING_TOTAL_STEPS}
@@ -1805,12 +1906,12 @@ const Booking = () => {
                     setCompanyName={(v) => setCC({ companyName: v })}
                     companyAddress={c.companyAddress || ""}
                     setCompanyAddress={(v) => setCC({ companyAddress: v })}
-
                     businessType={c.businessType || ""}
                     setBusinessType={(v) => setCC({ businessType: v })}
                     businessTypeOther={c.businessTypeOther || ""}
-                    setBusinessTypeOther={(v) => setCC({ businessTypeOther: v })}
-
+                    setBusinessTypeOther={(v) =>
+                      setCC({ businessTypeOther: v })
+                    }
                     renderProgress={renderCleaningProgress}
                     progressStepIndex={3}
                     totalSteps={CLEANING_TOTAL_STEPS}
@@ -1840,39 +1941,52 @@ const Booking = () => {
                       // мінімально заповнимо summary для review (як у твоєму прикладі)
                       let summary = "";
                       if (projectType === "office") {
-                        summary = `Office • ${c.officeSquareFootage || ""} sqft • ${
-                          c.officeFrequency || ""
-                        } • budget: ${c.officeBudget || ""}`;
+                        summary = `Office • ${
+                          c.officeSquareFootage || ""
+                        } sqft • ${c.officeFrequency || ""} • budget: ${
+                          c.officeBudget || ""
+                        }`;
                       } else if (projectType === "airbnb") {
-                        summary = `Airbnb • units: ${c.airbnbUnits || ""} • turnover: ${
+                        summary = `Airbnb • units: ${
+                          c.airbnbUnits || ""
+                        } • turnover: ${
                           c.airbnbTurnover || ""
                         } • budget/unit: ${c.airbnbBudgetPerUnit || ""}`;
                       } else if (projectType === "post_construction") {
-                        summary = `Post-construction • ${c.pcSquareFootage || ""} sqft • ${
-                          c.pcFrequency || ""
-                        } • budget: ${c.pcBudget || ""}`;
+                        summary = `Post-construction • ${
+                          c.pcSquareFootage || ""
+                        } sqft • ${c.pcFrequency || ""} • budget: ${
+                          c.pcBudget || ""
+                        }`;
                       } else if (projectType === "other") {
-                        summary = `Other • ${c.otherProjectDescription || ""} • ${
-                          c.otherFrequency || ""
-                        } • budget: ${c.otherBudget || ""}`;
+                        summary = `Other • ${
+                          c.otherProjectDescription || ""
+                        } • ${c.otherFrequency || ""} • budget: ${
+                          c.otherBudget || ""
+                        }`;
                       }
                       setCC({ projectSummary: summary });
                       ensureCommercialTexts();
                       setCleaningStep(7);
                     }}
                     projectType={projectType}
-
                     /** ===== OFFICE ===== */
                     officeSquareFootage={c.officeSquareFootage || ""}
-                    setOfficeSquareFootage={(v) => setCC({ officeSquareFootage: v })}
+                    setOfficeSquareFootage={(v) =>
+                      setCC({ officeSquareFootage: v })
+                    }
                     officeFloors={c.officeFloors || ""}
                     setOfficeFloors={(v) => setCC({ officeFloors: v })}
                     officeRestrooms={c.officeRestrooms || ""}
                     setOfficeRestrooms={(v) => setCC({ officeRestrooms: v })}
                     officePrivateOffices={c.officePrivateOffices || ""}
-                    setOfficePrivateOffices={(v) => setCC({ officePrivateOffices: v })}
+                    setOfficePrivateOffices={(v) =>
+                      setCC({ officePrivateOffices: v })
+                    }
                     officeConferenceRooms={c.officeConferenceRooms || ""}
-                    setOfficeConferenceRooms={(v) => setCC({ officeConferenceRooms: v })}
+                    setOfficeConferenceRooms={(v) =>
+                      setCC({ officeConferenceRooms: v })
+                    }
                     officeAreas={c.officeAreas || []}
                     setOfficeAreas={(v) => setCC({ officeAreas: v })}
                     officeAreasOther={c.officeAreasOther || ""}
@@ -1880,51 +1994,75 @@ const Booking = () => {
                     officeFrequency={c.officeFrequency || ""}
                     setOfficeFrequency={(v) => setCC({ officeFrequency: v })}
                     officeFrequencyOther={c.officeFrequencyOther || ""}
-                    setOfficeFrequencyOther={(v) => setCC({ officeFrequencyOther: v })}
+                    setOfficeFrequencyOther={(v) =>
+                      setCC({ officeFrequencyOther: v })
+                    }
                     officeBudget={c.officeBudget || ""}
                     setOfficeBudget={(v) => setCC({ officeBudget: v })}
                     officeOneTimeBudget={c.officeOneTimeBudget || ""}
-                    setOfficeOneTimeBudget={(v) => setCC({ officeOneTimeBudget: v })}
+                    setOfficeOneTimeBudget={(v) =>
+                      setCC({ officeOneTimeBudget: v })
+                    }
                     officeStartDate={c.officeStartDate || ""}
                     setOfficeStartDate={(v) => setCC({ officeStartDate: v })}
-
                     /** ===== AIRBNB / RENTAL ===== */
                     airbnbUnits={c.airbnbUnits || ""}
                     setAirbnbUnits={(v) => setCC({ airbnbUnits: v })}
                     airbnbPropertyTypes={c.airbnbPropertyTypes || []}
-                    setAirbnbPropertyTypes={(v) => setCC({ airbnbPropertyTypes: v })}
+                    setAirbnbPropertyTypes={(v) =>
+                      setCC({ airbnbPropertyTypes: v })
+                    }
                     airbnbPropertyOther={c.airbnbPropertyOther || ""}
-                    setAirbnbPropertyOther={(v) => setCC({ airbnbPropertyOther: v })}
+                    setAirbnbPropertyOther={(v) =>
+                      setCC({ airbnbPropertyOther: v })
+                    }
                     airbnbAvgSqft={c.airbnbAvgSqft || ""}
                     setAirbnbAvgSqft={(v) => setCC({ airbnbAvgSqft: v })}
                     airbnbAvgBedrooms={c.airbnbAvgBedrooms || ""}
-                    setAirbnbAvgBedrooms={(v) => setCC({ airbnbAvgBedrooms: v })}
+                    setAirbnbAvgBedrooms={(v) =>
+                      setCC({ airbnbAvgBedrooms: v })
+                    }
                     airbnbAvgBathrooms={c.airbnbAvgBathrooms || ""}
-                    setAirbnbAvgBathrooms={(v) => setCC({ airbnbAvgBathrooms: v })}
+                    setAirbnbAvgBathrooms={(v) =>
+                      setCC({ airbnbAvgBathrooms: v })
+                    }
                     airbnbTurnover={c.airbnbTurnover || ""}
                     setAirbnbTurnover={(v) => setCC({ airbnbTurnover: v })}
                     airbnbTurnoverOther={c.airbnbTurnoverOther || ""}
-                    setAirbnbTurnoverOther={(v) => setCC({ airbnbTurnoverOther: v })}
+                    setAirbnbTurnoverOther={(v) =>
+                      setCC({ airbnbTurnoverOther: v })
+                    }
                     airbnbBudgetPerUnit={c.airbnbBudgetPerUnit || ""}
-                    setAirbnbBudgetPerUnit={(v) => setCC({ airbnbBudgetPerUnit: v })}
+                    setAirbnbBudgetPerUnit={(v) =>
+                      setCC({ airbnbBudgetPerUnit: v })
+                    }
                     airbnbLinenLaundry={c.airbnbLinenLaundry || ""}
-                    setAirbnbLinenLaundry={(v) => setCC({ airbnbLinenLaundry: v })}
+                    setAirbnbLinenLaundry={(v) =>
+                      setCC({ airbnbLinenLaundry: v })
+                    }
                     airbnbAreas={c.airbnbAreas || []}
                     setAirbnbAreas={(v) => setCC({ airbnbAreas: v })}
                     airbnbAreasOther={c.airbnbAreasOther || ""}
                     setAirbnbAreasOther={(v) => setCC({ airbnbAreasOther: v })}
                     airbnbKitchenTasks={c.airbnbKitchenTasks || []}
-                    setAirbnbKitchenTasks={(v) => setCC({ airbnbKitchenTasks: v })}
+                    setAirbnbKitchenTasks={(v) =>
+                      setCC({ airbnbKitchenTasks: v })
+                    }
                     airbnbKitchenOther={c.airbnbKitchenOther || ""}
-                    setAirbnbKitchenOther={(v) => setCC({ airbnbKitchenOther: v })}
+                    setAirbnbKitchenOther={(v) =>
+                      setCC({ airbnbKitchenOther: v })
+                    }
                     airbnbStartDate={c.airbnbStartDate || ""}
                     setAirbnbStartDate={(v) => setCC({ airbnbStartDate: v })}
-
                     /** ===== POST-CONSTRUCTION ===== */
                     pcConstructionType={c.pcConstructionType || ""}
-                    setPcConstructionType={(v) => setCC({ pcConstructionType: v })}
+                    setPcConstructionType={(v) =>
+                      setCC({ pcConstructionType: v })
+                    }
                     pcConstructionOther={c.pcConstructionOther || ""}
-                    setPcConstructionOther={(v) => setCC({ pcConstructionOther: v })}
+                    setPcConstructionOther={(v) =>
+                      setCC({ pcConstructionOther: v })
+                    }
                     pcSquareFootage={c.pcSquareFootage || ""}
                     setPcSquareFootage={(v) => setCC({ pcSquareFootage: v })}
                     pcFloors={c.pcFloors || ""}
@@ -1932,7 +2070,9 @@ const Booking = () => {
                     pcPropertyType={c.pcPropertyType || ""}
                     setPcPropertyType={(v) => setCC({ pcPropertyType: v })}
                     pcPropertyTypeOther={c.pcPropertyTypeOther || ""}
-                    setPcPropertyTypeOther={(v) => setCC({ pcPropertyTypeOther: v })}
+                    setPcPropertyTypeOther={(v) =>
+                      setCC({ pcPropertyTypeOther: v })
+                    }
                     pcSurfaces={c.pcSurfaces || []}
                     setPcSurfaces={(v) => setCC({ pcSurfaces: v })}
                     pcSurfacesOther={c.pcSurfacesOther || ""}
@@ -1945,22 +2085,33 @@ const Booking = () => {
                     setPcBudget={(v) => setCC({ pcBudget: v })}
                     pcCompletionDate={c.pcCompletionDate || ""}
                     setPcCompletionDate={(v) => setCC({ pcCompletionDate: v })}
-
                     /** ===== OTHER ===== */
                     otherProjectDescription={c.otherProjectDescription || ""}
-                    setOtherProjectDescription={(v) => setCC({ otherProjectDescription: v })}
+                    setOtherProjectDescription={(v) =>
+                      setCC({ otherProjectDescription: v })
+                    }
                     otherProjectOther={c.otherProjectOther || ""}
-                    setOtherProjectOther={(v) => setCC({ otherProjectOther: v })}
+                    setOtherProjectOther={(v) =>
+                      setCC({ otherProjectOther: v })
+                    }
                     otherSquareFootage={c.otherSquareFootage || ""}
-                    setOtherSquareFootage={(v) => setCC({ otherSquareFootage: v })}
+                    setOtherSquareFootage={(v) =>
+                      setCC({ otherSquareFootage: v })
+                    }
                     otherFloors={c.otherFloors || ""}
                     setOtherFloors={(v) => setCC({ otherFloors: v })}
                     otherRestrooms={c.otherRestrooms || ""}
                     setOtherRestrooms={(v) => setCC({ otherRestrooms: v })}
                     otherCleaningService={c.otherCleaningService || ""}
-                    setOtherCleaningService={(v) => setCC({ otherCleaningService: v })}
-                    otherCleaningServiceOther={c.otherCleaningServiceOther || ""}
-                    setOtherCleaningServiceOther={(v) => setCC({ otherCleaningServiceOther: v })}
+                    setOtherCleaningService={(v) =>
+                      setCC({ otherCleaningService: v })
+                    }
+                    otherCleaningServiceOther={
+                      c.otherCleaningServiceOther || ""
+                    }
+                    setOtherCleaningServiceOther={(v) =>
+                      setCC({ otherCleaningServiceOther: v })
+                    }
                     otherAreas={c.otherAreas || []}
                     setOtherAreas={(v) => setCC({ otherAreas: v })}
                     otherAreasOther={c.otherAreasOther || ""}
@@ -1968,18 +2119,23 @@ const Booking = () => {
                     otherFrequency={c.otherFrequency || ""}
                     setOtherFrequency={(v) => setCC({ otherFrequency: v })}
                     otherFrequencyOther={c.otherFrequencyOther || ""}
-                    setOtherFrequencyOther={(v) => setCC({ otherFrequencyOther: v })}
+                    setOtherFrequencyOther={(v) =>
+                      setCC({ otherFrequencyOther: v })
+                    }
                     otherBudget={c.otherBudget || ""}
                     setOtherBudget={(v) => setCC({ otherBudget: v })}
                     otherContractType={c.otherContractType || ""}
-                    setOtherContractType={(v) => setCC({ otherContractType: v })}
+                    setOtherContractType={(v) =>
+                      setCC({ otherContractType: v })
+                    }
                     otherStartDate={c.otherStartDate || ""}
                     setOtherStartDate={(v) => setCC({ otherStartDate: v })}
                     otherUrgent={c.otherUrgent || ""}
                     setOtherUrgent={(v) => setCC({ otherUrgent: v })}
                     otherUrgentExplain={c.otherUrgentExplain || ""}
-                    setOtherUrgentExplain={(v) => setCC({ otherUrgentExplain: v })}
-
+                    setOtherUrgentExplain={(v) =>
+                      setCC({ otherUrgentExplain: v })
+                    }
                     renderProgress={renderCleaningProgress}
                     progressStepIndex={5}
                     totalSteps={CLEANING_TOTAL_STEPS}
@@ -2055,8 +2211,12 @@ const Booking = () => {
       {infoModal.open && (
         <div className="fixed inset-0 z-[9998] bg-black/40 flex items-center justify-center px-4">
           <div className="bg-white rounded-2xl shadow-lg max-w-sm w-full p-6 sm:p-7 text-center space-y-4">
-            <h3 className="text-xl font-bold text-[#18181B]">{infoModal.title}</h3>
-            <p className="text-sm text-[#4B5563] whitespace-pre-line">{infoModal.message}</p>
+            <h3 className="text-xl font-bold text-[#18181B]">
+              {infoModal.title}
+            </h3>
+            <p className="text-sm text-[#4B5563] whitespace-pre-line">
+              {infoModal.message}
+            </p>
             <div className="mt-2">
               <button
                 type="button"
@@ -2074,7 +2234,9 @@ const Booking = () => {
       {showSuccessModal && (
         <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center px-4">
           <div className="bg-white rounded-2xl shadow-lg max-w-sm w-full p-6 sm:p-8 text-center space-y-4">
-            <h3 className="text-xl font-bold text-[#18181B]">Request submitted</h3>
+            <h3 className="text-xl font-bold text-[#18181B]">
+              Request submitted
+            </h3>
 
             <p className="text-sm text-[#4B5563]">
               {isCleaning

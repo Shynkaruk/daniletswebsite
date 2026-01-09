@@ -302,18 +302,6 @@ const StepDetailingBusinessReview = ({
               })}
             </div>
           </div>
-
-          <div className="space-y-2">
-            <div className="text-sm text-[#6B7280] font-medium">
-              Anything else we should know? (optional)
-            </div>
-            <textarea
-              value={businessNotes}
-              onChange={(e) => setBusinessNotes(e.target.value)}
-              placeholder="Share any specific requirements, timelines, or questions you have."
-              className="w-full min-h-[90px] rounded-[16px] bg-[#F4F4F5] px-4 py-3 text-[14px] outline-none resize-none"
-            />
-          </div>
         </section>
 
         {/* Submit button */}
