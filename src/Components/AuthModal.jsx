@@ -53,7 +53,7 @@ export default function AuthModal({
 
 return (
   <div
-    className="fixed inset-0 z-[1000] text-[#18181B]"
+    className="fixed inset-0 z-[999999999999] text-[#18181B]"
     aria-modal="true"
     role="dialog"
   >

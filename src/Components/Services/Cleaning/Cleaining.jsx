@@ -57,8 +57,10 @@ const Cleaning = () => {
             className="mt-2 text-xl md:hidden max-w-md"
             style={{ color: "rgba(255,255,255,0.92)" }}
           >
-            Deep interior clean, safe exterior care, and protection — for a car
-            that looks its best, every time
+            Professional cleaning services that transform your space.
+            Specializing in commercial environments, offices, Airbnb properties,
+            and deep cleans—we deliver meticulous results with every service.
+            Flexible scheduling, trusted excellence.
           </p>
           <p
             className="mt-2 text-2xl hidden md:block max-w-screen-md"

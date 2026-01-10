@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+// src/Components/Head.jsx
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
   FaGoogle,
   FaTiktok,
@@ -23,7 +24,6 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
 
   return (
     <div className="block md:hidden w-full">
-      {/* Бар: стабільне центрування через mx-auto (без left-1/2, щоб не “їздило”) */}
       <div className="w-full px-2">
         <div className="w-[min(1800px,calc(100vw-4px))] mx-auto px-4">
           <div className="flex items-center justify-between w-full mx-auto px-2 py-2 rounded-full bg-white shadow-md">
@@ -32,6 +32,7 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
               onClick={toggleMenu}
               className="flex items-center justify-center rounded-full border border-[#A1A1A5] w-[32px] h-[32px]"
               aria-label="Open menu"
+              type="button"
             >
               <FaBars className="text-[#A1A1A5] text-sm" />
             </button>
@@ -49,6 +50,7 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
             <div className="flex items-center gap-2">
               <Link to="/book-online">
                 <button
+                  type="button"
                   className="text-1xl font-bold px-5 py-[10px] rounded-full"
                   style={{
                     background:
@@ -59,6 +61,8 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                   Get Quote
                 </button>
               </Link>
+
+              {/* Важливо: onShowAuth має бути функцією */}
               <AccountMenu variant="icon" onShowAuth={onOpenAuth} />
             </div>
           </div>
@@ -79,7 +83,7 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
           >
             <div className="relative p-4 h-full flex flex-col">
               {/* Logo */}
-              <Link to="/">
+              <Link to="/" onClick={toggleMenu}>
                 <img
                   src={logo}
                   alt="Logo"
@@ -92,6 +96,7 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                 onClick={toggleMenu}
                 className="absolute top-3 right-3 flex items-center justify-center w-[32px] h-[32px] rounded-full border border-[#A1A1A5]"
                 aria-label="Close menu"
+                type="button"
               >
                 <FaTimes className="text-[#A1A1A5] text-base" />
               </button>
@@ -106,7 +111,6 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                   Home
                 </Link>
 
-                {/* ===== Services with dropdown ===== */}
                 <details className="group">
                   <summary
                     className="text-[#A1A1A5] border border-[#A1A1A5] rounded-[44px]
@@ -141,9 +145,10 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
 
                 {/* Contact */}
                 <button
+                  type="button"
                   onClick={() => {
                     toggleMenu();
-                    onOpenContact();
+                    onOpenContact?.();
                   }}
                   className="text-[#A1A1A5] border border-[#A1A1A5] rounded-[44px] text-[14px] font-bold text-center py-2 px-4 hover:bg-[rgba(245,218,147,0.8)] hover:text-black transition"
                 >
@@ -169,7 +174,7 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                         type="button"
                         onClick={() => {
                           toggleMenu();
-                          onOpenSocial();
+                          onOpenSocial?.();
                         }}
                         className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:text-black transition"
                         aria-label="Open social modal"
@@ -182,11 +187,8 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
 
                 <Link to="/book-online" onClick={toggleMenu}>
                   <button
-                    className="
-                      text-1xl font-bold px-5 py-[10px] rounded-full transition-all duration-200
-                      hover:scale-[1.05]
-                      hover:brightness-90
-                    "
+                    type="button"
+                    className="text-1xl font-bold px-5 py-[10px] rounded-full transition-all duration-200 hover:scale-[1.05] hover:brightness-90"
                     style={{
                       background:
                         "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)",
@@ -207,34 +209,33 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
 
 /* ==================== DESKTOP ==================== */
 const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
-  const [open, setOpen] = useState(false);
+  const [openServices, setOpenServices] = useState(false);
   const btnRef = useRef(null);
   const menuRef = useRef(null);
 
   useEffect(() => {
     const onClickOutside = (e) => {
       if (
-        open &&
+        openServices &&
         menuRef.current &&
         !menuRef.current.contains(e.target) &&
         btnRef.current &&
         !btnRef.current.contains(e.target)
       ) {
-        setOpen(false);
+        setOpenServices(false);
       }
     };
-    const onEsc = (e) => e.key === "Escape" && setOpen(false);
+    const onEsc = (e) => e.key === "Escape" && setOpenServices(false);
     document.addEventListener("mousedown", onClickOutside);
     document.addEventListener("keydown", onEsc);
     return () => {
       document.removeEventListener("mousedown", onClickOutside);
       document.removeEventListener("keydown", onEsc);
     };
-  }, [open]);
+  }, [openServices]);
 
   return (
     <div className="hidden md:block w-full">
-      {/* Стабільне центрування через mx-auto (без left-1/2) */}
       <div className="w-full px-4">
         <div className="w-[min(1800px,calc(100vw-32px))] mx-auto">
           <div className="bg-white h-[72px] xl:h-20 rounded-[48px] overflow-visible flex items-center justify-between px-4 sm:px-6 shadow-md">
@@ -247,7 +248,7 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
               />
             </Link>
 
-            {/* Навігація по центру */}
+            {/* Навігація */}
             <nav className="flex-1 flex justify-center items-center">
               <div className="flex items-center gap-2 xl:gap-3">
                 <Link
@@ -264,9 +265,9 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                   <button
                     ref={btnRef}
                     type="button"
-                    onClick={() => setOpen((v) => !v)}
+                    onClick={() => setOpenServices((v) => !v)}
                     aria-haspopup="menu"
-                    aria-expanded={open}
+                    aria-expanded={openServices}
                     className="flex items-center gap-2 bg-white text-[#A1A1A5] border border-[#A1A1A5]
                              rounded-[44px] font-bold whitespace-nowrap
                              px-4 py-2 text-sm xl:px-6 xl:py-3 xl:text-base
@@ -275,14 +276,14 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                     Services{" "}
                     <span
                       className={`transition-transform ${
-                        open ? "rotate-180" : ""
+                        openServices ? "rotate-180" : ""
                       }`}
                     >
                       ▾
                     </span>
                   </button>
 
-                  {open && (
+                  {openServices && (
                     <div
                       ref={menuRef}
                       role="menu"
@@ -296,7 +297,7 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                           key={label}
                           to={to}
                           role="menuitem"
-                          onClick={() => setOpen(false)}
+                          onClick={() => setOpenServices(false)}
                           className={`block w-full text-left px-4 py-3 text-sm font-semibold text-black hover:bg-[rgba(245,218,147,0.25)] ${
                             idx !== 0 ? "border-t border-[#F2F2F5]" : ""
                           }`}
@@ -309,7 +310,8 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                 </div>
 
                 <button
-                  onClick={onOpenContact}
+                  type="button"
+                  onClick={() => onOpenContact?.()}
                   className="bg-white text-[#A1A1A5] border border-[#A1A1A5]
                            rounded-[44px] font-bold whitespace-nowrap
                            px-4 py-2 text-sm xl:px-6 xl:py-3 xl:text-base
@@ -332,22 +334,23 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
 
             {/* Правий блок */}
             <div className="flex items-center gap-2 xl:gap-3 shrink-0">
-              {/* На md–lg — кнопка “…”, на xl — всі соц.іконки */}
+              {/* md–lg — … */}
               <button
                 type="button"
-                onClick={onOpenSocial}
+                onClick={() => onOpenSocial?.()}
                 className="md:flex xl:hidden w-10 h-10 rounded-full bg-gray-100 items-center justify-center text-gray-600 hover:text-black transition"
                 aria-label="Open social modal"
               >
                 <FaEllipsisH />
               </button>
 
+              {/* xl — всі соц */}
               <div className="hidden xl:flex items-center gap-2">
                 {[FaGoogle, FaTiktok, FaYoutube, FaFacebookF].map((Icon, idx) => (
                   <button
                     key={idx}
                     type="button"
-                    onClick={onOpenSocial}
+                    onClick={() => onOpenSocial?.()}
                     className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:text-black transition"
                     aria-label="Open social modal"
                   >
@@ -358,13 +361,10 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
 
               <Link to="/book-online" className="shrink-0">
                 <button
-                  className="
-                    text-black font-bold rounded-full pointer-events-auto
+                  type="button"
+                  className="text-black font-bold rounded-full pointer-events-auto
                     px-4 py-3 text-sm md:px-5 md:py-3 md:text-sm xl:px-6 xl:py-4 xl:text-base
-                    transition-all duration-200
-                    hover:scale-[1.05]
-                    hover:brightness-90
-                  "
+                    transition-all duration-200 hover:scale-[1.05] hover:brightness-90"
                   style={{
                     background:
                       "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)",
@@ -374,6 +374,7 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                 </button>
               </Link>
 
+              {/* ✅ ОЦЕ ГОЛОВНЕ: тепер onOpenAuth точно є */}
               <AccountMenu variant="icon" onShowAuth={onOpenAuth} />
             </div>
           </div>
@@ -383,25 +384,72 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
   );
 };
 
-/* ==================== WRAPPER ==================== */
-const Head = ({ onOpenAuth, onOpenContact, onOpenSocial }) => {
+/* ==================== WRAPPER WITH MODALS ==================== */
+export default function Head() {
+  const [authOpen, setAuthOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [socialOpen, setSocialOpen] = useState(false);
+
+  const openAuth = useCallback(() => setAuthOpen(true), []);
+  const openContact = useCallback(() => setContactOpen(true), []);
+  const openSocial = useCallback(() => setSocialOpen(true), []);
+
+  const closeAuth = useCallback(() => setAuthOpen(false), []);
+  const closeContact = useCallback(() => setContactOpen(false), []);
+  const closeSocial = useCallback(() => setSocialOpen(false), []);
+
+  // (опційно) блок скролу коли відкрита будь-яка модалка
+  useEffect(() => {
+    const anyOpen = authOpen || contactOpen || socialOpen;
+    if (!anyOpen) return;
+
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [authOpen, contactOpen, socialOpen]);
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-[200000]">
-      <div className="pt-4">
-        <MobileHead
-          onOpenAuth={onOpenAuth}
-          onOpenContact={onOpenContact}
-          onOpenSocial={onOpenSocial}
+    <>
+      <header className="fixed top-0 left-0 right-0 z-[200000]">
+        <div className="pt-4">
+          <MobileHead
+            onOpenAuth={openAuth}
+            onOpenContact={openContact}
+            onOpenSocial={openSocial}
+          />
+          <DesktopHead
+            onOpenAuth={openAuth}
+            onOpenContact={openContact}
+            onOpenSocial={openSocial}
+          />
+        </div>
+      </header>
+
+      {/* ✅ Auth modal */}
+      {authOpen && (
+        <AuthModal
+          open={authOpen}
+          onClose={closeAuth}
         />
-        <DesktopHead
-          onOpenAuth={onOpenAuth}
-          onOpenContact={onOpenContact}
-          onOpenSocial={onOpenSocial}
+      )}
+
+      {/* ✅ Contact modal (якщо ContactForm у тебе вже модалка — ок; якщо ні, обгорни в свою) */}
+      {contactOpen && (
+        <ContactForm
+          open={contactOpen}
+          onClose={closeContact}
         />
-      </div>
-    </header>
+      )}
+
+      {/* ✅ Social modal */}
+      {socialOpen && (
+        <SocialModal
+          open={socialOpen}
+          onClose={closeSocial}
+        />
+      )}
+    </>
   );
-};
-
-
-export default Head;
+}

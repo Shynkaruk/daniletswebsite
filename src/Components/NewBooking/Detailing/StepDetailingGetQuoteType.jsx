@@ -12,9 +12,9 @@ const StepDetailingGetQuoteType = ({
   onNext,
 
   // варіанти назв пропів — підтримуємо обидва
-  quoteType,          // "personal" | "business"
+  quoteType, // "personal" | "business"
   setQuoteType,
-  detailingMode,      // "personal" | "business"
+  detailingMode, // "personal" | "business"
   setDetailingMode,
 
   // прогрес-бар
@@ -73,32 +73,27 @@ const StepDetailingGetQuoteType = ({
             What type of detailing are you interested in?
           </div>
 
-{/* BUTTONS */}
-<div className="flex justify-center">
-  <div className="w-full sm:w-auto">
-    <button
-      type="button"
-      onClick={() => handleSelect("business")}
-      className={`h-[48px] w-full sm:w-[320px] rounded-[16px] border text-sm font-semibold
+          {/* BUTTONS */}
+          <div className="flex justify-center">
+            <div className="w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={() => handleSelect("business")}
+                className={`h-[48px] w-full sm:w-[320px] rounded-[16px] border text-sm font-semibold
         ${
           currentType === "business"
             ? "border-transparent text-black"
             : "border-[#E5E7EB] text-[#4B5563] bg-white"
         }`}
-      style={{
-        background: currentType === "business" ? GOLD_GRADIENT : undefined,
-      }}
-    >
-      Business
-    </button>
-  </div>
-</div>
-
-
-          <p className="text-xs sm:text-[13px] text-[#9CA3AF]">
-            Personal is for your own vehicle. Business is for fleets,
-            dealerships, rental or corporate vehicles.
-          </p>
+                style={{
+                  background:
+                    currentType === "business" ? GOLD_GRADIENT : undefined,
+                }}
+              >
+                Business
+              </button>
+            </div>
+          </div>
         </section>
 
         {/* BUTTON */}

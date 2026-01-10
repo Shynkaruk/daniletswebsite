@@ -2184,6 +2184,7 @@ const Booking = () => {
                     onSubmit={submitCleaningCommercialRequest}
                     isSubmitting={submitting}
                     serviceAddress={query}
+                    projectType={projectType}
                     cleaningCommercial={cleaningCommercial}
                     onEditContact={() => setCleaningStep(3)}
                     onEditCompany={() => setCleaningStep(4)}
