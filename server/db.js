@@ -47,7 +47,7 @@ const cardSchema = new mongoose.Schema({
 });
 
 const userPaymentMethodSchema = new mongoose.Schema({
-  user_id:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  user_id:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   brand:      { type: String, required: true },
   last4:      { type: String, required: true },
   exp_month:  { type: Number, required: true },
@@ -58,7 +58,7 @@ const userPaymentMethodSchema = new mongoose.Schema({
 });
 
 const vehicleSchema = new mongoose.Schema({
-  user_id:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  user_id:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   make:       String,
   model:      String,
   year:       Number,
@@ -70,8 +70,10 @@ const vehicleSchema = new mongoose.Schema({
 });
 
 const requestSchema = new mongoose.Schema({
-  user_id:         { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  user_id:         { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   vehicle_id:      { type: mongoose.Schema.Types.ObjectId, ref: 'Vehicle' },
+  is_guest: { type: Boolean, default: true },
+
 
   // ✅ 4 типи заявок
   service_type:    { type: String, required: true },
