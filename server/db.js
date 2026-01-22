@@ -70,7 +70,7 @@ const vehicleSchema = new mongoose.Schema({
 });
 
 const requestSchema = new mongoose.Schema({
-  user_id:         { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  user_id: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   vehicle_id:      { type: mongoose.Schema.Types.ObjectId, ref: 'Vehicle' },
   is_guest: { type: Boolean, default: true },
 

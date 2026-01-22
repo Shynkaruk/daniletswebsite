@@ -102,6 +102,25 @@ function auth(req, res, next) {
   }
 }
 
+function optionalAuth(req, _res, next) {
+  const h = req.headers.authorization || "";
+  const token = h.startsWith("Bearer ") ? h.slice(7) : null;
+
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+
+  try {
+    req.user = jwt.verify(token, JWT_SECRET);
+  } catch {
+    req.user = null; // токен битий/прострочений — рахуємо як гість
+  }
+
+  next();
+}
+
+
 // ---- Health check для App Platform ----
 app.get("/health", (_req, res) => res.status(200).send("ok"));
 
@@ -1795,30 +1814,6 @@ app.get("/api/requests/:id", auth, async (req, res) => {
   res.json(row);
 });
 
-import jwt from "jsonwebtoken";
-import { RequestModel } from "./db.js"; // підправ шлях, якщо інший
-
-const JWT_SECRET = process.env.JWT_SECRET;
-
-// --- OPTIONAL AUTH: токен НЕ обов'язковий ---
-function optionalAuth(req, _res, next) {
-  const h = req.headers.authorization || "";
-  const token = h.startsWith("Bearer ") ? h.slice(7) : null;
-
-  if (!token) {
-    req.user = null;
-    return next();
-  }
-
-  try {
-    req.user = jwt.verify(token, JWT_SECRET);
-  } catch {
-    req.user = null; // битий/прострочений токен — як гість
-  }
-
-  next();
-}
-
 // --- helper: items_json завжди string ---
 function normalizeItemsJson(items_json) {
   if (items_json == null) return "{}";
@@ -1855,57 +1850,33 @@ app.post("/api/requests", optionalAuth, async (req, res) => {
       tax = 0,
       total = 0,
       notes_customer,
-      notes_admin, // якщо раптом передаєш з адмінки (можеш прибрати)
     } = req.body || {};
 
-    // мінімальна валідація
-    if (!service_type || typeof service_type !== "string") {
+    if (!service_type) {
       return res.status(400).json({ error: "service_type required" });
     }
 
-    // --- helper: items_json завжди string ---
-function normalizeItemsJson(items_json) {
-  if (items_json == null) return "{}";
-
-  // якщо фронт прислав вже string
-  if (typeof items_json === "string") {
-    const s = items_json.trim();
-    return s ? s : "{}";
-  }
-
-  // якщо фронт прислав об'єкт/масив
-  try {
-    return JSON.stringify(items_json);
-  } catch {
-    return "{}";
-  }
-}
-
-
-    // можна піджати значення, щоб не прилітали сміттєві
-    const allowedLocation = new Set(["shop", "mobile", "pickup_dropoff", "pickup", "drop_off", "customer_dropoff"]);
-    const safeLocation = allowedLocation.has(location_type) ? location_type : "shop";
+    // items_json: завжди рядок JSON
+    const safeItemsJson =
+      typeof items_json === "string"
+        ? (items_json.trim() || "{}")
+        : JSON.stringify(items_json ?? {});
 
     const doc = await RequestModel.create({
-      // ✅ user_id може бути null
-      user_id: req.user?.uid || null,
-      // ✅ зручно для адмінки
-      is_guest: !req.user,
+      user_id: req.user?.uid || null,   // ✅ тепер гість пройде
+      is_guest: !req.user,              // ✅ опціонально, але дуже зручно
 
       vehicle_id: vehicle_id || null,
       service_type,
       status,
-      location_type: safeLocation,
-
+      location_type,
       service_date: service_date || null,
       time_window: time_window || null,
-
       service_address: service_address || null,
       pickup_address: pickup_address || null,
       dropoff_address: dropoff_address || null,
 
-      // ✅ завжди string у форматі JSON
-      items_json: normalizeItemsJson(items_json),
+      items_json: safeItemsJson,
 
       currency,
       subtotal: Number(subtotal) || 0,
@@ -1913,8 +1884,6 @@ function normalizeItemsJson(items_json) {
       total: Number(total) || 0,
 
       notes_customer: notes_customer || null,
-      notes_admin: notes_admin || null,
-
       created_at: new Date(),
       updated_at: new Date(),
     });
@@ -1924,12 +1893,13 @@ function normalizeItemsJson(items_json) {
     delete row._id;
     delete row.__v;
 
-    return res.json(row);
-  } catch (err) {
-    console.error("[POST /api/requests] error:", err);
-    return res.status(500).json({ error: "server_error" });
+    res.json(row);
+  } catch (e) {
+    console.error("POST /api/requests error:", e);
+    res.status(500).json({ error: "server_error" });
   }
 });
+
 
 
 
