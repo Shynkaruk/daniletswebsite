@@ -1901,9 +1901,6 @@ app.post("/api/requests", optionalAuth, async (req, res) => {
 });
 
 
-
-
-
 function optionalAuth(req, _res, next) {
   const h = req.headers.authorization || "";
   const token = h.startsWith("Bearer ") ? h.slice(7) : null;

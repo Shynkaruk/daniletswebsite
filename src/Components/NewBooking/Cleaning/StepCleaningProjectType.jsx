@@ -65,7 +65,7 @@ export default function StepCleaningProjectType({
             <FiChevronLeft className="text-[18px] text-[#18181B]" />
           </button>
           <h2 className="text-[20px] sm:text-[22px] font-extrabold text-[#18181B]">
-            Cleaning details
+            Project Type
           </h2>
         </div>
 

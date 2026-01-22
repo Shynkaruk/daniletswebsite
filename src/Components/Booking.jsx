@@ -1928,6 +1928,8 @@ const Booking = () => {
                     propertyType={propertyType}
                     projectType={projectType}
                     setProjectType={setProjectType}
+                    projectTypeOther={projectTypeOther}
+                    setProjectTypeOther={setProjectTypeOther}
                     renderProgress={renderCleaningProgress}
                     progressStepIndex={4}
                     totalSteps={CLEANING_TOTAL_STEPS}
