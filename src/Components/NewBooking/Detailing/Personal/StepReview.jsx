@@ -201,7 +201,7 @@ const StepReview = ({
           )}
           <div>
             <h2 className="text-[20px] sm:text-[22px] lg:text-[24px] font-extrabold text-[#18181B]">
-              Review & submit
+              Review & Submit
             </h2>
             <p className="text-[11px] sm:text-[12px] text-[#9CA3AF] mt-0.5">
               Step {progressStepIndex} of {totalSteps}

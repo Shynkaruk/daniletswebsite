@@ -1832,6 +1832,88 @@ function normalizeItemsJson(items_json) {
   }
 }
 
+// ✅ Public create request (guest allowed)
+app.post("/api/requests/public", optionalAuth, async (req, res) => {
+  try {
+    const {
+      vehicle_id,
+      status = "new",
+      location_type = "shop",
+      service_date,
+      time_window,
+      service_type,
+      service_address,
+      pickup_address,
+      dropoff_address,
+      items_json,
+      currency = "USD",
+      subtotal = 0,
+      tax = 0,
+      total = 0,
+      notes_customer,
+
+      // 👇 додай для гостя (фронт має прислати)
+      guest_name,
+      guest_email,
+      guest_phone,
+    } = req.body || {};
+
+    if (!service_type) {
+      return res.status(400).json({ error: "service_type required" });
+    }
+
+    // Якщо user залогінений — беремо uid, якщо ні — null
+    const userId = req.user?.uid || null;
+
+    // Підмішаємо контакт гостя в items_json (щоб не губилось)
+    // Якщо items_json строка — залишимо як є
+    let mergedItemsJson = items_json || "{}";
+    try {
+      const parsed = JSON.parse(mergedItemsJson);
+      const withGuest = {
+        ...parsed,
+        guest: userId
+          ? null
+          : { name: guest_name || "", email: guest_email || "", phone: guest_phone || "" },
+      };
+      mergedItemsJson = JSON.stringify(withGuest);
+    } catch {
+      // якщо items_json не JSON — не чіпаємо
+    }
+
+    const doc = await RequestModel.create({
+      user_id: userId, // ⚠️ якщо схема вимагає — дивись варіант нижче
+      vehicle_id: vehicle_id || null,
+      service_type,
+      status,
+      location_type,
+      service_date: service_date || null,
+      time_window: time_window || null,
+      service_address: service_address || null,
+      pickup_address: pickup_address || null,
+      dropoff_address: dropoff_address || null,
+      items_json: mergedItemsJson,
+      currency,
+      subtotal,
+      tax,
+      total,
+      notes_customer: notes_customer || null,
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
+
+    const row = doc.toObject();
+    row.id = row._id.toString();
+    delete row._id;
+
+    return res.json(row);
+  } catch (e) {
+    console.error("POST /api/requests/public error:", e);
+    return res.status(500).json({ error: "server_error" });
+  }
+});
+
+
 app.post("/api/requests", optionalAuth, async (req, res) => {
   try {
     const {

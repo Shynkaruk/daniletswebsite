@@ -54,7 +54,7 @@ const WhyDaniletsCleaning = () => {
 
       {/* ------- MOBILE ------- */}
       <div className="md:hidden">
-        <div className="inline-flex items-center gap-2 px-3 h-9 rounded-full mb-4">
+        <div className="inline-flex items-center gap-2 px-3 h-9 rounded-full bg-[#FF525226] mb-4">
           <span className="w-5 h-5 grid place-items-center rounded-full">
             <img src={iconDrops} alt="" className="w-6 h-6" />
           </span>

@@ -233,7 +233,7 @@ const MainMobile = () => {
       </main>
 
 <LayoutContainer>
-      <Services className="relative z-10 mt-[-100px]" />
+      <Services className="relative z-10 mt-[-50px]" />
       </LayoutContainer>
 <LayoutContainer>
   <StatsBlock />

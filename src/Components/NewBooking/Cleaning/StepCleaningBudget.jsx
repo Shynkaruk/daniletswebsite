@@ -48,7 +48,7 @@ export default function StepCleaningBudget({
             <FiChevronLeft className="text-[18px] text-[#18181B]" />
           </button>
           <h2 className="text-[20px] sm:text-[22px] font-extrabold text-[#18181B]">
-            Budget & details
+            Budget
           </h2>
         </div>
 

@@ -7,6 +7,7 @@ import OurReviews from '../../OurReviews'
 import FAQ from '../../FAQ'
 import Footer from '../../Footer'
 import PortfolioCleaning from './PortfolioCleaning'
+import LayoutContainer from '../../LayoutContainer'
 
 export default function CleaningPage() {
   return (
@@ -16,8 +17,12 @@ export default function CleaningPage() {
       <WhyDaniletsCleaning></WhyDaniletsCleaning>
       <PortfolioCleaning></PortfolioCleaning>
       <ContactSection></ContactSection>
-      <OurReviews></OurReviews>
-      <FAQ></FAQ>
+      <LayoutContainer>
+              <OurReviews></OurReviews>
+      </LayoutContainer>
+      <LayoutContainer>
+              <FAQ></FAQ>
+      </LayoutContainer>
       <Footer></Footer>
     </div>
   )

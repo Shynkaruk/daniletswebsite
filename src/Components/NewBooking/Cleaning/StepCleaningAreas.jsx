@@ -111,7 +111,7 @@ export default function StepCleaningAreas({
           </button>
           <div>
             <h2 className="text-[22px] font-extrabold text-[#18181B]">
-              Project details
+              Property Information
             </h2>
           </div>
         </div>

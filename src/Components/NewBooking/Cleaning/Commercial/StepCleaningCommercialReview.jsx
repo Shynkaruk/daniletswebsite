@@ -157,7 +157,7 @@ export default function StepCleaningCommercialReview({
 
           <div>
             <h2 className="text-[24px] sm:text-[26px] font-extrabold text-[#18181B]">
-              Review & submit
+              Review & Submit
             </h2>
             <p className="text-[12px] sm:text-[13px] text-[#9CA3AF]">
               Step {progressStepIndex} of {totalSteps}

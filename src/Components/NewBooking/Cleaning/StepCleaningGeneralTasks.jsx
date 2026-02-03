@@ -111,7 +111,7 @@ export default function StepCleaningGeneralTasks({
             <FiChevronLeft className="text-[18px] text-[#18181B]" />
           </button>
           <h2 className="text-[22px] font-extrabold text-[#18181B]">
-            Project details
+            Project Information
           </h2>
         </div>
 
