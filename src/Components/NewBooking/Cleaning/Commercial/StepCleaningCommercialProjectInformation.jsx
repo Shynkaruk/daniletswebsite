@@ -293,6 +293,8 @@ export default function StepCleaningCommercialProjectInformation({
     { key: "house", label: "House" },
     { key: "condo", label: "Condo" },
     { key: "townhouse", label: "Townhouse" },
+    // ✅ додаю other щоб працювала логіка "other" як у тебе в canContinue
+    { key: "other", label: "Other (please specify)" },
   ];
 
   const AIRBNB_TURNOVER = [
@@ -319,6 +321,7 @@ export default function StepCleaningCommercialProjectInformation({
     { key: "balcony", label: "Balcony/Patio" },
     { key: "laundry", label: "Laundry Room" },
     { key: "all", label: "All Areas" },
+    { key: "other", label: "Other (please specify)" },
   ];
 
   const AIRBNB_KITCHEN_TASKS = [
@@ -331,6 +334,7 @@ export default function StepCleaningCommercialProjectInformation({
     { key: "inside_fridge", label: "Inside Refrigerator" },
     { key: "inside_microwave", label: "Inside Microwave" },
     { key: "inside_dishwasher", label: "Inside Dishwasher" },
+    { key: "other", label: "Other (please specify)" },
   ];
 
   const PC_CONSTRUCTION_TYPE = [
@@ -359,6 +363,7 @@ export default function StepCleaningCommercialProjectInformation({
     { key: "bathrooms", label: "Bathrooms" },
     { key: "kitchen", label: "Kitchen" },
     { key: "hvac", label: "HVAC Vents/Ducts" },
+    { key: "other", label: "Other (please specify)" },
   ];
 
   const PC_FREQUENCY = [
@@ -413,6 +418,7 @@ export default function StepCleaningCommercialProjectInformation({
     { key: "floors", label: "Floors (Carpet, Tile, Hardwood, etc.)" },
     { key: "storage", label: "Storage Areas" },
     { key: "exterior", label: "Exterior (Entrance, Walkways, etc.)" },
+    { key: "other", label: "Other (please specify)" },
   ];
 
   const OTHER_FREQUENCY = [
@@ -444,44 +450,203 @@ export default function StepCleaningCommercialProjectInformation({
     { key: "undecided", label: "Undecided" },
   ];
 
-  // ====== СЕКЦІЇ всередині цього кроку (без окремого прогресу) ======
+  // ====== 1 питання = 1 секція ======
   const [section, setSection] = useState(0);
 
   const sections = useMemo(() => {
     if (projectType === "office") {
       return [
-        { key: "size", title: "Size & Layout" },
-        { key: "areas", title: "Areas" },
-        { key: "frequency", title: "Frequency" },
-        { key: "budget_date", title: "Budget & Start Date" },
-      ];
+        { key: "office_sqft", title: "Office square footage?" },
+        { key: "office_floors", title: "How many floors/levels?" },
+        { key: "office_restrooms", title: "How many restrooms?" },
+        { key: "office_private", title: "How many private offices?" },
+        { key: "office_conference", title: "How many conference rooms?" },
+        {
+          key: "office_areas",
+          title: "What areas do you need cleaned? (Select all that apply)",
+        },
+        { key: "office_frequency", title: "Frequency of cleaning?" },
+        { key: "office_budget", title: "What is your budget?" },
+        {
+          key: "office_budget_onetime",
+          title: "One-Time Budget amount",
+          hidden: officeBudget !== "one_time",
+        },
+        { key: "office_start_date", title: "By what date does service start?" },
+      ].filter((s) => !s.hidden);
     }
+
     if (projectType === "airbnb") {
       return [
-        { key: "units", title: "Units & Property" },
-        { key: "details", title: "Unit Details" },
-        { key: "scope", title: "Scope of Work" },
-        { key: "budget_date", title: "Start Date" },
-      ];
+        { key: "airbnb_units", title: "How many units do you need cleaned?" },
+        {
+          key: "airbnb_property_types",
+          title: "Property type? (Select all that apply)",
+        },
+        {
+          key: "airbnb_property_other",
+          title: "Property type — Other (specify)",
+          hidden:
+            !Array.isArray(airbnbPropertyTypes) ||
+            !airbnbPropertyTypes.includes("other"),
+        },
+        { key: "airbnb_avg_sqft", title: "Average square footage per unit?" },
+        {
+          key: "airbnb_avg_bedrooms",
+          title: "Average number of bedrooms per unit?",
+        },
+        {
+          key: "airbnb_avg_bathrooms",
+          title: "Average number of bathrooms per unit?",
+        },
+        { key: "airbnb_turnover", title: "Turnover frequency?" },
+        {
+          key: "airbnb_turnover_other",
+          title: "Turnover — Other (specify)",
+          hidden: airbnbTurnover !== "other",
+        },
+        { key: "airbnb_budget", title: "What is your budget per unit?" },
+        {
+          key: "airbnb_linen",
+          title: "Do you need linen/laundry services?",
+        },
+        {
+          key: "airbnb_areas",
+          title: "What areas do you need cleaned? (Select all that apply)",
+        },
+        {
+          key: "airbnb_areas_other",
+          title: "Areas — Other (specify)",
+          hidden: !Array.isArray(airbnbAreas) || !airbnbAreas.includes("other"),
+        },
+        {
+          key: "airbnb_kitchen_tasks",
+          title: "What will we be doing in the kitchen? (Select all that apply)",
+        },
+        {
+          key: "airbnb_kitchen_other",
+          title: "Kitchen tasks — Other (specify)",
+          hidden:
+            !Array.isArray(airbnbKitchenTasks) ||
+            !airbnbKitchenTasks.includes("other"),
+        },
+        { key: "airbnb_start_date", title: "By what date does service start?" },
+      ].filter((s) => !s.hidden);
     }
+
     if (projectType === "post_construction") {
       return [
-        { key: "construction", title: "Construction Type" },
-        { key: "property", title: "Property Details" },
-        { key: "surfaces", title: "Surfaces & Frequency" },
-        { key: "budget_date", title: "Budget & Completion" },
-      ];
+        { key: "pc_construction_type", title: "What type of construction?" },
+        {
+          key: "pc_construction_other",
+          title: "Construction — Other (specify)",
+          hidden: pcConstructionType !== "other",
+        },
+        { key: "pc_sqft", title: "Property square footage" },
+        { key: "pc_floors", title: "How many floors/levels? (optional)" },
+        { key: "pc_property_type", title: "Property type?" },
+        {
+          key: "pc_property_other",
+          title: "Property type — Other (specify)",
+          hidden: pcPropertyType !== "other",
+        },
+        {
+          key: "pc_surfaces",
+          title: "What specific surfaces need attention? (Select all that apply)",
+        },
+        {
+          key: "pc_surfaces_other",
+          title: "Surfaces — Other (specify)",
+          hidden: !Array.isArray(pcSurfaces) || !pcSurfaces.includes("other"),
+        },
+        { key: "pc_frequency", title: "Frequency of cleaning?" },
+        {
+          key: "pc_frequency_other",
+          title: "Frequency — Other (specify)",
+          hidden: pcFrequency !== "other",
+        },
+        { key: "pc_budget", title: "What is your budget?" },
+        {
+          key: "pc_completion_date",
+          title: "By what date does the service need to be completed?",
+        },
+      ].filter((s) => !s.hidden);
     }
+
     if (projectType === "other") {
       return [
-        { key: "desc", title: "Project Type" },
-        { key: "property", title: "Property Details" },
-        { key: "scope", title: "Scope of Work" },
-        { key: "budget_date", title: "Budget & Timing" },
-      ];
+        { key: "other_project_desc", title: "Please describe your project type:" },
+        {
+          key: "other_project_other",
+          title: "Project type — Other (specify)",
+          hidden: otherProjectDescription !== "other",
+        },
+        { key: "other_sqft", title: "Property square footage" },
+        { key: "other_floors", title: "How many floors/levels? (optional)" },
+        { key: "other_restrooms", title: "How many restrooms? (optional)" },
+        {
+          key: "other_cleaning_service",
+          title: "What type of cleaning service do you need?",
+        },
+        {
+          key: "other_cleaning_other",
+          title: "Cleaning service — Please specify",
+          hidden: !(
+            otherCleaningService === "specialized" ||
+            otherCleaningService === "other"
+          ),
+        },
+        {
+          key: "other_areas",
+          title: "What areas do you need cleaned? (Select all that apply)",
+        },
+        {
+          key: "other_areas_other",
+          title: "Areas — Other (specify)",
+          hidden: !Array.isArray(otherAreas) || !otherAreas.includes("other"),
+        },
+        { key: "other_frequency", title: "Frequency of cleaning?" },
+        {
+          key: "other_frequency_other",
+          title: "Frequency — Other (specify)",
+          hidden: otherFrequency !== "other",
+        },
+        { key: "other_budget", title: "What is your budget?" },
+        {
+          key: "other_contract_type",
+          title: "Is this an ongoing contract or one-time service?",
+        },
+        { key: "other_start_date", title: "By what date does service start?" },
+        { key: "other_urgent", title: "Is this project time-sensitive or urgent?" },
+        {
+          key: "other_urgent_explain",
+          title: "If Yes, please explain:",
+          hidden: otherUrgent !== "yes",
+        },
+      ].filter((s) => !s.hidden);
     }
+
     return [];
-  }, [projectType]);
+  }, [
+    projectType,
+    officeBudget,
+
+    airbnbPropertyTypes,
+    airbnbTurnover,
+    airbnbAreas,
+    airbnbKitchenTasks,
+
+    pcConstructionType,
+    pcPropertyType,
+    pcSurfaces,
+    pcFrequency,
+
+    otherProjectDescription,
+    otherCleaningService,
+    otherAreas,
+    otherFrequency,
+    otherUrgent,
+  ]);
 
   const totalSections = Math.max(1, sections.length);
   const sectionKey = sections[section]?.key;
@@ -490,9 +655,7 @@ export default function StepCleaningCommercialProjectInformation({
     setSection(0);
   }, [projectType]);
 
-  // ✅ Підключаємося до ЗОВНІШНЬОГО прогрес-бару:
-  // даємо "плавний" прогрес всередині одного кроку: progressStepIndex + частка секції.
-  // (якщо твій ProgressBar не підтримує дроби — скажеш, зроблю варіант через globalTotal)
+  // ✅ зовнішній прогрес: progressStepIndex + частка секцій
   const outerProgressValue = useMemo(() => {
     const frac = totalSections > 0 ? section / totalSections : 0;
     return progressStepIndex + frac;
@@ -508,44 +671,52 @@ export default function StepCleaningCommercialProjectInformation({
     else onNext?.();
   };
 
-  // ====== CAN CONTINUE (по поточній секції) ======
+  // ====== CAN CONTINUE (тільки поточне питання) ======
   const canContinue = useMemo(() => {
     if (!projectType || !sectionKey) return false;
 
+    // ===== OFFICE =====
     if (projectType === "office") {
-      if (sectionKey === "size") {
-        return (
-          isFilled(officeSquareFootage) &&
-          isFilled(officeFloors) &&
-          isFilled(officeRestrooms) &&
-          isFilled(officePrivateOffices) &&
-          isFilled(officeConferenceRooms)
-        );
-      }
-      if (sectionKey === "areas") {
+      if (sectionKey === "office_sqft") return isFilled(officeSquareFootage);
+      if (sectionKey === "office_floors") return isFilled(officeFloors);
+      if (sectionKey === "office_restrooms") return isFilled(officeRestrooms);
+      if (sectionKey === "office_private") return isFilled(officePrivateOffices);
+      if (sectionKey === "office_conference")
+        return isFilled(officeConferenceRooms);
+
+      if (sectionKey === "office_areas") {
         if (!hasSome(officeAreas)) return false;
         if (officeAreas.includes("other") && !isFilled(officeAreasOther))
           return false;
         return true;
       }
-      if (sectionKey === "frequency") {
+
+      if (sectionKey === "office_frequency") {
         if (!isFilled(officeFrequency)) return false;
         if (officeFrequency === "other" && !isFilled(officeFrequencyOther))
           return false;
         return true;
       }
-      if (sectionKey === "budget_date") {
-        if (!isFilled(officeBudget)) return false;
-        if (officeBudget === "one_time" && !isFilled(officeOneTimeBudget))
-          return false;
-        if (!isFilled(officeStartDate)) return false;
-        return true;
+
+      if (sectionKey === "office_budget") {
+        return isFilled(officeBudget);
+      }
+
+      if (sectionKey === "office_budget_onetime") {
+        if (officeBudget !== "one_time") return true; // секції не буде, але на всяк
+        return isFilled(officeOneTimeBudget);
+      }
+
+      if (sectionKey === "office_start_date") {
+        return isFilled(officeStartDate);
       }
     }
 
+    // ===== AIRBNB =====
     if (projectType === "airbnb") {
-      if (sectionKey === "units") {
-        if (!isFilled(airbnbUnits)) return false;
+      if (sectionKey === "airbnb_units") return isFilled(airbnbUnits);
+
+      if (sectionKey === "airbnb_property_types") {
         if (!hasSome(airbnbPropertyTypes)) return false;
         if (
           airbnbPropertyTypes.includes("other") &&
@@ -554,75 +725,145 @@ export default function StepCleaningCommercialProjectInformation({
           return false;
         return true;
       }
-      if (sectionKey === "details") {
-        // не required
-        return true;
+
+      if (sectionKey === "airbnb_property_other") {
+        if (
+          !Array.isArray(airbnbPropertyTypes) ||
+          !airbnbPropertyTypes.includes("other")
+        )
+          return true;
+        return isFilled(airbnbPropertyOther);
       }
-      if (sectionKey === "scope") {
+
+      if (sectionKey === "airbnb_avg_sqft") return true; // optional
+      if (sectionKey === "airbnb_avg_bedrooms") return true; // optional
+      if (sectionKey === "airbnb_avg_bathrooms") return true; // optional
+
+      if (sectionKey === "airbnb_turnover") {
         if (!isFilled(airbnbTurnover)) return false;
         if (airbnbTurnover === "other" && !isFilled(airbnbTurnoverOther))
           return false;
+        return true;
+      }
 
-        if (!isFilled(airbnbBudgetPerUnit)) return false;
+      if (sectionKey === "airbnb_turnover_other") {
+        if (airbnbTurnover !== "other") return true;
+        return isFilled(airbnbTurnoverOther);
+      }
 
+      if (sectionKey === "airbnb_budget") return isFilled(airbnbBudgetPerUnit);
+
+      if (sectionKey === "airbnb_linen") return isFilled(airbnbLinenLaundry);
+
+      if (sectionKey === "airbnb_areas") {
         if (!hasSome(airbnbAreas)) return false;
         if (airbnbAreas.includes("other") && !isFilled(airbnbAreasOther))
           return false;
+        return true;
+      }
 
+      if (sectionKey === "airbnb_areas_other") {
+        if (!Array.isArray(airbnbAreas) || !airbnbAreas.includes("other"))
+          return true;
+        return isFilled(airbnbAreasOther);
+      }
+
+      if (sectionKey === "airbnb_kitchen_tasks") {
         if (!hasSome(airbnbKitchenTasks)) return false;
         if (airbnbKitchenTasks.includes("other") && !isFilled(airbnbKitchenOther))
           return false;
-
         return true;
       }
-      if (sectionKey === "budget_date") {
-        return isFilled(airbnbStartDate);
+
+      if (sectionKey === "airbnb_kitchen_other") {
+        if (
+          !Array.isArray(airbnbKitchenTasks) ||
+          !airbnbKitchenTasks.includes("other")
+        )
+          return true;
+        return isFilled(airbnbKitchenOther);
       }
+
+      if (sectionKey === "airbnb_start_date") return isFilled(airbnbStartDate);
     }
 
+    // ===== POST CONSTRUCTION =====
     if (projectType === "post_construction") {
-      if (sectionKey === "construction") {
+      if (sectionKey === "pc_construction_type") {
         if (!isFilled(pcConstructionType)) return false;
         if (pcConstructionType === "other" && !isFilled(pcConstructionOther))
           return false;
         return true;
       }
-      if (sectionKey === "property") {
-        if (!isFilled(pcSquareFootage)) return false;
+
+      if (sectionKey === "pc_construction_other") {
+        if (pcConstructionType !== "other") return true;
+        return isFilled(pcConstructionOther);
+      }
+
+      if (sectionKey === "pc_sqft") return isFilled(pcSquareFootage);
+      if (sectionKey === "pc_floors") return true; // optional
+
+      if (sectionKey === "pc_property_type") {
         if (!isFilled(pcPropertyType)) return false;
         if (pcPropertyType === "other" && !isFilled(pcPropertyTypeOther))
           return false;
         return true;
       }
-      if (sectionKey === "surfaces") {
+
+      if (sectionKey === "pc_property_other") {
+        if (pcPropertyType !== "other") return true;
+        return isFilled(pcPropertyTypeOther);
+      }
+
+      if (sectionKey === "pc_surfaces") {
         if (!hasSome(pcSurfaces)) return false;
         if (pcSurfaces.includes("other") && !isFilled(pcSurfacesOther))
           return false;
+        return true;
+      }
 
+      if (sectionKey === "pc_surfaces_other") {
+        if (!Array.isArray(pcSurfaces) || !pcSurfaces.includes("other"))
+          return true;
+        return isFilled(pcSurfacesOther);
+      }
+
+      if (sectionKey === "pc_frequency") {
         if (!isFilled(pcFrequency)) return false;
         if (pcFrequency === "other" && !isFilled(pcFrequencyOther))
           return false;
+        return true;
+      }
 
-        return true;
+      if (sectionKey === "pc_frequency_other") {
+        if (pcFrequency !== "other") return true;
+        return isFilled(pcFrequencyOther);
       }
-      if (sectionKey === "budget_date") {
-        if (!isFilled(pcBudget)) return false;
-        if (!isFilled(pcCompletionDate)) return false;
-        return true;
-      }
+
+      if (sectionKey === "pc_budget") return isFilled(pcBudget);
+      if (sectionKey === "pc_completion_date") return isFilled(pcCompletionDate);
     }
 
+    // ===== OTHER =====
     if (projectType === "other") {
-      if (sectionKey === "desc") {
+      if (sectionKey === "other_project_desc") {
         if (!isFilled(otherProjectDescription)) return false;
         if (otherProjectDescription === "other" && !isFilled(otherProjectOther))
           return false;
         return true;
       }
-      if (sectionKey === "property") {
-        return isFilled(otherSquareFootage);
+
+      if (sectionKey === "other_project_other") {
+        if (otherProjectDescription !== "other") return true;
+        return isFilled(otherProjectOther);
       }
-      if (sectionKey === "scope") {
+
+      if (sectionKey === "other_sqft") return isFilled(otherSquareFootage);
+      if (sectionKey === "other_floors") return true; // optional
+      if (sectionKey === "other_restrooms") return true; // optional
+
+      if (sectionKey === "other_cleaning_service") {
         if (!isFilled(otherCleaningService)) return false;
         if (
           (otherCleaningService === "specialized" ||
@@ -630,26 +871,54 @@ export default function StepCleaningCommercialProjectInformation({
           !isFilled(otherCleaningServiceOther)
         )
           return false;
+        return true;
+      }
 
+      if (sectionKey === "other_cleaning_other") {
+        if (
+          !(
+            otherCleaningService === "specialized" ||
+            otherCleaningService === "other"
+          )
+        )
+          return true;
+        return isFilled(otherCleaningServiceOther);
+      }
+
+      if (sectionKey === "other_areas") {
         if (!hasSome(otherAreas)) return false;
         if (otherAreas.includes("other") && !isFilled(otherAreasOther))
           return false;
+        return true;
+      }
 
+      if (sectionKey === "other_areas_other") {
+        if (!Array.isArray(otherAreas) || !otherAreas.includes("other"))
+          return true;
+        return isFilled(otherAreasOther);
+      }
+
+      if (sectionKey === "other_frequency") {
         if (!isFilled(otherFrequency)) return false;
         if (otherFrequency === "other" && !isFilled(otherFrequencyOther))
           return false;
-
         return true;
       }
-      if (sectionKey === "budget_date") {
-        if (!isFilled(otherBudget)) return false;
-        if (!isFilled(otherContractType)) return false;
-        if (!isFilled(otherStartDate)) return false;
 
-        if (!isFilled(otherUrgent)) return false;
-        if (otherUrgent === "yes" && !isFilled(otherUrgentExplain)) return false;
+      if (sectionKey === "other_frequency_other") {
+        if (otherFrequency !== "other") return true;
+        return isFilled(otherFrequencyOther);
+      }
 
-        return true;
+      if (sectionKey === "other_budget") return isFilled(otherBudget);
+      if (sectionKey === "other_contract_type") return isFilled(otherContractType);
+      if (sectionKey === "other_start_date") return isFilled(otherStartDate);
+
+      if (sectionKey === "other_urgent") return isFilled(otherUrgent);
+
+      if (sectionKey === "other_urgent_explain") {
+        if (otherUrgent !== "yes") return true;
+        return isFilled(otherUrgentExplain);
       }
     }
 
@@ -737,7 +1006,7 @@ export default function StepCleaningCommercialProjectInformation({
             </h2>
             {!!sections?.length && (
               <div className="text-sm font-semibold text-[#111827] truncate">
-                {sections[section]?.title}
+                {sections[section]?.title} • {section + 1}/{sections.length}
               </div>
             )}
           </div>
@@ -750,11 +1019,12 @@ export default function StepCleaningCommercialProjectInformation({
           <ProgressBar activeCount={outerProgressValue} total={totalSteps} />
         )}
 
-        {/* ===== OFFICE ===== */}
-        {projectType === "office" && (
-          <div className="space-y-6">
-            {sectionKey === "size" && (
-              <>
+        {/* ====== РЕНДЕР 1 ПИТАННЯ ====== */}
+        <div className="space-y-6">
+          {/* ===== OFFICE ===== */}
+          {projectType === "office" && (
+            <>
+              {sectionKey === "office_sqft" && (
                 <div>
                   <label className="text-sm font-semibold text-[#111827]">
                     Office square footage?
@@ -766,91 +1036,98 @@ export default function StepCleaningCommercialProjectInformation({
                     inputMode="numeric"
                   />
                 </div>
+              )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-semibold text-[#111827]">
-                      How many floors/levels?
-                    </label>
-                    <input
-                      value={officeFloors}
-                      onChange={(e) => setOfficeFloors(e.target.value)}
-                      className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
-                      inputMode="numeric"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-semibold text-[#111827]">
-                      How many restrooms?
-                    </label>
-                    <input
-                      value={officeRestrooms}
-                      onChange={(e) => setOfficeRestrooms(e.target.value)}
-                      className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
-                      inputMode="numeric"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-semibold text-[#111827]">
-                      How many private offices?
-                    </label>
-                    <input
-                      value={officePrivateOffices}
-                      onChange={(e) => setOfficePrivateOffices(e.target.value)}
-                      className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
-                      inputMode="numeric"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-semibold text-[#111827]">
-                      How many conference rooms?
-                    </label>
-                    <input
-                      value={officeConferenceRooms}
-                      onChange={(e) => setOfficeConferenceRooms(e.target.value)}
-                      className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
-                      inputMode="numeric"
-                    />
-                  </div>
+              {sectionKey === "office_floors" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    How many floors/levels?
+                  </label>
+                  <input
+                    value={officeFloors}
+                    onChange={(e) => setOfficeFloors(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                    inputMode="numeric"
+                  />
                 </div>
-              </>
-            )}
+              )}
 
-            {sectionKey === "areas" && (
-              <div className="space-y-2">
-                <div className="text-sm font-semibold text-[#111827]">
-                  What areas do you need cleaned? (Select all that apply)
+              {sectionKey === "office_restrooms" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    How many restrooms?
+                  </label>
+                  <input
+                    value={officeRestrooms}
+                    onChange={(e) => setOfficeRestrooms(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                    inputMode="numeric"
+                  />
                 </div>
-                <ToggleMulti
-                  value={officeAreas}
-                  setValue={setOfficeAreas}
-                  options={OFFICE_AREAS}
-                  otherKey="other"
-                  otherLabel="Other (please specify)"
-                  otherText={officeAreasOther}
-                  setOtherText={setOfficeAreasOther}
-                />
-              </div>
-            )}
+              )}
 
-            {sectionKey === "frequency" && (
-              <div className="space-y-2">
-                <div className="text-sm font-semibold text-[#111827]">
-                  Frequency of cleaning?
+              {sectionKey === "office_private" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    How many private offices?
+                  </label>
+                  <input
+                    value={officePrivateOffices}
+                    onChange={(e) => setOfficePrivateOffices(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                    inputMode="numeric"
+                  />
                 </div>
-                <SingleSelect
-                  value={officeFrequency}
-                  setValue={setOfficeFrequency}
-                  options={OFFICE_FREQUENCY}
-                  otherKey="other"
-                  otherText={officeFrequencyOther}
-                  setOtherText={setOfficeFrequencyOther}
-                />
-              </div>
-            )}
+              )}
 
-            {sectionKey === "budget_date" && (
-              <>
+              {sectionKey === "office_conference" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    How many conference rooms?
+                  </label>
+                  <input
+                    value={officeConferenceRooms}
+                    onChange={(e) => setOfficeConferenceRooms(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                    inputMode="numeric"
+                  />
+                </div>
+              )}
+
+              {sectionKey === "office_areas" && (
+                <div className="space-y-2">
+                  <div className="text-sm font-semibold text-[#111827]">
+                    What areas do you need cleaned? (Select all that apply)
+                  </div>
+                  <ToggleMulti
+                    value={officeAreas}
+                    setValue={setOfficeAreas}
+                    options={OFFICE_AREAS}
+                    otherKey="other"
+                    otherLabel="Other (please specify)"
+                    otherText={officeAreasOther}
+                    setOtherText={setOfficeAreasOther}
+                  />
+                </div>
+              )}
+
+              {sectionKey === "office_frequency" && (
+                <div className="space-y-2">
+                  <div className="text-sm font-semibold text-[#111827]">
+                    Frequency of cleaning?
+                  </div>
+                  <SingleSelect
+                    value={officeFrequency}
+                    setValue={setOfficeFrequency}
+                    options={OFFICE_FREQUENCY}
+                    otherKey="other"
+                    otherText={officeFrequencyOther}
+                    setOtherText={setOfficeFrequencyOther}
+                  />
+                </div>
+              )}
+
+              {sectionKey === "office_budget" && (
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-[#111827]">
                     What is your budget?
@@ -862,51 +1139,48 @@ export default function StepCleaningCommercialProjectInformation({
                         active={officeBudget === opt.key}
                         onClick={() => {
                           setOfficeBudget(opt.key);
-                          if (opt.key !== "one_time")
-                            setOfficeOneTimeBudget?.("");
+                          if (opt.key !== "one_time") setOfficeOneTimeBudget?.("");
                         }}
                       >
                         {opt.label}
                       </OptionButton>
                     ))}
                   </div>
-
-                  {officeBudget === "one_time" && (
-                    <div className="pt-2">
-                      <label className="text-sm font-semibold text-[#111827]">
-                        One-Time Budget: (please specify amount)
-                      </label>
-                      <input
-                        value={officeOneTimeBudget}
-                        onChange={(e) => setOfficeOneTimeBudget(e.target.value)}
-                        className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
-                      />
-                    </div>
-                  )}
                 </div>
+              )}
 
+              {sectionKey === "office_budget_onetime" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    One-Time Budget: (please specify amount)
+                  </label>
+                  <input
+                    value={officeOneTimeBudget}
+                    onChange={(e) => setOfficeOneTimeBudget(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  />
+                </div>
+              )}
+
+              {sectionKey === "office_start_date" && (
                 <div>
                   <label className="text-sm font-semibold text-[#111827]">
                     By what date does the service need to start?
                   </label>
                   <DatePicker
                     value={officeStartDate}
-                    onChange={(v) =>
-                      setOfficeStartDate(v?.target?.value ?? v)
-                    }
+                    onChange={(v) => setOfficeStartDate(v?.target?.value ?? v)}
                     placeholder="MM/DD/YYYY"
                   />
                 </div>
-              </>
-            )}
-          </div>
-        )}
+              )}
+            </>
+          )}
 
-        {/* ===== AIRBNB / RENTAL ===== */}
-        {projectType === "airbnb" && (
-          <div className="space-y-6">
-            {sectionKey === "units" && (
-              <>
+          {/* ===== AIRBNB ===== */}
+          {projectType === "airbnb" && (
+            <>
+              {sectionKey === "airbnb_units" && (
                 <div>
                   <label className="text-sm font-semibold text-[#111827]">
                     How many units do you need cleaned?
@@ -918,7 +1192,9 @@ export default function StepCleaningCommercialProjectInformation({
                     inputMode="numeric"
                   />
                 </div>
+              )}
 
+              {sectionKey === "airbnb_property_types" && (
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-[#111827]">
                     Property type? (Select all that apply)
@@ -933,14 +1209,25 @@ export default function StepCleaningCommercialProjectInformation({
                     setOtherText={setAirbnbPropertyOther}
                   />
                 </div>
-              </>
-            )}
+              )}
 
-            {sectionKey === "details" && (
-              <>
+              {sectionKey === "airbnb_property_other" && (
                 <div>
                   <label className="text-sm font-semibold text-[#111827]">
-                    Average square footage per unit?
+                    Please specify property type
+                  </label>
+                  <input
+                    value={airbnbPropertyOther}
+                    onChange={(e) => setAirbnbPropertyOther(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  />
+                </div>
+              )}
+
+              {sectionKey === "airbnb_avg_sqft" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    Average square footage per unit? (optional)
                   </label>
                   <input
                     value={airbnbAvgSqft}
@@ -949,36 +1236,37 @@ export default function StepCleaningCommercialProjectInformation({
                     inputMode="numeric"
                   />
                 </div>
+              )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-semibold text-[#111827]">
-                      Average number of bedrooms per unit?
-                    </label>
-                    <input
-                      value={airbnbAvgBedrooms}
-                      onChange={(e) => setAirbnbAvgBedrooms(e.target.value)}
-                      className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
-                      inputMode="numeric"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-semibold text-[#111827]">
-                      Average number of bathrooms per unit?
-                    </label>
-                    <input
-                      value={airbnbAvgBathrooms}
-                      onChange={(e) => setAirbnbAvgBathrooms(e.target.value)}
-                      className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
-                      inputMode="numeric"
-                    />
-                  </div>
+              {sectionKey === "airbnb_avg_bedrooms" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    Average number of bedrooms per unit? (optional)
+                  </label>
+                  <input
+                    value={airbnbAvgBedrooms}
+                    onChange={(e) => setAirbnbAvgBedrooms(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                    inputMode="numeric"
+                  />
                 </div>
-              </>
-            )}
+              )}
 
-            {sectionKey === "scope" && (
-              <>
+              {sectionKey === "airbnb_avg_bathrooms" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    Average number of bathrooms per unit? (optional)
+                  </label>
+                  <input
+                    value={airbnbAvgBathrooms}
+                    onChange={(e) => setAirbnbAvgBathrooms(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                    inputMode="numeric"
+                  />
+                </div>
+              )}
+
+              {sectionKey === "airbnb_turnover" && (
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-[#111827]">
                     Turnover frequency?
@@ -992,7 +1280,22 @@ export default function StepCleaningCommercialProjectInformation({
                     setOtherText={setAirbnbTurnoverOther}
                   />
                 </div>
+              )}
 
+              {sectionKey === "airbnb_turnover_other" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    Please specify turnover frequency
+                  </label>
+                  <input
+                    value={airbnbTurnoverOther}
+                    onChange={(e) => setAirbnbTurnoverOther(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  />
+                </div>
+              )}
+
+              {sectionKey === "airbnb_budget" && (
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-[#111827]">
                     What is your budget per unit?
@@ -1009,7 +1312,9 @@ export default function StepCleaningCommercialProjectInformation({
                     ))}
                   </div>
                 </div>
+              )}
 
+              {sectionKey === "airbnb_linen" && (
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-[#111827]">
                     Do you need linen/laundry services?
@@ -1029,7 +1334,9 @@ export default function StepCleaningCommercialProjectInformation({
                     </OptionButton>
                   </div>
                 </div>
+              )}
 
+              {sectionKey === "airbnb_areas" && (
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-[#111827]">
                     What areas do you need cleaned? (Select all that apply)
@@ -1044,7 +1351,22 @@ export default function StepCleaningCommercialProjectInformation({
                     setOtherText={setAirbnbAreasOther}
                   />
                 </div>
+              )}
 
+              {sectionKey === "airbnb_areas_other" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    Please specify areas
+                  </label>
+                  <input
+                    value={airbnbAreasOther}
+                    onChange={(e) => setAirbnbAreasOther(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  />
+                </div>
+              )}
+
+              {sectionKey === "airbnb_kitchen_tasks" && (
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-[#111827]">
                     What will we be doing in the kitchen? (Select all that apply)
@@ -1059,46 +1381,69 @@ export default function StepCleaningCommercialProjectInformation({
                     setOtherText={setAirbnbKitchenOther}
                   />
                 </div>
-              </>
-            )}
+              )}
 
-            {sectionKey === "budget_date" && (
-              <div>
-                <label className="text-sm font-semibold text-[#111827]">
-                  By what date does the service need to start?
-                </label>
-                <DatePicker
-                  value={airbnbStartDate}
-                  onChange={(v) => setAirbnbStartDate(v?.target?.value ?? v)}
-                  className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
-                  placeholder="MM/DD/YYYY"
-                />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ===== POST-CONSTRUCTION ===== */}
-        {projectType === "post_construction" && (
-          <div className="space-y-6">
-            {sectionKey === "construction" && (
-              <div className="space-y-2">
-                <div className="text-sm font-semibold text-[#111827]">
-                  What type of construction?
+              {sectionKey === "airbnb_kitchen_other" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    Please specify kitchen tasks
+                  </label>
+                  <input
+                    value={airbnbKitchenOther}
+                    onChange={(e) => setAirbnbKitchenOther(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  />
                 </div>
-                <SingleSelect
-                  value={pcConstructionType}
-                  setValue={setPcConstructionType}
-                  options={PC_CONSTRUCTION_TYPE}
-                  otherKey="other"
-                  otherText={pcConstructionOther}
-                  setOtherText={setPcConstructionOther}
-                />
-              </div>
-            )}
+              )}
 
-            {sectionKey === "property" && (
-              <>
+              {sectionKey === "airbnb_start_date" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    By what date does the service need to start?
+                  </label>
+                  <DatePicker
+                    value={airbnbStartDate}
+                    onChange={(v) => setAirbnbStartDate(v?.target?.value ?? v)}
+                    placeholder="MM/DD/YYYY"
+                  />
+                </div>
+              )}
+            </>
+          )}
+
+          {/* ===== POST-CONSTRUCTION ===== */}
+          {projectType === "post_construction" && (
+            <>
+              {sectionKey === "pc_construction_type" && (
+                <div className="space-y-2">
+                  <div className="text-sm font-semibold text-[#111827]">
+                    What type of construction?
+                  </div>
+                  <SingleSelect
+                    value={pcConstructionType}
+                    setValue={setPcConstructionType}
+                    options={PC_CONSTRUCTION_TYPE}
+                    otherKey="other"
+                    otherText={pcConstructionOther}
+                    setOtherText={setPcConstructionOther}
+                  />
+                </div>
+              )}
+
+              {sectionKey === "pc_construction_other" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    Please specify construction type
+                  </label>
+                  <input
+                    value={pcConstructionOther}
+                    onChange={(e) => setPcConstructionOther(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  />
+                </div>
+              )}
+
+              {sectionKey === "pc_sqft" && (
                 <div>
                   <label className="text-sm font-semibold text-[#111827]">
                     Property square footage
@@ -1110,7 +1455,9 @@ export default function StepCleaningCommercialProjectInformation({
                     inputMode="numeric"
                   />
                 </div>
+              )}
 
+              {sectionKey === "pc_floors" && (
                 <div>
                   <label className="text-sm font-semibold text-[#111827]">
                     How many floors/levels? (optional)
@@ -1122,7 +1469,9 @@ export default function StepCleaningCommercialProjectInformation({
                     inputMode="numeric"
                   />
                 </div>
+              )}
 
+              {sectionKey === "pc_property_type" && (
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-[#111827]">
                     Property type?
@@ -1136,11 +1485,22 @@ export default function StepCleaningCommercialProjectInformation({
                     setOtherText={setPcPropertyTypeOther}
                   />
                 </div>
-              </>
-            )}
+              )}
 
-            {sectionKey === "surfaces" && (
-              <>
+              {sectionKey === "pc_property_other" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    Please specify property type
+                  </label>
+                  <input
+                    value={pcPropertyTypeOther}
+                    onChange={(e) => setPcPropertyTypeOther(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  />
+                </div>
+              )}
+
+              {sectionKey === "pc_surfaces" && (
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-[#111827]">
                     What specific surfaces need attention? (Select all that apply)
@@ -1155,7 +1515,22 @@ export default function StepCleaningCommercialProjectInformation({
                     setOtherText={setPcSurfacesOther}
                   />
                 </div>
+              )}
 
+              {sectionKey === "pc_surfaces_other" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    Please specify surfaces
+                  </label>
+                  <input
+                    value={pcSurfacesOther}
+                    onChange={(e) => setPcSurfacesOther(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  />
+                </div>
+              )}
+
+              {sectionKey === "pc_frequency" && (
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-[#111827]">
                     Frequency of cleaning?
@@ -1169,11 +1544,22 @@ export default function StepCleaningCommercialProjectInformation({
                     setOtherText={setPcFrequencyOther}
                   />
                 </div>
-              </>
-            )}
+              )}
 
-            {sectionKey === "budget_date" && (
-              <>
+              {sectionKey === "pc_frequency_other" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    Please specify frequency
+                  </label>
+                  <input
+                    value={pcFrequencyOther}
+                    onChange={(e) => setPcFrequencyOther(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  />
+                </div>
+              )}
+
+              {sectionKey === "pc_budget" && (
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-[#111827]">
                     What is your budget?
@@ -1190,7 +1576,9 @@ export default function StepCleaningCommercialProjectInformation({
                     ))}
                   </div>
                 </div>
+              )}
 
+              {sectionKey === "pc_completion_date" && (
                 <div>
                   <label className="text-sm font-semibold text-[#111827]">
                     By what date does the service need to be completed?
@@ -1201,32 +1589,43 @@ export default function StepCleaningCommercialProjectInformation({
                     placeholder="MM/DD/YYYY"
                   />
                 </div>
-              </>
-            )}
-          </div>
-        )}
+              )}
+            </>
+          )}
 
-        {/* ===== OTHER ===== */}
-        {projectType === "other" && (
-          <div className="space-y-6">
-            {sectionKey === "desc" && (
-              <div className="space-y-2">
-                <div className="text-sm font-semibold text-[#111827]">
-                  Please describe your project type:
+          {/* ===== OTHER ===== */}
+          {projectType === "other" && (
+            <>
+              {sectionKey === "other_project_desc" && (
+                <div className="space-y-2">
+                  <div className="text-sm font-semibold text-[#111827]">
+                    Please describe your project type:
+                  </div>
+                  <SingleSelect
+                    value={otherProjectDescription}
+                    setValue={setOtherProjectDescription}
+                    options={OTHER_PROJECT_DESC}
+                    otherKey="other"
+                    otherText={otherProjectOther}
+                    setOtherText={setOtherProjectOther}
+                  />
                 </div>
-                <SingleSelect
-                  value={otherProjectDescription}
-                  setValue={setOtherProjectDescription}
-                  options={OTHER_PROJECT_DESC}
-                  otherKey="other"
-                  otherText={otherProjectOther}
-                  setOtherText={setOtherProjectOther}
-                />
-              </div>
-            )}
+              )}
 
-            {sectionKey === "property" && (
-              <>
+              {sectionKey === "other_project_other" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    Please specify
+                  </label>
+                  <input
+                    value={otherProjectOther}
+                    onChange={(e) => setOtherProjectOther(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  />
+                </div>
+              )}
+
+              {sectionKey === "other_sqft" && (
                 <div>
                   <label className="text-sm font-semibold text-[#111827]">
                     Property square footage
@@ -1238,36 +1637,37 @@ export default function StepCleaningCommercialProjectInformation({
                     inputMode="numeric"
                   />
                 </div>
+              )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-semibold text-[#111827]">
-                      How many floors/levels? (optional)
-                    </label>
-                    <input
-                      value={otherFloors}
-                      onChange={(e) => setOtherFloors(e.target.value)}
-                      className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
-                      inputMode="numeric"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-semibold text-[#111827]">
-                      How many restrooms? (optional)
-                    </label>
-                    <input
-                      value={otherRestrooms}
-                      onChange={(e) => setOtherRestrooms(e.target.value)}
-                      className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
-                      inputMode="numeric"
-                    />
-                  </div>
+              {sectionKey === "other_floors" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    How many floors/levels? (optional)
+                  </label>
+                  <input
+                    value={otherFloors}
+                    onChange={(e) => setOtherFloors(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                    inputMode="numeric"
+                  />
                 </div>
-              </>
-            )}
+              )}
 
-            {sectionKey === "scope" && (
-              <>
+              {sectionKey === "other_restrooms" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    How many restrooms? (optional)
+                  </label>
+                  <input
+                    value={otherRestrooms}
+                    onChange={(e) => setOtherRestrooms(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                    inputMode="numeric"
+                  />
+                </div>
+              )}
+
+              {sectionKey === "other_cleaning_service" && (
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-[#111827]">
                     What type of cleaning service do you need?
@@ -1278,23 +1678,23 @@ export default function StepCleaningCommercialProjectInformation({
                     options={OTHER_CLEANING_SERVICE}
                     otherKey={null}
                   />
-                  {(otherCleaningService === "specialized" ||
-                    otherCleaningService === "other") && (
-                    <div className="pt-2">
-                      <label className="text-sm font-semibold text-[#111827]">
-                        Please specify
-                      </label>
-                      <input
-                        value={otherCleaningServiceOther}
-                        onChange={(e) =>
-                          setOtherCleaningServiceOther(e.target.value)
-                        }
-                        className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
-                      />
-                    </div>
-                  )}
                 </div>
+              )}
 
+              {sectionKey === "other_cleaning_other" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    Please specify
+                  </label>
+                  <input
+                    value={otherCleaningServiceOther}
+                    onChange={(e) => setOtherCleaningServiceOther(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  />
+                </div>
+              )}
+
+              {sectionKey === "other_areas" && (
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-[#111827]">
                     What areas do you need cleaned? (Select all that apply)
@@ -1309,7 +1709,22 @@ export default function StepCleaningCommercialProjectInformation({
                     setOtherText={setOtherAreasOther}
                   />
                 </div>
+              )}
 
+              {sectionKey === "other_areas_other" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    Please specify areas
+                  </label>
+                  <input
+                    value={otherAreasOther}
+                    onChange={(e) => setOtherAreasOther(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  />
+                </div>
+              )}
+
+              {sectionKey === "other_frequency" && (
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-[#111827]">
                     Frequency of cleaning?
@@ -1323,11 +1738,22 @@ export default function StepCleaningCommercialProjectInformation({
                     setOtherText={setOtherFrequencyOther}
                   />
                 </div>
-              </>
-            )}
+              )}
 
-            {sectionKey === "budget_date" && (
-              <>
+              {sectionKey === "other_frequency_other" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    Please specify frequency
+                  </label>
+                  <input
+                    value={otherFrequencyOther}
+                    onChange={(e) => setOtherFrequencyOther(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  />
+                </div>
+              )}
+
+              {sectionKey === "other_budget" && (
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-[#111827]">
                     What is your budget?
@@ -1344,7 +1770,9 @@ export default function StepCleaningCommercialProjectInformation({
                     ))}
                   </div>
                 </div>
+              )}
 
+              {sectionKey === "other_contract_type" && (
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-[#111827]">
                     Is this an ongoing contract or one-time service?
@@ -1361,7 +1789,9 @@ export default function StepCleaningCommercialProjectInformation({
                     ))}
                   </div>
                 </div>
+              )}
 
+              {sectionKey === "other_start_date" && (
                 <div>
                   <label className="text-sm font-semibold text-[#111827]">
                     By what date does the service need to start?
@@ -1369,11 +1799,12 @@ export default function StepCleaningCommercialProjectInformation({
                   <DatePicker
                     value={otherStartDate}
                     onChange={(v) => setOtherStartDate(v?.target?.value ?? v)}
-                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
                     placeholder="MM/DD/YYYY"
                   />
                 </div>
+              )}
 
+              {sectionKey === "other_urgent" && (
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-[#111827]">
                     Is this project time-sensitive or urgent?
@@ -1395,24 +1826,24 @@ export default function StepCleaningCommercialProjectInformation({
                       No
                     </OptionButton>
                   </div>
-
-                  {otherUrgent === "yes" && (
-                    <div className="pt-2">
-                      <label className="text-sm font-semibold text-[#111827]">
-                        If Yes, please explain:
-                      </label>
-                      <input
-                        value={otherUrgentExplain}
-                        onChange={(e) => setOtherUrgentExplain(e.target.value)}
-                        className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
-                      />
-                    </div>
-                  )}
                 </div>
-              </>
-            )}
-          </div>
-        )}
+              )}
+
+              {sectionKey === "other_urgent_explain" && (
+                <div>
+                  <label className="text-sm font-semibold text-[#111827]">
+                    If Yes, please explain:
+                  </label>
+                  <input
+                    value={otherUrgentExplain}
+                    onChange={(e) => setOtherUrgentExplain(e.target.value)}
+                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  />
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
         <div className="flex items-center justify-between pt-2">
           <button

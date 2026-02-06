@@ -367,6 +367,9 @@ export const reqApi = {
     });
     return parseJsonSafe(r);
   },
+    async createPublic(payload) {
+    return apiSend("/api/requests/public", "POST", payload);
+  },
 };
 
 // ===== УНІВЕРСАЛЬНИЙ HELPER ДЛЯ ЗАПИТІВ НА API (GET) =====
