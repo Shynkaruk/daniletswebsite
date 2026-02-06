@@ -1983,24 +1983,6 @@ app.post("/api/requests", optionalAuth, async (req, res) => {
 });
 
 
-function optionalAuth(req, _res, next) {
-  const h = req.headers.authorization || "";
-  const token = h.startsWith("Bearer ") ? h.slice(7) : null;
-
-  if (!token) {
-    req.user = null;
-    return next();
-  }
-
-  try {
-    req.user = jwt.verify(token, JWT_SECRET);
-  } catch {
-    req.user = null;
-  }
-
-  next();
-}
-
 app.put("/api/requests/:id", auth, async (req, res) => {
   const id = req.params.id;
   const exists = await RequestModel.findOne({ _id: id, user_id: req.user.uid });
