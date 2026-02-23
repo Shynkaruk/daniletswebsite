@@ -9,14 +9,14 @@ const Services = ({ className = "" }) => {
 
   const services = [
     {
-      title: "Danilets Detailing",
+      title: "Auto and Dealership Detailing",
       description:
         "Premium automotive detailing that enhances, protects, and perfects every detail of your vehicle. From dealerships to individual clients, we deliver excellence with precision.",
       icon: detailingIcon,
       link: "/services/detailing",
     },
     {
-      title: "Danilets Cleaning",
+      title: "Commercial and Residential Cleaning",
       description:
         "Professional cleaning services specializing in commercial spaces, offices, Airbnb properties, and deep cleans. We deliver meticulous results that transform your environment.",
       icon: cleaningIcon,
