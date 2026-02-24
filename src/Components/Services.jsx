@@ -45,7 +45,8 @@ const Services = ({ className = "" }) => {
         {/* Картки сервісів */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {services.map((service, idx) => {
-            const [danilets, serviceName] = service.title.split(" ");
+            const [firstWord, ...restWords] = service.title.split(" ");
+            const serviceName = restWords.join(" ");
 
             return (
               <div
@@ -55,7 +56,7 @@ const Services = ({ className = "" }) => {
                 <div className="mb-4">
                   <img
                     src={service.icon}
-                    alt={`${serviceName} icon`}
+                    alt={`${service.title} icon`}
                     className="w-[48px] h-[48px] md:w-[64px] md:h-[64px] object-contain"
                   />
                 </div>
@@ -64,7 +65,7 @@ const Services = ({ className = "" }) => {
                   className="text-[28px] sm:text-[28px] md:text-[32px] lg:text-[40px] font-bold leading-[110%] text-black mb-6 break-words"
                   style={{ fontFamily: "Manrope, sans-serif" }}
                 >
-                  {danilets}
+                  {firstWord}
                   <br />
                   {serviceName}
                 </h3>

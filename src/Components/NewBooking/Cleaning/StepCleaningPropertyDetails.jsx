@@ -95,7 +95,7 @@ export default function StepCleaningPropertyDetails({
             {isResidential ? (
               <>
                 <h2 className="text-[26px] font-extrabold text-[#111827]">
-                  Property details
+                  Property Information
                 </h2>
               </>
             ) : (

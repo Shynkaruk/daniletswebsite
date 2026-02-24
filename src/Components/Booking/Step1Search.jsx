@@ -53,14 +53,14 @@ export default function Step1Search({
         {/* Два пілли */}
         <div className="mt-10 flex flex-col sm:flex-row gap-6 justify-center">
           <Pill
-            label="Cleaning"
-            active={selected === "cleaning"}
-            onClick={() => setSelected("cleaning")}
-          />
-          <Pill
             label="Detailing"
             active={selected === "detailing"}
             onClick={() => setSelected("detailing")}
+          />
+          <Pill
+            label="Cleaning"
+            active={selected === "cleaning"}
+            onClick={() => setSelected("cleaning")}
           />
         </div>
 

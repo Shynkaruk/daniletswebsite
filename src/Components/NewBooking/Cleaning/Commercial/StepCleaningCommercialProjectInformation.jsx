@@ -293,7 +293,6 @@ export default function StepCleaningCommercialProjectInformation({
     { key: "house", label: "House" },
     { key: "condo", label: "Condo" },
     { key: "townhouse", label: "Townhouse" },
-    // ✅ додаю other щоб працювала логіка "other" як у тебе в canContinue
     { key: "other", label: "Other (please specify)" },
   ];
 
@@ -368,10 +367,7 @@ export default function StepCleaningCommercialProjectInformation({
 
   const PC_FREQUENCY = [
     { key: "one_time_final", label: "One-Time Final Clean" },
-    {
-      key: "multiple_phases",
-      label: "Multiple Phases (Rough Clean, Final Clean)",
-    },
+    { key: "multiple_phases", label: "Multiple Phases (Rough Clean, Final Clean)" },
     { key: "ongoing", label: "Ongoing During Construction" },
     { key: "other", label: "Other (please specify)" },
   ];
@@ -450,17 +446,13 @@ export default function StepCleaningCommercialProjectInformation({
     { key: "undecided", label: "Undecided" },
   ];
 
-  // ====== 1 питання = 1 секція ======
+  // ====== 1 секція = 1 екран ======
   const [section, setSection] = useState(0);
 
   const sections = useMemo(() => {
     if (projectType === "office") {
       return [
-        { key: "office_sqft", title: "Office square footage?" },
-        { key: "office_floors", title: "How many floors/levels?" },
-        { key: "office_restrooms", title: "How many restrooms?" },
-        { key: "office_private", title: "How many private offices?" },
-        { key: "office_conference", title: "How many conference rooms?" },
+        { key: "office_basic", title: "Office details" }, // ✅ 1–5 разом
         {
           key: "office_areas",
           title: "What areas do you need cleaned? (Select all that apply)",
@@ -671,18 +663,21 @@ export default function StepCleaningCommercialProjectInformation({
     else onNext?.();
   };
 
-  // ====== CAN CONTINUE (тільки поточне питання) ======
+  // ====== CAN CONTINUE (тільки поточна секція) ======
   const canContinue = useMemo(() => {
     if (!projectType || !sectionKey) return false;
 
     // ===== OFFICE =====
     if (projectType === "office") {
-      if (sectionKey === "office_sqft") return isFilled(officeSquareFootage);
-      if (sectionKey === "office_floors") return isFilled(officeFloors);
-      if (sectionKey === "office_restrooms") return isFilled(officeRestrooms);
-      if (sectionKey === "office_private") return isFilled(officePrivateOffices);
-      if (sectionKey === "office_conference")
-        return isFilled(officeConferenceRooms);
+      if (sectionKey === "office_basic") {
+        return (
+          isFilled(officeSquareFootage) &&
+          isFilled(officeFloors) &&
+          isFilled(officeRestrooms) &&
+          isFilled(officePrivateOffices) &&
+          isFilled(officeConferenceRooms)
+        );
+      }
 
       if (sectionKey === "office_areas") {
         if (!hasSome(officeAreas)) return false;
@@ -698,18 +693,14 @@ export default function StepCleaningCommercialProjectInformation({
         return true;
       }
 
-      if (sectionKey === "office_budget") {
-        return isFilled(officeBudget);
-      }
+      if (sectionKey === "office_budget") return isFilled(officeBudget);
 
       if (sectionKey === "office_budget_onetime") {
-        if (officeBudget !== "one_time") return true; // секції не буде, але на всяк
+        if (officeBudget !== "one_time") return true;
         return isFilled(officeOneTimeBudget);
       }
 
-      if (sectionKey === "office_start_date") {
-        return isFilled(officeStartDate);
-      }
+      if (sectionKey === "office_start_date") return isFilled(officeStartDate);
     }
 
     // ===== AIRBNB =====
@@ -718,26 +709,20 @@ export default function StepCleaningCommercialProjectInformation({
 
       if (sectionKey === "airbnb_property_types") {
         if (!hasSome(airbnbPropertyTypes)) return false;
-        if (
-          airbnbPropertyTypes.includes("other") &&
-          !isFilled(airbnbPropertyOther)
-        )
+        if (airbnbPropertyTypes.includes("other") && !isFilled(airbnbPropertyOther))
           return false;
         return true;
       }
 
       if (sectionKey === "airbnb_property_other") {
-        if (
-          !Array.isArray(airbnbPropertyTypes) ||
-          !airbnbPropertyTypes.includes("other")
-        )
+        if (!Array.isArray(airbnbPropertyTypes) || !airbnbPropertyTypes.includes("other"))
           return true;
         return isFilled(airbnbPropertyOther);
       }
 
-      if (sectionKey === "airbnb_avg_sqft") return true; // optional
-      if (sectionKey === "airbnb_avg_bedrooms") return true; // optional
-      if (sectionKey === "airbnb_avg_bathrooms") return true; // optional
+      if (sectionKey === "airbnb_avg_sqft") return true;
+      if (sectionKey === "airbnb_avg_bedrooms") return true;
+      if (sectionKey === "airbnb_avg_bathrooms") return true;
 
       if (sectionKey === "airbnb_turnover") {
         if (!isFilled(airbnbTurnover)) return false;
@@ -752,7 +737,6 @@ export default function StepCleaningCommercialProjectInformation({
       }
 
       if (sectionKey === "airbnb_budget") return isFilled(airbnbBudgetPerUnit);
-
       if (sectionKey === "airbnb_linen") return isFilled(airbnbLinenLaundry);
 
       if (sectionKey === "airbnb_areas") {
@@ -776,10 +760,7 @@ export default function StepCleaningCommercialProjectInformation({
       }
 
       if (sectionKey === "airbnb_kitchen_other") {
-        if (
-          !Array.isArray(airbnbKitchenTasks) ||
-          !airbnbKitchenTasks.includes("other")
-        )
+        if (!Array.isArray(airbnbKitchenTasks) || !airbnbKitchenTasks.includes("other"))
           return true;
         return isFilled(airbnbKitchenOther);
       }
@@ -802,7 +783,7 @@ export default function StepCleaningCommercialProjectInformation({
       }
 
       if (sectionKey === "pc_sqft") return isFilled(pcSquareFootage);
-      if (sectionKey === "pc_floors") return true; // optional
+      if (sectionKey === "pc_floors") return true;
 
       if (sectionKey === "pc_property_type") {
         if (!isFilled(pcPropertyType)) return false;
@@ -860,8 +841,8 @@ export default function StepCleaningCommercialProjectInformation({
       }
 
       if (sectionKey === "other_sqft") return isFilled(otherSquareFootage);
-      if (sectionKey === "other_floors") return true; // optional
-      if (sectionKey === "other_restrooms") return true; // optional
+      if (sectionKey === "other_floors") return true;
+      if (sectionKey === "other_restrooms") return true;
 
       if (sectionKey === "other_cleaning_service") {
         if (!isFilled(otherCleaningService)) return false;
@@ -875,12 +856,7 @@ export default function StepCleaningCommercialProjectInformation({
       }
 
       if (sectionKey === "other_cleaning_other") {
-        if (
-          !(
-            otherCleaningService === "specialized" ||
-            otherCleaningService === "other"
-          )
-        )
+        if (!(otherCleaningService === "specialized" || otherCleaningService === "other"))
           return true;
         return isFilled(otherCleaningServiceOther);
       }
@@ -1004,11 +980,8 @@ export default function StepCleaningCommercialProjectInformation({
             <h2 className="text-[26px] font-extrabold text-[#111827]">
               Project Information
             </h2>
-            {!!sections?.length && (
-              <div className="text-sm font-semibold text-[#111827] truncate">
-                {sections[section]?.title} • {section + 1}/{sections.length}
-              </div>
-            )}
+
+            {/* ✅ Прибрали субтайтл під заголовком (як просив) */}
           </div>
         </div>
 
@@ -1019,78 +992,78 @@ export default function StepCleaningCommercialProjectInformation({
           <ProgressBar activeCount={outerProgressValue} total={totalSteps} />
         )}
 
-        {/* ====== РЕНДЕР 1 ПИТАННЯ ====== */}
         <div className="space-y-6">
           {/* ===== OFFICE ===== */}
           {projectType === "office" && (
             <>
-              {sectionKey === "office_sqft" && (
-                <div>
-                  <label className="text-sm font-semibold text-[#111827]">
-                    Office square footage?
-                  </label>
-                  <input
-                    value={officeSquareFootage}
-                    onChange={(e) => setOfficeSquareFootage(e.target.value)}
-                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
-                    inputMode="numeric"
-                  />
-                </div>
-              )}
+              {/* ✅ 1–5 В ОДНОМУ ЕКРАНІ */}
+              {sectionKey === "office_basic" && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-sm font-semibold text-[#111827]">
+                        Office square footage?
+                      </label>
+                      <input
+                        value={officeSquareFootage}
+                        onChange={(e) => setOfficeSquareFootage(e.target.value)}
+                        className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                        inputMode="numeric"
+                      />
+                    </div>
 
-              {sectionKey === "office_floors" && (
-                <div>
-                  <label className="text-sm font-semibold text-[#111827]">
-                    How many floors/levels?
-                  </label>
-                  <input
-                    value={officeFloors}
-                    onChange={(e) => setOfficeFloors(e.target.value)}
-                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
-                    inputMode="numeric"
-                  />
-                </div>
-              )}
+                    <div>
+                      <label className="text-sm font-semibold text-[#111827]">
+                        How many floors/levels?
+                      </label>
+                      <input
+                        value={officeFloors}
+                        onChange={(e) => setOfficeFloors(e.target.value)}
+                        className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                        inputMode="numeric"
+                      />
+                    </div>
 
-              {sectionKey === "office_restrooms" && (
-                <div>
-                  <label className="text-sm font-semibold text-[#111827]">
-                    How many restrooms?
-                  </label>
-                  <input
-                    value={officeRestrooms}
-                    onChange={(e) => setOfficeRestrooms(e.target.value)}
-                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
-                    inputMode="numeric"
-                  />
-                </div>
-              )}
+                    <div>
+                      <label className="text-sm font-semibold text-[#111827]">
+                        How many restrooms?
+                      </label>
+                      <input
+                        value={officeRestrooms}
+                        onChange={(e) => setOfficeRestrooms(e.target.value)}
+                        className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                        inputMode="numeric"
+                      />
+                    </div>
 
-              {sectionKey === "office_private" && (
-                <div>
-                  <label className="text-sm font-semibold text-[#111827]">
-                    How many private offices?
-                  </label>
-                  <input
-                    value={officePrivateOffices}
-                    onChange={(e) => setOfficePrivateOffices(e.target.value)}
-                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
-                    inputMode="numeric"
-                  />
-                </div>
-              )}
+                    <div>
+                      <label className="text-sm font-semibold text-[#111827]">
+                        How many private offices?
+                      </label>
+                      <input
+                        value={officePrivateOffices}
+                        onChange={(e) =>
+                          setOfficePrivateOffices(e.target.value)
+                        }
+                        className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                        inputMode="numeric"
+                      />
+                    </div>
+                  </div>
 
-              {sectionKey === "office_conference" && (
-                <div>
-                  <label className="text-sm font-semibold text-[#111827]">
-                    How many conference rooms?
-                  </label>
-                  <input
-                    value={officeConferenceRooms}
-                    onChange={(e) => setOfficeConferenceRooms(e.target.value)}
-                    className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
-                    inputMode="numeric"
-                  />
+                  <div>
+                    <label className="text-sm font-semibold text-[#111827]">
+                      How many conference rooms?
+                    </label>
+                    <input
+                      value={officeConferenceRooms}
+                      onChange={(e) =>
+                        setOfficeConferenceRooms(e.target.value)
+                      }
+                      className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                      inputMode="numeric"
+                    />
+                  </div>
                 </div>
               )}
 
@@ -1139,7 +1112,8 @@ export default function StepCleaningCommercialProjectInformation({
                         active={officeBudget === opt.key}
                         onClick={() => {
                           setOfficeBudget(opt.key);
-                          if (opt.key !== "one_time") setOfficeOneTimeBudget?.("");
+                          if (opt.key !== "one_time")
+                            setOfficeOneTimeBudget?.("");
                         }}
                       >
                         {opt.label}

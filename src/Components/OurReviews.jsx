@@ -41,7 +41,7 @@ const OurReviews = ({ className = "" }) => {
     }
   }, [isDetailingPage, isCleaningPage]);
 
-  // 2) Фетчимо дані при зміні route
+  // 2) Фетчимо Google reviews
   useEffect(() => {
     let cancelled = false;
 
@@ -58,9 +58,7 @@ const OurReviews = ({ className = "" }) => {
             Cleaning: [],
           });
         } else if (isCleaningPage) {
-          // якщо у тебе є окремий google endpoint — заміни на нього:
-          // const cleanJson = await apiGet("/api/reviews/google/cleaning");
-          const cleanJson = await apiGet("/api/reviews/cleaning");
+          const cleanJson = await apiGet("/api/reviews/google/cleaning");
           if (cancelled) return;
 
           setReviewsByService({
@@ -69,8 +67,8 @@ const OurReviews = ({ className = "" }) => {
           });
         } else {
           const [detJson, cleanJson] = await Promise.all([
-            apiGet("/api/reviews/detailing"),
-            apiGet("/api/reviews/cleaning"),
+            apiGet("/api/reviews/google/detailing"),
+            apiGet("/api/reviews/google/cleaning"),
           ]);
           if (cancelled) return;
 
@@ -80,7 +78,7 @@ const OurReviews = ({ className = "" }) => {
           });
         }
       } catch (error) {
-        if (!cancelled) console.error("Error loading reviews:", error);
+        if (!cancelled) console.error("Error loading Google reviews:", error);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -94,10 +92,9 @@ const OurReviews = ({ className = "" }) => {
   }, [location.pathname, isDetailingPage, isCleaningPage]);
 
   const filteredReviews = reviewsByService[selectedService] || [];
-
   const safeVisibleCards = Math.min(VISIBLE_CARDS, filteredReviews.length);
 
-  // 3) Якщо змінився сервіс — скидаємо індекс (на головній це важливо)
+  // 3) Якщо змінився сервіс — скидаємо індекс (на головній важливо)
   useEffect(() => {
     setStartIndex(0);
   }, [selectedService]);

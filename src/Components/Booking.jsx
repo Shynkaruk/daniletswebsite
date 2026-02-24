@@ -192,10 +192,16 @@ const Booking = () => {
     <ProgressBar activeCount={activeIndex} total={CLEANING_TOTAL_STEPS} />
   );
   const renderPersonalDetailingProgress = (activeIndex) => (
-    <ProgressBar activeCount={activeIndex} total={DETAILING_PERSONAL_STEPS_COUNT} />
+    <ProgressBar
+      activeCount={activeIndex}
+      total={DETAILING_PERSONAL_STEPS_COUNT}
+    />
   );
   const renderBusinessDetailingProgress = (activeIndex) => (
-    <ProgressBar activeCount={activeIndex} total={DETAILING_BUSINESS_STEPS_COUNT} />
+    <ProgressBar
+      activeCount={activeIndex}
+      total={DETAILING_BUSINESS_STEPS_COUNT}
+    />
   );
 
   // Google Places
@@ -256,7 +262,7 @@ const Booking = () => {
   const onSearch = () => {
     // Після адреси:
     // - Detailing -> step=2
-    // - Cleaning -> step=2 (показуємо Cleaning) + cleaningStep=2 (PropertyType)
+    // - Cleaning  -> step=2 + cleaningStep=2 (PropertyType = step 1/9)
     if (isCleaning) {
       setStep(2);
       setCleaningStep(2);
@@ -331,9 +337,10 @@ const Booking = () => {
   const [heardAbout, setHeardAbout] = useState([]);
   const [extraInfo, setExtraInfo] = useState("");
 
-  /** ---------- CLEANING RESIDENTIAL (старий) ---------- */
+  /** ---------- CLEANING (states) ---------- */
   const [propertyType, setPropertyType] = useState(""); // residential | commercial
   const [projectType, setProjectType] = useState(""); // deep_clean | ...
+  const [projectTypeOther, setProjectTypeOther] = useState("");
 
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
@@ -343,7 +350,7 @@ const Booking = () => {
   const [resBudget, setResBudget] = useState("");
   const [extraDetails, setExtraDetails] = useState("");
 
-  // ці поля в твоєму старому коді були, але по residential не завжди потрібні:
+  // legacy commercial fields
   const [companyName, setCompanyName] = useState("");
   const [companyAddress, setCompanyAddress] = useState("");
   const [squareFeet, setSquareFeet] = useState("");
@@ -354,14 +361,13 @@ const Booking = () => {
   // residential "hearAboutUs" (як у тебе — не чіпаю)
   const [hearAboutUs, setHearAboutUs] = useState("");
 
-  /** ---------- CLEANING COMMERCIAL (новий object-state) ---------- */
+  /** ---------- CLEANING COMMERCIAL (object-state) ---------- */
   const [cleaningCommercial, setCleaningCommercial] = useState(null);
   const c = cleaningCommercial || {};
 
   const setCC = (patch) =>
     setCleaningCommercial((prev) => ({ ...(prev || {}), ...(patch || {}) }));
 
-  // helper: commercial "render text" для review
   const ensureCommercialTexts = () => {
     const source = c.hearAbout || "";
     const sourceText =
@@ -392,21 +398,15 @@ const Booking = () => {
   const isLoggedIn = !!user;
   const [submitting, setSubmitting] = useState(false);
 
-  /**
-   * Guest / Logged-in submit helper
-   * - logged in: POST /api/requests (reqApi.saveMine)
-   * - guest:     POST /api/requests/public (reqApi.createPublic)
-   *
-   * guest_* поля потрібні, щоб адмінка бачила контакти навіть без user_id.
-   */
   async function submitRequest(payload, guestContact) {
     const isGuest = !isLoggedIn;
 
-    // якщо гість — передаємо контакти дублем у верхні поля (бекенд їх підхопить)
     const payloadWithGuest = isGuest
       ? {
           ...payload,
-          guest_name: `${guestContact?.firstName || ""} ${guestContact?.lastName || ""}`.trim(),
+          guest_name: `${guestContact?.firstName || ""} ${
+            guestContact?.lastName || ""
+          }`.trim(),
           guest_email: guestContact?.email || "",
           guest_phone: guestContact?.phone || "",
         }
@@ -446,13 +446,11 @@ const Booking = () => {
         const ph = u.phone || "";
         const em = u.email || "";
 
-        // shared
         setFirstName(fn);
         setLastNameState(ln);
         setPhone(ph);
         setEmail(em);
 
-        // якщо вже в commercial flow — м’яко підставляємо тільки порожні поля
         setCleaningCommercial((prev) => {
           const cur = prev || {};
           return {
@@ -473,19 +471,17 @@ const Booking = () => {
     };
   }, [isLoggedIn]);
 
-  /** ---------- Service change: базове вирівнювання кроків ---------- */
+  /** ---------- Service change ---------- */
   const onChangeService = (nextService) => {
     setService(nextService);
 
-    // якщо юзер перемикає тип сервісу посеред форми — повертаємо на search
     setStep(1);
     setCleaningStep(2);
 
-    // можна (за бажанням) не чистити всі дані, але архітектурно безпечніше:
-    // (я не міняю пропси, але чистка стейтів тут ок)
-    // cleaning
+    // reset cleaning
     setPropertyType("");
     setProjectType("");
+    setProjectTypeOther("");
     setBedrooms("");
     setBathrooms("");
     setAreas([]);
@@ -592,17 +588,11 @@ const Booking = () => {
       return;
     }
     if (!detServiceLocation) {
-      openInfoModal(
-        "Location missing",
-        "Please choose where the service will be performed."
-      );
+      openInfoModal("Location missing", "Please choose where the service will be performed.");
       return;
     }
     if (!detCompletionDate) {
-      openInfoModal(
-        "Timeline missing",
-        "Please select by what date the service should be completed."
-      );
+      openInfoModal("Timeline missing", "Please select by what date the service should be completed.");
       return;
     }
 
@@ -812,7 +802,6 @@ const Booking = () => {
       return;
     }
 
-    // Локація для бізнесу
     const baseAddress = query?.trim() || null;
     let location_type = "unknown";
     let service_address = baseAddress || null;
@@ -947,7 +936,7 @@ const Booking = () => {
     }
   }
 
-  /** ---------- SUBMIT: Cleaning (Residential старий) ---------- */
+  /** ---------- SUBMIT: Cleaning Residential ---------- */
   async function submitCleaningRequest() {
     if (submitting) return;
 
@@ -972,6 +961,7 @@ const Booking = () => {
     const itemsPayload = {
       propertyType,
       projectType,
+      projectTypeOther,
 
       bedrooms,
       bathrooms,
@@ -981,7 +971,7 @@ const Booking = () => {
       resBudget,
       extraDetails,
 
-      // commercial legacy fields (для residential тут може бути пусто — ок)
+      // legacy commercial fields
       companyName,
       companyAddress,
       squareFeet,
@@ -1004,7 +994,11 @@ const Booking = () => {
     const notesParts = [
       "Cleaning quote request (Residential)",
       propertyType ? `Property type: ${propertyType}` : null,
-      projectType ? `Project type: ${projectType}` : null,
+      projectType
+        ? `Project type: ${projectType}${
+            projectType === "other" && projectTypeOther ? ` (${projectTypeOther})` : ""
+          }`
+        : null,
       bedrooms || bathrooms ? `Bedrooms: ${bedrooms || 0}, Bathrooms: ${bathrooms || 0}` : null,
       areas?.length ? `Areas: ${areas.join(", ")}` : null,
       generalTasks?.length ? `Tasks: ${generalTasks.join(", ")}` : null,
@@ -1050,14 +1044,13 @@ const Booking = () => {
     }
   }
 
-  /** ---------- SUBMIT: Cleaning Commercial (новий 9-step object-state) ---------- */
+  /** ---------- SUBMIT: Cleaning Commercial ---------- */
   async function submitCleaningCommercialRequest() {
     if (submitting) return;
 
     const isEmailLocal = (v) => /\S+@\S+\.\S+/.test(v || "");
     const isPhoneLocal = (v) => (v || "").replace(/[^\d]/g, "").length >= 7;
 
-    // Валідація по commercial об’єкту
     if (
       !String(c.firstName || "").trim() ||
       !String(c.lastName || "").trim() ||
@@ -1082,13 +1075,12 @@ const Booking = () => {
     }
 
     const loc = buildCleaningLocation();
-
-    // трішки “підсумків” для review/нотаток
     ensureCommercialTexts();
 
     const itemsPayload = {
       propertyType,
       projectType,
+      projectTypeOther,
       cleaningCommercial: c,
       contact: {
         firstName: c.firstName || "",
@@ -1165,8 +1157,7 @@ const Booking = () => {
       setLastRequestId(saved?.id || null);
       setShowSuccessModal(true);
     } catch (e) {
-      const m =
-        e?.error || e?.message || "Failed to submit commercial cleaning request.";
+      const m = e?.error || e?.message || "Failed to submit commercial cleaning request.";
       openInfoModal("Submission failed", m);
     } finally {
       setSubmitting(false);
@@ -1175,8 +1166,8 @@ const Booking = () => {
 
   /** ---------- CLEANING: reset при зміні типу ---------- */
   const resetCleaningAfterTypeChange = () => {
-    // shared cleaning basics
     setProjectType("");
+    setProjectTypeOther("");
 
     // residential reset
     setBedrooms("");
@@ -1188,7 +1179,7 @@ const Booking = () => {
     setExtraDetails("");
     setHearAboutUs("");
 
-    // legacy commercial fields reset (на випадок твоїх review)
+    // legacy commercial fields
     setCompanyName("");
     setCompanyAddress("");
     setSquareFeet("");
@@ -1196,7 +1187,6 @@ const Booking = () => {
     setComBudget("");
     setComExtraDetails("");
 
-    // NEW commercial object-state reset
     setCleaningCommercial(null);
   };
 
@@ -1614,7 +1604,7 @@ const Booking = () => {
             </>
           )}
 
-          {/* ======================= CLEANING (НОВА архітектура) ======================= */}
+          {/* ======================= CLEANING (архітектура) ======================= */}
           {isCleaning && step === 2 && (
             <>
               {/* STEP 1/9 (cleaningStep=2): Property type */}
@@ -1627,7 +1617,6 @@ const Booking = () => {
                 onNext={() => setCleaningStep(3)}
                 propertyType={propertyType}
                 setPropertyType={(v) => {
-                  // якщо тип змінюється — чистимо і res, і com
                   setPropertyType(v);
                 }}
                 onResetAfterTypeChange={resetCleaningAfterTypeChange}
@@ -1636,33 +1625,57 @@ const Booking = () => {
                 totalSteps={CLEANING_TOTAL_STEPS}
               />
 
-              {/* ================= RESIDENTIAL FLOW (старий, тільки step-структура інша) ================= */}
+              {/* ================= RESIDENTIAL FLOW (НОВИЙ порядок 9-step) ================= */}
               {isResidential && (
                 <>
-                  {/* STEP 2/9 (cleaningStep=3): Project type */}
-                  <StepCleaningProjectType
+                  {/* STEP 2/9: Contact Information */}
+                  <StepCleaningContactDetails
                     visible={cleaningStep === 3}
                     onBack={() => setCleaningStep(2)}
                     onNext={() => setCleaningStep(4)}
-                    propertyType={propertyType}
-                    projectType={projectType}
-                    setProjectType={setProjectType}
+                    firstName={firstName}
+                    setFirstName={setFirstName}
+                    lastName={lastNameState}
+                    setLastName={setLastNameState}
+                    user={user}
+                    phone={phone}
+                    setPhone={setPhone}
+                    email={email}
+                    setEmail={setEmail}
+                    heardAbout={heardAbout}
+                    setHeardAbout={setHeardAbout}
+                    extraInfo={extraInfo}
+                    setExtraInfo={setExtraInfo}
                     renderProgress={renderCleaningProgress}
                     progressStepIndex={2}
                     totalSteps={CLEANING_TOTAL_STEPS}
                   />
 
-                  {/* STEP 3/9 (cleaningStep=4): Property details (bed/bath) */}
-                  <StepCleaningPropertyDetails
+                  {/* STEP 3/9: Project Type */}
+                  <StepCleaningProjectType
                     visible={cleaningStep === 4}
                     onBack={() => setCleaningStep(3)}
                     onNext={() => setCleaningStep(5)}
+                    propertyType={propertyType}
+                    projectType={projectType}
+                    setProjectType={setProjectType}
+                    projectTypeOther={projectTypeOther}
+                    setProjectTypeOther={setProjectTypeOther}
+                    renderProgress={renderCleaningProgress}
+                    progressStepIndex={3}
+                    totalSteps={CLEANING_TOTAL_STEPS}
+                  />
+
+                  {/* STEP 4/9: Property Information */}
+                  <StepCleaningPropertyDetails
+                    visible={cleaningStep === 5}
+                    onBack={() => setCleaningStep(4)}
+                    onNext={() => setCleaningStep(6)}
                     propertyType={propertyType}
                     bedrooms={bedrooms}
                     setBedrooms={setBedrooms}
                     bathrooms={bathrooms}
                     setBathrooms={setBathrooms}
-                    // комерційні пропси лишаються, але тут вони не використовуються — передаю як було
                     firstName={firstName}
                     setFirstName={setFirstName}
                     lastName={lastNameState}
@@ -1678,54 +1691,54 @@ const Booking = () => {
                     hearAboutUs={hearAboutUs}
                     setHearAboutUs={setHearAboutUs}
                     renderProgress={renderCleaningProgress}
-                    progressStepIndex={3}
-                    totalSteps={CLEANING_TOTAL_STEPS}
-                  />
-
-                  {/* STEP 4/9 */}
-                  <StepCleaningAreas
-                    visible={cleaningStep === 5}
-                    onBack={() => setCleaningStep(4)}
-                    onNext={() => setCleaningStep(6)}
-                    propertyType={propertyType}
-                    areas={areas}
-                    setAreas={setAreas}
-                    renderProgress={renderCleaningProgress}
                     progressStepIndex={4}
                     totalSteps={CLEANING_TOTAL_STEPS}
                   />
 
                   {/* STEP 5/9 */}
-                  <StepCleaningGeneralTasks
+                  <StepCleaningAreas
                     visible={cleaningStep === 6}
                     onBack={() => setCleaningStep(5)}
                     onNext={() => setCleaningStep(7)}
                     propertyType={propertyType}
-                    generalTasks={generalTasks}
-                    setGeneralTasks={setGeneralTasks}
+                    areas={areas}
+                    setAreas={setAreas}
                     renderProgress={renderCleaningProgress}
                     progressStepIndex={5}
                     totalSteps={CLEANING_TOTAL_STEPS}
                   />
 
                   {/* STEP 6/9 */}
-                  <StepCleaningKitchenTasks
+                  <StepCleaningGeneralTasks
                     visible={cleaningStep === 7}
                     onBack={() => setCleaningStep(6)}
                     onNext={() => setCleaningStep(8)}
                     propertyType={propertyType}
-                    kitchenTasks={kitchenTasks}
-                    setKitchenTasks={setKitchenTasks}
+                    generalTasks={generalTasks}
+                    setGeneralTasks={setGeneralTasks}
                     renderProgress={renderCleaningProgress}
                     progressStepIndex={6}
                     totalSteps={CLEANING_TOTAL_STEPS}
                   />
 
                   {/* STEP 7/9 */}
-                  <StepCleaningBudget
+                  <StepCleaningKitchenTasks
                     visible={cleaningStep === 8}
                     onBack={() => setCleaningStep(7)}
                     onNext={() => setCleaningStep(9)}
+                    propertyType={propertyType}
+                    kitchenTasks={kitchenTasks}
+                    setKitchenTasks={setKitchenTasks}
+                    renderProgress={renderCleaningProgress}
+                    progressStepIndex={7}
+                    totalSteps={CLEANING_TOTAL_STEPS}
+                  />
+
+                  {/* STEP 8/9 */}
+                  <StepCleaningBudget
+                    visible={cleaningStep === 9}
+                    onBack={() => setCleaningStep(8)}
+                    onNext={() => setCleaningStep(10)}
                     propertyType={propertyType}
                     resBudget={resBudget}
                     setResBudget={setResBudget}
@@ -1735,29 +1748,6 @@ const Booking = () => {
                     setExtraDetails={setExtraDetails}
                     comExtraDetails={comExtraDetails}
                     setComExtraDetails={setComExtraDetails}
-                    renderProgress={renderCleaningProgress}
-                    progressStepIndex={7}
-                    totalSteps={CLEANING_TOTAL_STEPS}
-                  />
-
-                  {/* STEP 8/9 */}
-                  <StepCleaningContactDetails
-                    visible={cleaningStep === 9}
-                    onBack={() => setCleaningStep(8)}
-                    onNext={() => setCleaningStep(10)}
-                    firstName={firstName}
-                    setFirstName={setFirstName}
-                    lastName={lastNameState}
-                    setLastName={setLastNameState}
-                    user={user}
-                    phone={phone}
-                    setPhone={setPhone}
-                    email={email}
-                    setEmail={setEmail}
-                    heardAbout={heardAbout}
-                    setHeardAbout={setHeardAbout}
-                    extraInfo={extraInfo}
-                    setExtraInfo={setExtraInfo}
                     renderProgress={renderCleaningProgress}
                     progressStepIndex={8}
                     totalSteps={CLEANING_TOTAL_STEPS}
@@ -1775,6 +1765,7 @@ const Booking = () => {
                     serviceAddress={query}
                     propertyType={propertyType}
                     projectType={projectType}
+                    projectTypeOther={projectTypeOther}
                     bedrooms={bedrooms}
                     bathrooms={bathrooms}
                     companyName={companyName}
@@ -1795,21 +1786,20 @@ const Booking = () => {
                     heardAbout={heardAbout}
                     extraInfo={extraInfo}
                     onEditType={() => setCleaningStep(2)}
-                    onEditProject={() => setCleaningStep(3)}
-                    onEditProperty={() => setCleaningStep(4)}
-                    onEditAreas={() => setCleaningStep(5)}
-                    onEditGeneralTasks={() => setCleaningStep(6)}
-                    onEditKitchenTasks={() => setCleaningStep(7)}
-                    onEditBudget={() => setCleaningStep(8)}
-                    onEditContact={() => setCleaningStep(9)}
+                    onEditContact={() => setCleaningStep(3)}
+                    onEditProject={() => setCleaningStep(4)}
+                    onEditProperty={() => setCleaningStep(5)}
+                    onEditAreas={() => setCleaningStep(6)}
+                    onEditGeneralTasks={() => setCleaningStep(7)}
+                    onEditKitchenTasks={() => setCleaningStep(8)}
+                    onEditBudget={() => setCleaningStep(9)}
                   />
                 </>
               )}
 
-              {/* ================= COMMERCIAL FLOW (новий 9-step) ================= */}
+              {/* ================= COMMERCIAL FLOW (як було) ================= */}
               {isCommercial && (
                 <>
-                  {/* STEP 2/9 (cleaningStep=3): Commercial Contact Info */}
                   <StepCleaningCommercialContactInfo
                     visible={cleaningStep === 3}
                     onBack={() => setCleaningStep(2)}
@@ -1825,20 +1815,17 @@ const Booking = () => {
                     setPhone={(v) => setCC({ phone: v })}
                     email={c.email || ""}
                     setEmail={(v) => setCC({ email: v })}
-
                     hearAbout={c.hearAbout || ""}
                     setHearAbout={(v) => setCC({ hearAbout: v })}
                     referralName={c.referralName || ""}
                     setReferralName={(v) => setCC({ referralName: v })}
                     hearOther={c.hearAboutOther || ""}
                     setHearOther={(v) => setCC({ hearAboutOther: v })}
-
                     renderProgress={renderCleaningProgress}
                     progressStepIndex={2}
                     totalSteps={CLEANING_TOTAL_STEPS}
                   />
 
-                  {/* STEP 3/9 (cleaningStep=4): Company Info */}
                   <StepCleaningCommercialCompanyInfo
                     visible={cleaningStep === 4}
                     onBack={() => setCleaningStep(3)}
@@ -1850,18 +1837,15 @@ const Booking = () => {
                     setCompanyName={(v) => setCC({ companyName: v })}
                     companyAddress={c.companyAddress || ""}
                     setCompanyAddress={(v) => setCC({ companyAddress: v })}
-
                     businessType={c.businessType || ""}
                     setBusinessType={(v) => setCC({ businessType: v })}
                     businessTypeOther={c.businessTypeOther || ""}
                     setBusinessTypeOther={(v) => setCC({ businessTypeOther: v })}
-
                     renderProgress={renderCleaningProgress}
                     progressStepIndex={3}
                     totalSteps={CLEANING_TOTAL_STEPS}
                   />
 
-                  {/* STEP 4/9 (cleaningStep=5): Project Type (shared component) */}
                   <StepCleaningProjectType
                     visible={cleaningStep === 5}
                     onBack={() => setCleaningStep(4)}
@@ -1872,17 +1856,17 @@ const Booking = () => {
                     propertyType={propertyType}
                     projectType={projectType}
                     setProjectType={setProjectType}
+                    projectTypeOther={projectTypeOther}
+                    setProjectTypeOther={setProjectTypeOther}
                     renderProgress={renderCleaningProgress}
                     progressStepIndex={4}
                     totalSteps={CLEANING_TOTAL_STEPS}
                   />
 
-                  {/* STEP 5/9 (cleaningStep=6): Project Information */}
                   <StepCleaningCommercialProjectInformation
                     visible={cleaningStep === 6}
                     onBack={() => setCleaningStep(5)}
                     onNext={() => {
-                      // мінімально заповнимо summary для review (як у твоєму прикладі)
                       let summary = "";
                       if (projectType === "office") {
                         summary = `Office • ${c.officeSquareFootage || ""} sqft • ${
@@ -1907,7 +1891,6 @@ const Booking = () => {
                     }}
                     projectType={projectType}
 
-                    /** ===== OFFICE ===== */
                     officeSquareFootage={c.officeSquareFootage || ""}
                     setOfficeSquareFootage={(v) => setCC({ officeSquareFootage: v })}
                     officeFloors={c.officeFloors || ""}
@@ -1933,7 +1916,6 @@ const Booking = () => {
                     officeStartDate={c.officeStartDate || ""}
                     setOfficeStartDate={(v) => setCC({ officeStartDate: v })}
 
-                    /** ===== AIRBNB / RENTAL ===== */
                     airbnbUnits={c.airbnbUnits || ""}
                     setAirbnbUnits={(v) => setCC({ airbnbUnits: v })}
                     airbnbPropertyTypes={c.airbnbPropertyTypes || []}
@@ -1965,7 +1947,6 @@ const Booking = () => {
                     airbnbStartDate={c.airbnbStartDate || ""}
                     setAirbnbStartDate={(v) => setCC({ airbnbStartDate: v })}
 
-                    /** ===== POST-CONSTRUCTION ===== */
                     pcConstructionType={c.pcConstructionType || ""}
                     setPcConstructionType={(v) => setCC({ pcConstructionType: v })}
                     pcConstructionOther={c.pcConstructionOther || ""}
@@ -1991,7 +1972,6 @@ const Booking = () => {
                     pcCompletionDate={c.pcCompletionDate || ""}
                     setPcCompletionDate={(v) => setCC({ pcCompletionDate: v })}
 
-                    /** ===== OTHER ===== */
                     otherProjectDescription={c.otherProjectDescription || ""}
                     setOtherProjectDescription={(v) => setCC({ otherProjectDescription: v })}
                     otherProjectOther={c.otherProjectOther || ""}
@@ -2030,7 +2010,6 @@ const Booking = () => {
                     totalSteps={CLEANING_TOTAL_STEPS}
                   />
 
-                  {/* STEP 6/9 (cleaningStep=7): Supplies */}
                   <StepCleaningCommercialSupplies
                     visible={cleaningStep === 7}
                     onBack={() => setCleaningStep(6)}
@@ -2042,7 +2021,6 @@ const Booking = () => {
                     totalSteps={CLEANING_TOTAL_STEPS}
                   />
 
-                  {/* STEP 7/9 (cleaningStep=8): Access & Scheduling */}
                   <StepCleaningCommercialAccess
                     visible={cleaningStep === 8}
                     onBack={() => setCleaningStep(7)}
@@ -2054,7 +2032,6 @@ const Booking = () => {
                     totalSteps={CLEANING_TOTAL_STEPS}
                   />
 
-                  {/* STEP 8/9 (cleaningStep=9): Additional Info */}
                   <StepCleaningCommercialAdditionalInfo
                     visible={cleaningStep === 9}
                     onBack={() => setCleaningStep(8)}
@@ -2066,7 +2043,6 @@ const Booking = () => {
                     totalSteps={CLEANING_TOTAL_STEPS}
                   />
 
-                  {/* STEP 9/9 (cleaningStep=10): Review */}
                   <StepCleaningCommercialReview
                     visible={cleaningStep === 10}
                     onBack={() => setCleaningStep(9)}

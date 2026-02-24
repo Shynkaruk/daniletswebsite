@@ -23,7 +23,7 @@ import {
   OtpCode,
 } from "./db.js";
 import googleCodeRouter from "./routes/authGoogle.js";
-import googleReviewsRouter from "./routes/reviews.js";
+import googleReviewsRouter from "./routes/googleReviews.js";
 import { sendOtpEmail } from "./email.js";
 import contactRouter from "./routes/contact.js";
 import contactsFormRouter from "./routes/contactsform.js";
