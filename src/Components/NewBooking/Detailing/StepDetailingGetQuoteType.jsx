@@ -73,27 +73,44 @@ const StepDetailingGetQuoteType = ({
             What type of detailing are you interested in?
           </div>
 
-          {/* BUTTONS */}
-          <div className="flex justify-center">
-            <div className="w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={() => handleSelect("business")}
-                className={`h-[48px] w-full sm:w-[320px] rounded-[16px] border text-sm font-semibold
-        ${
-          currentType === "business"
-            ? "border-transparent text-black"
-            : "border-[#E5E7EB] text-[#4B5563] bg-white"
-        }`}
-                style={{
-                  background:
-                    currentType === "business" ? GOLD_GRADIENT : undefined,
-                }}
-              >
-                Business
-              </button>
-            </div>
-          </div>
+{/* BUTTONS */}
+<div className="flex w-full gap-3">
+  {/* PERSONAL */}
+  <button
+    type="button"
+    onClick={() => handleSelect("personal")}
+    className={`flex-1 h-[48px] rounded-[16px] border text-sm font-semibold
+      ${
+        currentType === "personal"
+          ? "border-transparent text-black"
+          : "border-[#E5E7EB] text-[#4B5563] bg-white"
+      }`}
+    style={{
+      background:
+        currentType === "personal" ? GOLD_GRADIENT : undefined,
+    }}
+  >
+    Personal
+  </button>
+
+  {/* BUSINESS */}
+  <button
+    type="button"
+    onClick={() => handleSelect("business")}
+    className={`flex-1 h-[48px] rounded-[16px] border text-sm font-semibold
+      ${
+        currentType === "business"
+          ? "border-transparent text-black"
+          : "border-[#E5E7EB] text-[#4B5563] bg-white"
+      }`}
+    style={{
+      background:
+        currentType === "business" ? GOLD_GRADIENT : undefined,
+    }}
+  >
+    Business
+  </button>
+</div>
         </section>
 
         {/* BUTTON */}
