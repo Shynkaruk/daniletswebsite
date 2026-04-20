@@ -4,21 +4,17 @@ const router = express.Router();
 
 const GOOGLE_KEY = process.env.GOOGLE_PLACES_API_KEY;
 
-// Задай placeId тут (коли знайдеш). Можна і через env.
 const PLACE_IDS = {
   detailing: process.env.GOOGLE_PLACE_ID_DETAILING || "",
   cleaning: process.env.GOOGLE_PLACE_ID_CLEANING || "",
 };
 
-// Простий in-memory cache
 const cache = new Map();
-// key: "detailing" | "cleaning" -> { expiresAt: number, data: any }
-
-const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6h
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 годин
 
 function mapGoogleReview(r) {
   return {
-    id: r?.time || `${r?.author_name}-${Math.random()}`,
+    id: r?.time || `${r?.author_name}-${Date.now()}`,
     name: r?.author_name || "Anonymous",
     rating: typeof r?.rating === "number" ? r.rating : null,
     relativeTime: r?.relative_time_description || "",
@@ -28,23 +24,22 @@ function mapGoogleReview(r) {
 }
 
 async function placeDetails(placeId) {
-  if (!GOOGLE_KEY) throw new Error("GOOGLE_PLACES_API_KEY missing");
-  if (!placeId) throw new Error("placeId missing");
+  if (!GOOGLE_KEY) throw new Error("GOOGLE_PLACES_API_KEY is missing in .env");
+  if (!placeId) throw new Error(`placeId for this service is missing in .env`);
 
-  // Place Details (Fields)
-  // docs: fields=reviews,name,rating,user_ratings_total,url
-  const url =
-    "https://maps.googleapis.com/maps/api/place/details/json" +
-    `?place_id=${encodeURIComponent(placeId)}` +
-    `&fields=${encodeURIComponent("name,rating,user_ratings_total,reviews,url")}` +
-    `&key=${encodeURIComponent(GOOGLE_KEY)}`;
+  const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(
+    placeId
+  )}&fields=name,rating,user_ratings_total,reviews,url&key=${encodeURIComponent(GOOGLE_KEY)}`;
+
+  console.log(`[Google Reviews] Fetching for placeId: ${placeId}`);
 
   const res = await fetch(url);
   const json = await res.json();
 
   if (json?.status !== "OK") {
-    const msg = json?.error_message || json?.status || "Google Places error";
-    throw new Error(msg);
+    console.error("[Google Reviews] Error from Google:", json);
+    const msg = json?.error_message || json?.status || "Unknown Google error";
+    throw new Error(`Google API: ${msg}`);
   }
 
   const result = json?.result || {};
@@ -58,49 +53,20 @@ async function placeDetails(placeId) {
       url: result.url || "",
     },
     reviews: reviews
-      // зазвичай Google віддає 5, але інколи менше
       .map(mapGoogleReview)
-      // без порожнього тексту (за бажанням)
-      .filter((x) => (x.review || "").trim().length > 0),
+      .filter((x) => (x.review || "").trim().length > 10), // відфільтровуємо надто короткі
   };
 }
 
-// (опціонально) Автопошук place_id по тексту — щоб ти не шукав руками
-router.get("/google/find-place-id", async (req, res) => {
-  const q = String(req.query.q || "").trim();
-  if (!q) return res.status(400).json({ error: "q required" });
-
-  if (!GOOGLE_KEY) return res.status(500).json({ error: "GOOGLE_PLACES_API_KEY missing" });
-
-  const url =
-    "https://maps.googleapis.com/maps/api/place/textsearch/json" +
-    `?query=${encodeURIComponent(q)}` +
-    `&key=${encodeURIComponent(GOOGLE_KEY)}`;
-
-  const r = await fetch(url);
-  const j = await r.json();
-
-  if (j?.status !== "OK") {
-    return res.status(400).json({ error: j?.error_message || j?.status || "Google error" });
-  }
-
-  const first = j?.results?.[0];
-  return res.json({
-    place_id: first?.place_id || null,
-    name: first?.name || null,
-    formatted_address: first?.formatted_address || null,
-  });
-});
-
-// Основний endpoint
+// Основний ендпоінт
 router.get("/google/:service", async (req, res) => {
-  const service = String(req.params.service || "").toLowerCase();
+  const service = String(req.params.service || "").toLowerCase().trim();
 
   if (!["detailing", "cleaning"].includes(service)) {
-    return res.status(400).json({ error: "service must be detailing|cleaning" });
+    return res.status(400).json({ error: "service must be 'detailing' or 'cleaning'" });
   }
 
-  // cache
+  // Cache check
   const cached = cache.get(service);
   if (cached && cached.expiresAt > Date.now()) {
     return res.json(cached.data);
@@ -108,6 +74,12 @@ router.get("/google/:service", async (req, res) => {
 
   try {
     const placeId = PLACE_IDS[service];
+    if (!placeId) {
+      return res.status(400).json({ 
+        error: `GOOGLE_PLACE_ID_${service.toUpperCase()} is not set in .env` 
+      });
+    }
+
     const data = await placeDetails(placeId);
 
     const payload = {
@@ -115,13 +87,45 @@ router.get("/google/:service", async (req, res) => {
       service,
       place: data.place,
       reviews: data.reviews,
+      fetchedAt: new Date().toISOString(),
     };
 
     cache.set(service, { expiresAt: Date.now() + CACHE_TTL_MS, data: payload });
 
     res.json(payload);
   } catch (e) {
-    res.status(500).json({ error: e?.message || "Failed to fetch Google reviews" });
+    console.error(`[Google Reviews] Error for ${service}:`, e.message);
+    res.status(500).json({ 
+      error: "Failed to load Google reviews",
+      details: process.env.NODE_ENV === "development" ? e.message : undefined 
+    });
+  }
+});
+
+// Допоміжний ендпоінт для пошуку Place ID
+router.get("/google/find-place-id", async (req, res) => {
+  const q = String(req.query.q || "").trim();
+  if (!q) return res.status(400).json({ error: "query parameter 'q' is required" });
+
+  if (!GOOGLE_KEY) return res.status(500).json({ error: "GOOGLE_PLACES_API_KEY missing" });
+
+  try {
+    const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(q)}&key=${encodeURIComponent(GOOGLE_KEY)}`;
+    const r = await fetch(url);
+    const j = await r.json();
+
+    if (j?.status !== "OK") {
+      return res.status(400).json({ error: j?.error_message || j?.status });
+    }
+
+    const first = j?.results?.[0];
+    res.json({
+      place_id: first?.place_id || null,
+      name: first?.name || null,
+      formatted_address: first?.formatted_address || null,
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 

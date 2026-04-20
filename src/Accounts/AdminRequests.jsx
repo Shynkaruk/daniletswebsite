@@ -129,7 +129,7 @@ export default function AdminRequests() {
   };
 
   return (
-    <div className="flex h-screen bg-[#F4F4F5] overflow-hidden">
+    <div className="flex h-screen bg-[#F4F4F5] overflow-hidden pt-20">
       {/* Sidebar */}
       <aside className="w-72 hidden md:flex flex-col border-r border-[#E5E7EB] bg-white overflow-y-auto">
         <div className="px-6 py-8 border-b">
@@ -186,8 +186,8 @@ export default function AdminRequests() {
                 </thead>
                 <tbody>
                   {filteredRows.map((row) => {
-                    const items = safeJsonParse(row.items_json, {});
-                    const contact = items.contact || items.guest || {};
+                    const itemsData = safeJsonParse(row.items_json, {});
+                    const contact = itemsData.contact || itemsData.guest || {};
                     const fullName = row.user_full_name || 
                       `${contact.firstName || ""} ${contact.lastName || ""}`.trim() || "Guest";
                     const phone = contact.phone || row.user_phone || "—";
@@ -242,12 +242,20 @@ function DetailModal({ row, onClose, onSave }) {
   const fullName = row.user_full_name || 
     `${contact.firstName || contact.name || ""} ${contact.lastName || ""}`.trim() || "Guest";
 
-  const isOffice = commercial.businessType === "office" || commercial.projectTypeText?.toLowerCase().includes("office");
-  const isAirbnb = commercial.businessType === "retail" || commercial.projectTypeText?.toLowerCase().includes("airbnb");
-  const isPostConstruction = commercial.businessType === "medical" || 
-                            commercial.businessType === "property_mgmt" || 
-                            commercial.businessTypeText?.toLowerCase().includes("medical") ||
-                            commercial.businessTypeText?.toLowerCase().includes("property");
+  // Визначаємо тип без залежності від activeMenu
+  const serviceType = row.service_type || "";
+  const isPersonal = serviceType === "detailing_quote_personal";
+  const isBusiness = serviceType === "detailing_quote_business";
+  const isResidential = items.propertyType === "residential";
+  const isCommercial = items.propertyType === "commercial";
+
+  const isOffice = isCommercial && (commercial.businessType === "office" || commercial.projectTypeText?.toLowerCase().includes("office"));
+  const isAirbnb = isCommercial && (commercial.businessType === "retail" || commercial.projectTypeText?.toLowerCase().includes("airbnb"));
+  const isPostConstruction = isCommercial && 
+    (commercial.businessType === "medical" || 
+     commercial.businessType === "property_mgmt" || 
+     commercial.businessTypeText?.toLowerCase().includes("medical") ||
+     commercial.businessTypeText?.toLowerCase().includes("property"));
 
   return (
     <div className="fixed inset-0 z-[999999] flex items-end sm:items-center justify-center bg-black/70 backdrop-blur p-4 sm:p-6">
@@ -285,7 +293,7 @@ function DetailModal({ row, onClose, onSave }) {
           </Section>
 
           {/* Detailing Personal */}
-          {vehicle.make && !business.vehiclesCount && (
+          {isPersonal && (
             <Section title="Vehicle & Requested Services">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
                 <Field label="Year" value={vehicle.year} />
@@ -301,7 +309,7 @@ function DetailModal({ row, onClose, onSave }) {
           )}
 
           {/* Detailing Business */}
-          {business.vehiclesCount && (
+          {isBusiness && (
             <Section title="Business Information">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <Field label="Company Name" value={contact.companyName || business.companyName} />
@@ -341,7 +349,7 @@ function DetailModal({ row, onClose, onSave }) {
           )}
 
           {/* Cleaning Residential */}
-          {items.propertyType === "residential" && (
+          {isResidential && (
             <Section title="Property & Project Details">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <Field label="Property Type" value={items.propertyType} />
@@ -358,7 +366,7 @@ function DetailModal({ row, onClose, onSave }) {
           )}
 
           {/* Cleaning Commercial */}
-          {items.propertyType === "commercial" && (
+          {isCommercial && (
             <Section title="Commercial Cleaning">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <Field label="Company Name" value={commercial.companyName} />
@@ -407,7 +415,7 @@ function DetailModal({ row, onClose, onSave }) {
                 </div>
               )}
 
-              {/* Post-Construction / Medical / Property Management */}
+              {/* Post-Construction */}
               {isPostConstruction && (
                 <div className="mt-6 pt-6 border-t">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -439,6 +447,33 @@ function DetailModal({ row, onClose, onSave }) {
                   )}
                 </div>
               )}
+            </Section>
+          )}
+
+          {/* Forms Clients */}
+          {row.service_type === "forms_clients" && (
+            <Section title="Form Submission Details">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <Field label="First Name" value={items.firstName} />
+                <Field label="Last Name" value={items.lastName} />
+                <Field label="Email" value={items.email} />
+                <Field label="Phone" value={items.phone} />
+                <Field label="Service" value={items.service} />
+              </div>
+
+              {items.description && (
+                <div className="mt-6">
+                  <div className="text-[11px] font-extrabold tracking-wide text-[#6B7280] uppercase mb-2">
+                    Description / Message from Client
+                  </div>
+                  <div className="p-5 bg-gray-50 rounded-2xl text-sm leading-relaxed border border-gray-200">
+                    {items.description}
+                  </div>
+                </div>
+              )}
+
+              <Field label="Page Path" value={items.pagePath} />
+              <Field label="Source" value={items.source} />
             </Section>
           )}
 
