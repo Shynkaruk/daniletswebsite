@@ -1,20 +1,6 @@
-// src/pages/AdminRequests.jsx
+// src/Accounts/AdminRequests.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { adminReqApi } from "../lib/api";
-
-const gradient =
-  "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
-
-const MENU_ITEMS = [
-  { key: "detailing_quote_personal", label: "Detailing — Personal" },
-  { key: "detailing_quote_business", label: "Detailing — Business" },
-  { key: "cleaning_quote_residential", label: "Cleaning — Residential" },
-  { key: "cleaning_quote_commercial", label: "Cleaning — Commercial" },
-
-  { key: "forms_clients", label: "Forms Clients" },
-
-  { key: "users", label: "Users" },
-];
 
 function safeJsonParse(text, fallback = {}) {
   try {
@@ -25,230 +11,71 @@ function safeJsonParse(text, fallback = {}) {
   }
 }
 
-/* ================== HUMANIZATION (EN) ================== */
+const gradient = "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
 
-const STATUS_LABELS = {
-  new: "New",
-  in_progress: "In progress",
-  completed: "Completed",
-  rejected: "Rejected",
-};
-
-const HEARD_ABOUT_LABELS = {
-  google: "Google search",
-  facebook: "Facebook",
-  instagram: "Instagram",
-  returning: "Returning customer",
-  referral: "Referral",
-  friend: "Friend / Family",
-  yelp: "Yelp",
-  tiktok: "TikTok",
-  other: "Other",
-};
-
-const CLEANING_PROJECT_TYPE_LABELS = {
-  office: "Office",
-  airbnb: "Airbnb / Short-term rentals",
-  post_construction: "Post-construction",
-  other: "Other",
-};
-
-const FREQUENCY_LABELS = {
-  one_time: "One-time",
-  weekly: "Weekly",
-  bi_weekly: "Bi-weekly",
-  monthly: "Monthly",
-  quarterly: "Quarterly",
-  as_needed: "As needed",
-  other: "Other",
-};
-
-const BUDGET_LABELS = {
-  under_1000: "Under $1,000",
-  "1000_2500": "$1,000 – $2,500",
-  "2500_5000": "$2,500 – $5,000",
-  "2500_5000_month": "$2,500 – $5,000 / month",
-  "5000_10000": "$5,000 – $10,000",
-  "10000_plus": "$10,000+",
-  custom: "Custom / discuss with client",
-};
-
-const YES_NO_LABELS = {
-  yes: "Yes",
-  no: "No",
-  true: "Yes",
-  false: "No",
-};
-
-const SERVICE_LOCATION_LABELS = {
-  on_site: "On-site",
-  drop_off: "Drop-off",
-  pickup_dropoff: "Pick-up & drop-off",
-  other: "Other",
-};
-
-const CONTACT_METHOD_LABELS = {
-  call: "Phone call",
-  text: "Text message",
-  sms: "Text message",
-  email: "Email",
-};
-
-const CONTACT_TIME_LABELS = {
-  morning: "Morning",
-  afternoon: "Afternoon",
-  evening: "Evening",
-  anytime: "Anytime",
-};
-
-/* Optional: If your lists are stored as keys, map them here.
-   If they are already human strings, the fallback will show them nicely anyway.
-*/
-const OFFICE_AREAS_LABELS = {
-  offices: "Office areas",
-  restrooms: "Restrooms",
-  kitchen: "Kitchen",
-  conference_rooms: "Conference rooms",
-  common_areas: "Common areas",
-  lobby: "Lobby",
-  break_room: "Break room",
-  other: "Other",
-};
-
-const RES_PROPERTY_TYPE_LABELS = {
-  house: "House",
-  apartment: "Apartment",
-  condo: "Condo",
-  townhouse: "Townhouse",
-  other: "Other",
-};
-
-const RES_PROJECT_TYPE_LABELS = {
-  standard: "Standard cleaning",
-  deep: "Deep cleaning",
-  move_in_out: "Move-in / Move-out",
-  post_construction: "Post-construction",
-  other: "Other",
-};
-
-const PC_CONSTRUCTION_TYPE_LABELS = {
-  renovation: "Renovation",
-  new_build: "New build",
-  remodel: "Remodel",
-  other: "Other",
-};
-
-const AIRBNB_TURNOVER_LABELS = {
-  daily: "Daily",
-  weekly: "Weekly",
-  as_needed: "As needed",
-  other: "Other",
-};
-
-const AIRBNB_LINEN_LABELS = {
-  yes: "Yes",
-  no: "No",
-  unsure: "Not sure",
-};
+const MENU_ITEMS = [
+  { key: "detailing_quote_personal", label: "Detailing — Personal" },
+  { key: "detailing_quote_business", label: "Detailing — Business" },
+  { key: "cleaning_quote_residential", label: "Cleaning — Residential" },
+  { key: "cleaning_quote_commercial", label: "Cleaning — Commercial" },
+  { key: "forms_clients", label: "Forms Clients" },
+  { key: "users", label: "Users" },
+];
 
 const STATUS_META = {
   new: { label: "New", cls: "bg-blue-50 text-blue-700 border-blue-200" },
-  in_progress: {
-    label: "In progress",
-    cls: "bg-amber-50 text-amber-700 border-amber-200",
-  },
-  completed: {
-    label: "Completed",
-    cls: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  },
+  in_progress: { label: "In Progress", cls: "bg-amber-50 text-amber-700 border-amber-200" },
+  completed: { label: "Completed", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
   rejected: { label: "Rejected", cls: "bg-red-50 text-red-700 border-red-200" },
 };
 
-function prettifyKey(v) {
-  if (v === undefined || v === null) return "";
-  const s = String(v);
-  if (!s) return "";
-  return s.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+function formatDate(dateString) {
+  if (!dateString) return "—";
+  return new Date(dateString).toLocaleDateString('en-US', { 
+    month: 'short', day: 'numeric', year: 'numeric' 
+  });
 }
 
-function humanize(value, map) {
-  if (value === undefined || value === null) return "";
-  const key = String(value);
-  return map?.[key] || prettifyKey(key);
-}
-
-function humanizeList(arr, map) {
-  if (!Array.isArray(arr) || !arr.length) return [];
-  return arr.map((x) => (map ? humanize(x, map) : prettifyKey(x)));
-}
-
-/* ================== UI PRIMITIVES ================== */
-
-const isFilled = (v) => {
-  if (v === undefined || v === null) return false;
-  if (typeof v === "string") return v.trim().length > 0;
-  if (Array.isArray(v)) return v.length > 0;
-  return true;
-};
-
-const Field = ({ label, value }) => {
-  if (!isFilled(value)) return null;
-  return (
-    <div className="flex flex-col gap-1">
-      <div className="text-[11px] font-extrabold tracking-wide text-[#6B7280] uppercase">
-        {label}
-      </div>
-      <div className="text-sm font-semibold text-[#111827] break-words">
-        {String(value)}
-      </div>
-    </div>
-  );
-};
-
-const FieldRow = ({ children }) => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{children}</div>
-);
-
-function StatusBadge({ value }) {
-  const meta = STATUS_META[value] || {
-    label: value || "—",
-    cls: "bg-gray-50 text-gray-700 border-gray-200",
+function formatBudget(budgetCode) {
+  if (!budgetCode) return "";
+  const map = {
+    "1000_2500_month": "$1,000 – $2,500 per month",
+    "2500_5000_month": "$2,500 – $5,000 per month",
+    "5000_plus_month": "$5,000+ per month",
+    "200_350": "$200 – $350 per unit",
+    "5000_10000": "$5,000 – $10,000",
+    "3000_5000": "$3,000 – $5,000",
   };
-  return (
-    <span
-      className={`inline-flex items-center px-3 h-8 rounded-full border text-sm font-semibold ${meta.cls}`}
-    >
-      {meta.label}
-    </span>
-  );
+  return map[budgetCode] || budgetCode.replace(/_/g, " ");
 }
 
-const Section = ({ title, children, right }) => (
-  <div className="bg-white rounded-[24px] border border-[#E5E7EB] p-5 shadow-sm">
-    <div className="flex items-start justify-between gap-3">
-      <div className="text-xs font-extrabold tracking-wide text-[#111827] uppercase">
-        {title}
-      </div>
-      {right || null}
-    </div>
-    <div className="mt-4">{children}</div>
+// ================== UI COMPONENTS ==================
+const Section = ({ title, children }) => (
+  <div className="bg-white rounded-[24px] border border-[#E5E7EB] p-6 shadow-sm">
+    <div className="text-xs font-extrabold tracking-wide text-[#111827] uppercase mb-4">{title}</div>
+    {children}
   </div>
 );
 
-const Chips = ({ label, items }) => {
-  if (!Array.isArray(items) || !items.length) return null;
+const Field = ({ label, value }) => {
+  if (value == null || value === "" || (Array.isArray(value) && value.length === 0)) return null;
   return (
     <div>
-      <div className="text-[11px] font-extrabold tracking-wide text-[#6B7280] uppercase">
-        {label}
-      </div>
-      <div className="mt-2 flex flex-wrap gap-2">
-        {items.map((x, idx) => (
-          <span
-            key={idx}
-            className="px-3 py-1 rounded-full border text-xs font-semibold text-[#111827] bg-[#FAFAFB]"
-          >
-            {x}
+      <div className="text-[11px] font-extrabold tracking-wide text-[#6B7280] uppercase">{label}</div>
+      <div className="text-sm font-semibold text-[#111827] mt-1 break-words">{value}</div>
+    </div>
+  );
+};
+
+const Chips = ({ label, items }) => {
+  if (!items || items.length === 0) return null;
+  return (
+    <div>
+      <div className="text-[11px] font-extrabold tracking-wide text-[#6B7280] uppercase mb-2">{label}</div>
+      <div className="flex flex-wrap gap-2">
+        {items.map((item, idx) => (
+          <span key={idx} className="px-4 py-2 bg-gray-100 rounded-full text-sm">
+            {item}
           </span>
         ))}
       </div>
@@ -256,1645 +83,391 @@ const Chips = ({ label, items }) => {
   );
 };
 
-const PrimaryText = ({ children }) => {
-  if (!isFilled(children)) return null;
-  return (
-    <div className="rounded-2xl bg-[#FFF7E6] border border-[#F3E3B9] p-4">
-      <div className="text-sm font-bold text-[#111827] whitespace-pre-wrap">
-        {children}
-      </div>
-    </div>
-  );
-};
-
-/* ================== TYPE HELPERS ================== */
-
-function isDetailing(serviceType = "") {
-  return String(serviceType).startsWith("detailing_quote");
-}
-function isCleaning(serviceType = "") {
-  return String(serviceType).startsWith("cleaning_quote");
-}
-function isFormsClients(serviceType = "") {
-  return String(serviceType) === "forms_clients";
-}
-
-function categoryLabelFromServiceType(serviceType = "") {
-  const st = String(serviceType);
-  const found = MENU_ITEMS.find((i) => i.key === st);
-  return found?.label || st || "Unknown";
-}
-
-function pickFirst(...vals) {
-  for (const v of vals) {
-    if (typeof v === "string" && v.trim()) return v.trim();
-    if (v && typeof v === "object") return v;
-  }
-  return "";
-}
-
-function getContact(items = {}, row = {}) {
-  const c1 = items?.contact || {};
-  const c2 = items?.contactInfo || {};
-  const c3 = items?.customer || {};
-  const c4 = items?.business?.contact || {};
-  const c5 = items?.personal?.contact || {};
-  const c6 = items?.fleet?.contact || {};
-
-  const c7 = items || {};
-
-  const firstName = pickFirst(
-    c1.firstName,
-    c2.firstName,
-    c3.firstName,
-    c4.firstName,
-    c5.firstName,
-    c6.firstName,
-    c7.firstName
-  );
-  const lastName = pickFirst(
-    c1.lastName,
-    c2.lastName,
-    c3.lastName,
-    c4.lastName,
-    c5.lastName,
-    c6.lastName,
-    c7.lastName
-  );
-
-  const email = pickFirst(
-    c1.email,
-    c2.email,
-    c3.email,
-    c4.email,
-    c5.email,
-    c6.email,
-    c7.email,
-    row.user_email
-  );
-
-  const phone = pickFirst(
-    c1.phone,
-    c2.phone,
-    c3.phone,
-    c4.phone,
-    c5.phone,
-    c6.phone,
-    c7.phone,
-    row.user_phone
-  );
-
-  const companyName = pickFirst(
-    c1.companyName,
-    c2.companyName,
-    c3.companyName,
-    c4.companyName
-  );
-
-  const heardAbout =
-    c1.heardAbout ?? c2.heardAbout ?? c3.heardAbout ?? c4.heardAbout ?? "";
-  const heardOther =
-    c1.heardOther ?? c2.heardOther ?? c3.heardOther ?? c4.heardOther ?? "";
-
-  const fullName =
-    pickFirst(`${firstName} ${lastName}`.trim(), row.user_full_name) || "—";
-
-  return {
-    fullName,
-    firstName,
-    lastName,
-    email,
-    phone,
-    companyName,
-    heardAbout,
-    heardOther,
-  };
-}
-
-function stringifyHeardAbout(v) {
-  if (!v) return "";
-  if (Array.isArray(v)) return v.filter(Boolean).join(", ");
-  return String(v);
-}
-
-function summarizeType(serviceType, items) {
-  if (isFormsClients(serviceType)) return items?.service || "Client Form";
-
-  if (isDetailing(serviceType)) {
-    const vehicle = items?.vehicle || {};
-    const s = `${vehicle.year || ""} ${vehicle.make || ""} ${
-      vehicle.model || ""
-    }`.trim();
-    return s || "Detailing request";
-  }
-
-  if (isCleaning(serviceType)) {
-    const pt = items?.propertyType ? prettifyKey(items.propertyType) : "";
-    const pr = items?.projectType
-      ? humanize(items.projectType, CLEANING_PROJECT_TYPE_LABELS)
-      : "";
-    const t = [pt, pr].filter(Boolean).join(" • ");
-    return t || "Cleaning request";
-  }
-
-  return "Request";
-}
-
-function matchesSearch(row, items, term) {
-  if (!term) return true;
-  const t = term.toLowerCase().trim();
-  if (!t) return true;
-
-  const contact = items?.contact || {};
-  const vehicle = items?.vehicle || {};
-  const notes = row?.notes_customer || "";
-  const adminNote = row?.notes_admin || "";
-
-  const formService = items?.service || "";
-  const formDesc = items?.description || items?.message || "";
-  const formPath = items?.pagePath || items?.page_path || "";
-
-  const hay = [
-    row?.id,
-    row?._id,
-    row?.service_type,
-    row?.status,
-    row?.user_full_name,
-    row?.user_email,
-    row?.user_phone,
-
-    contact?.firstName,
-    contact?.lastName,
-    contact?.email,
-    contact?.phone,
-    stringifyHeardAbout(contact?.heardAbout),
-
-    `${vehicle?.year || ""} ${vehicle?.make || ""} ${
-      vehicle?.model || ""
-    }`.trim(),
-
-    items?.firstName,
-    items?.lastName,
-    items?.email,
-    items?.phone,
-    formService,
-    formDesc,
-    formPath,
-
-    notes,
-    adminNote,
-  ]
-    .filter(Boolean)
-    .join(" | ")
-    .toLowerCase();
-
-  return hay.includes(t);
-}
-
-function getPickupAddress(items = {}) {
-  const loc = items?.location || {};
-  const fleet = items?.fleet || {};
-  const contact = items?.contact || {};
-
-  return (
-    loc?.pickupAddress ||
-    loc?.pickup_address ||
-    items?.pickupAddress ||
-    items?.pickup_address ||
-    fleet?.pickupAddress ||
-    fleet?.pickup_address ||
-    loc?.baseAddress ||
-    items?.baseAddress ||
-    contact?.pickupAddress ||
-    ""
-  );
-}
-
-function getServiceLocationType(items = {}, fallback = "") {
-  const loc = items?.location || {};
-  const fleet = items?.fleet || {};
-  return (
-    loc?.location_type ||
-    loc?.locationType ||
-    fleet?.serviceLocation ||
-    items?.serviceLocation ||
-    fallback
-  );
-}
-
-function formatDateTime(v) {
-  try {
-    if (!v) return "—";
-    const d = new Date(v);
-    if (Number.isNaN(d.getTime())) return String(v);
-    return d.toLocaleString();
-  } catch {
-    return String(v || "—");
-  }
-}
-
-/* ================== PAGE ================== */
-
+// ================== MAIN COMPONENT ==================
 export default function AdminRequests() {
   const [activeMenu, setActiveMenu] = useState("detailing_quote_personal");
-  const [drawerOpen, setDrawerOpen] = useState(false);
-
-  const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
   const [selectedRow, setSelectedRow] = useState(null);
-
-  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-
-  const [counts, setCounts] = useState({});
-  const activeIsUsers = activeMenu === "users";
-
-  const [editStatus, setEditStatus] = useState("");
-  const [editAdminNote, setEditAdminNote] = useState("");
-
-  useEffect(() => {
-    if (!selectedRow) return;
-    setEditStatus(selectedRow.status || "new");
-    setEditAdminNote(selectedRow.notes_admin || "");
-  }, [selectedRow]);
-
-  const loadCounts = async () => {
-    const items = MENU_ITEMS.filter((x) => x.key !== "users");
-    try {
-      const results = await Promise.all(
-        items.map(async (it) => {
-          const params = { service_type: it.key };
-          if (statusFilter) params.status = statusFilter;
-          const data = await adminReqApi.list(params);
-          return [it.key, Array.isArray(data) ? data.length : 0];
-        })
-      );
-      const map = {};
-      for (const [k, v] of results) map[k] = v;
-      setCounts(map);
-    } catch (e) {
-      console.error("Failed to load counts:", e);
-    }
-  };
+  const [loading, setLoading] = useState(false);
 
   const loadBookings = async () => {
     setLoading(true);
-    setError("");
-
     try {
-      if (activeIsUsers) {
-        setRows([]);
-        return;
-      }
-
-      const params = { service_type: activeMenu };
-      if (statusFilter) params.status = statusFilter;
-
-      const data = await adminReqApi.list(params);
+      const data = await adminReqApi.list({ service_type: activeMenu });
       setRows(Array.isArray(data) ? data : []);
     } catch (e) {
-      const msg =
-        e?.error || e?.message || "Failed to load admin requests. Check API.";
-      setError(msg);
-      setRows([]);
+      console.error(e);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadBookings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeMenu, statusFilter]);
+    if (activeMenu !== "users") loadBookings();
+  }, [activeMenu]);
 
-  useEffect(() => {
-    loadCounts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter]);
-
-  const rowsWithParsed = useMemo(() => {
-    return rows.map((r) => ({
-      row: r,
-      items: safeJsonParse(r.items_json, {}),
-    }));
-  }, [rows]);
-
-  const filtered = useMemo(() => {
-    return rowsWithParsed.filter(({ row, items }) =>
-      matchesSearch(row, items, search)
+  const filteredRows = useMemo(() => {
+    if (!search.trim()) return rows;
+    const term = search.toLowerCase().trim();
+    return rows.filter(row =>
+      (row.user_full_name || "").toLowerCase().includes(term) ||
+      (row.user_email || "").toLowerCase().includes(term)
     );
-  }, [rowsWithParsed, search]);
+  }, [rows, search]);
 
-  const [deleteError, setDeleteError] = useState(null);
-
-  const deleteBooking = async (row) => {
-    if (!window.confirm("Delete this request?")) return;
-
+  const saveEdits = async (row, newStatus, newNote) => {
     const id = row?.id || row?._id;
     if (!id) return;
-
     try {
-      setDeleteError(null);
-      await adminReqApi.remove(id);
-
-      if ((selectedRow?.id || selectedRow?._id) === id) setSelectedRow(null);
-
-      await Promise.all([loadBookings(), loadCounts()]);
+      await adminReqApi.save({ id, status: newStatus, notes_admin: newNote });
+      loadBookings();
+      setSelectedRow(null);
     } catch (e) {
-      console.error("Delete failed:", e);
-      setDeleteError(e.message || "Failed to delete request.");
+      alert("Save error: " + (e.message || e));
     }
   };
 
-  const saveEdits = async () => {
-    if (!selectedRow) return;
+  return (
+    <div className="flex h-screen bg-[#F4F4F5] overflow-hidden">
+      {/* Sidebar */}
+      <aside className="w-72 hidden md:flex flex-col border-r border-[#E5E7EB] bg-white overflow-y-auto">
+        <div className="px-6 py-8 border-b">
+          <div className="text-xs text-[#9CA3AF] uppercase tracking-widest">Danilets</div>
+          <div className="text-2xl font-extrabold text-[#111827]">CRM Panel</div>
+        </div>
+        <nav className="flex-1 px-4 py-6 space-y-1">
+          {MENU_ITEMS.map((item) => (
+            <button
+              key={item.key}
+              onClick={() => { setActiveMenu(item.key); setSelectedRow(null); }}
+              style={activeMenu === item.key ? { background: gradient } : {}}
+              className={`w-full text-left px-5 py-4 rounded-2xl text-sm font-semibold transition-all ${
+                activeMenu === item.key ? "text-black shadow" : "text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
+      </aside>
 
-    const id = selectedRow?.id || selectedRow?._id;
-
-    if (!id) {
-      console.error("Save failed: selectedRow has no id/_id", selectedRow);
-      setError?.("Cannot save: missing request id.");
-      return;
-    }
-
-    try {
-      setError?.(null);
-
-      await adminReqApi.save({
-        id, // ✅ гарантовано не undefined
-        status: editStatus,
-        notes_admin: editAdminNote,
-      });
-
-      await Promise.all([loadBookings(), loadCounts()]);
-
-      // ✅ підтягнути оновлену заявку і відкрити її в модалці
-      // краще через get(id), а не list+find
-      const found = await adminReqApi.get(id);
-
-      // ✅ нормалізуємо, щоб selectedRow завжди мав id
-      setSelectedRow({ ...found, id: found?.id || found?._id });
-    } catch (e) {
-      console.error("Save failed:", e);
-      setError?.(e?.message || e?.error || "Failed to save changes.");
-    }
-  };
-
-  const activeTitle =
-    MENU_ITEMS.find((i) => i.key === activeMenu)?.label || "Requests";
-
-  const Header = (
-    <div className="sticky top-0 z-30 bg-[#F4F4F5]/80 backdrop-blur border-b border-[#E5E7EB]">
-      <div className="px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setDrawerOpen(true)}
-            className="md:hidden w-10 h-10 rounded-2xl bg-white border flex items-center justify-center"
-            aria-label="Open menu"
-          >
-            <span className="text-xl">≡</span>
-          </button>
-
+      {/* Main Table */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="p-6 border-b bg-white flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div>
-            <div className="text-[11px] text-[#9CA3AF] uppercase">
-              Admin Panel
-            </div>
-            <div className="text-[18px] sm:text-[20px] font-extrabold text-[#111827]">
-              {activeTitle}
-            </div>
+            <h1 className="text-3xl font-extrabold text-[#111827]">
+              {MENU_ITEMS.find(m => m.key === activeMenu)?.label}
+            </h1>
+            <p className="text-gray-500">Total requests: <span className="font-semibold">{rows.length}</span></p>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              loadBookings();
-              loadCounts();
-            }}
-            className="h-10 px-4 rounded-2xl bg-white border text-sm font-semibold"
-          >
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      <div className="px-4 sm:px-6 pb-4 flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
-        <div className="flex flex-col sm:flex-row gap-3 sm:items-center w-full">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search: id, name, email, phone, vehicle, notes…"
-            className="w-full sm:max-w-[420px] h-11 px-4 rounded-2xl border bg-white text-sm outline-none"
+            placeholder="Search by name, email..."
+            className="w-full sm:w-96 h-11 px-5 rounded-2xl border focus:border-[#A8834E] outline-none"
           />
-
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-sm text-[#4B5563] mr-1">Status:</span>
-
-            {[
-              { key: "", label: "All" },
-              { key: "new", label: "New" },
-              { key: "in_progress", label: "In progress" },
-              { key: "completed", label: "Completed" },
-              { key: "rejected", label: "Rejected" },
-            ].map((s) => {
-              const active = statusFilter === s.key;
-
-              return (
-                <button
-                  key={s.key}
-                  type="button"
-                  onClick={() => setStatusFilter(s.key)}
-                  className={[
-                    "h-10 px-4 rounded-full border text-sm font-semibold transition",
-                    active
-                      ? "bg-[#111827] text-white border-[#111827]"
-                      : "bg-white text-[#111827] hover:bg-gray-50",
-                  ].join(" ")}
-                >
-                  {s.label}
-                </button>
-              );
-            })}
-          </div>
         </div>
 
-        {deleteError || error ? (
-          <div className="w-full lg:max-w-[520px] p-3 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm">
-            {deleteError || error}
-          </div>
-        ) : null}
-      </div>
-    </div>
-  );
-
-  const Sidebar = (
-    <aside className="w-80 hidden md:flex flex-col border-r border-[#E5E7EB] bg-white">
-      <div className="px-5 py-6 border-b">
-        <div className="text-xs text-[#9CA3AF] uppercase">Admin Panel</div>
-        <div className="text-lg font-extrabold text-[#111827]">
-          Danilets Dashboard
-        </div>
-        <div className="text-xs text-[#6B7280] mt-2">
-          Fast view • edit status • mobile friendly
-        </div>
-      </div>
-
-      <nav className="flex-1 px-2 py-4 space-y-1">
-        {MENU_ITEMS.map((item) => {
-          const active = activeMenu === item.key;
-          const c = counts[item.key] ?? 0;
-
-          return (
-            <button
-              key={item.key}
-              onClick={() => {
-                setActiveMenu(item.key);
-                setSelectedRow(null);
-              }}
-              className={`w-full px-3 py-2 rounded-2xl text-sm font-semibold text-left flex items-center justify-between gap-2
-                ${
-                  active
-                    ? "text-black shadow-sm"
-                    : "text-[#4B5563] hover:text-[#111827] hover:bg-gray-100"
-                }`}
-              style={{ background: active ? gradient : undefined }}
-            >
-              <span>{item.label}</span>
-
-              {item.key !== "users" ? (
-                <span
-                  className={`min-w-[32px] h-[22px] px-2 rounded-full text-xs flex items-center justify-center
-                    ${active ? "bg-black/10" : "bg-gray-100"}`}
-                >
-                  {c}
-                </span>
-              ) : (
-                <span className="text-xs text-[#9CA3AF]">soon</span>
-              )}
-            </button>
-          );
-        })}
-      </nav>
-    </aside>
-  );
-
-  const MobileDrawer = (
-    <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
-      <div className="p-4 border-b">
-        <div className="text-xs text-[#9CA3AF] uppercase">Admin Panel</div>
-        <div className="text-lg font-extrabold text-[#111827]">
-          Danilets Dashboard
-        </div>
-      </div>
-
-      <div className="p-3 space-y-2">
-        {MENU_ITEMS.map((item) => {
-          const active = activeMenu === item.key;
-          const c = counts[item.key] ?? 0;
-
-          return (
-            <button
-              key={item.key}
-              onClick={() => {
-                setActiveMenu(item.key);
-                setSelectedRow(null);
-                setDrawerOpen(false);
-              }}
-              className={`w-full px-3 py-3 rounded-2xl text-sm font-semibold text-left flex items-center justify-between gap-2 border
-                ${active ? "border-transparent" : "border-[#E5E7EB] bg-white"}`}
-              style={{ background: active ? gradient : undefined }}
-            >
-              <span>{item.label}</span>
-              {item.key !== "users" ? (
-                <span
-                  className={`min-w-[32px] h-[22px] px-2 rounded-full text-xs flex items-center justify-center ${
-                    active ? "bg-black/10" : "bg-gray-100"
-                  }`}
-                >
-                  {c}
-                </span>
-              ) : (
-                <span className="text-xs text-[#9CA3AF]">soon</span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </Drawer>
-  );
-
-  const ListArea = () => {
-    if (activeIsUsers) {
-      return (
-        <div className="p-6 bg-white rounded-3xl border">
-          Users: coming soon
-        </div>
-      );
-    }
-
-    if (loading) {
-      return <div className="p-6 bg-white rounded-3xl border">Loading…</div>;
-    }
-
-    if (!filtered.length) {
-      return (
-        <div className="p-6 bg-white rounded-3xl border">
-          No requests found.
-        </div>
-      );
-    }
-
-    const openDetails = (row) => {
-      setSelectedRow(row);
-    };
-
-    return (
-      <>
-        {/* Mobile cards */}
-        <div className="grid gap-3 md:hidden">
-          {filtered.map(({ row: r, items }) => {
-            const contact = getContact(items, r);
-            const serviceType = r.service_type || activeMenu;
-
-            const pickupAddr = getPickupAddress(items);
-            const locationTypeRaw = getServiceLocationType(items, "");
-            const locationType = locationTypeRaw
-              ? humanize(locationTypeRaw, SERVICE_LOCATION_LABELS)
-              : "";
-
-            return (
-              <div
-                key={String(
-                  r.id ?? r._id ?? `${r.created_at}-${contact?.email ?? ""}`
-                )}
-                role="button"
-                tabIndex={0}
-                onClick={() => openDetails(r)}
-                onKeyDown={(e) => e.key === "Enter" && openDetails(r)}
-                className="text-left bg-white border rounded-3xl p-4 shadow-sm active:scale-[0.995] cursor-pointer"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="text-[13px] text-[#6B7280]">
-                      #{r.id} • {formatDateTime(r.created_at)}
-                    </div>
-
-                    <div className="font-extrabold text-[#111827] mt-1 truncate">
-                      {contact.fullName || "—"}
-                    </div>
-
-                    {contact.email ? (
-                      <div className="text-xs text-[#6B7280] truncate">
-                        {contact.email}
-                      </div>
-                    ) : null}
-
-                    {contact.phone ? (
-                      <div className="text-xs text-[#6B7280] truncate">
-                        {contact.phone}
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <span className="px-2 py-1 rounded-full text-xs border bg-white capitalize">
-                    {humanize(r.status || "—", STATUS_LABELS)}
-                  </span>
-                </div>
-
-                <div className="mt-3 text-sm">
-                  <div className="font-semibold text-[#111827]">
-                    {summarizeType(serviceType, items)}
-                  </div>
-                  <div className="text-xs text-[#6B7280]">
-                    {categoryLabelFromServiceType(serviceType)}
-                  </div>
-                </div>
-
-                {(locationType || pickupAddr) &&
-                  !isFormsClients(serviceType) && (
-                    <div className="mt-3 text-xs text-[#4B5563]">
-                      {locationType ? (
-                        <div>Location: {locationType}</div>
-                      ) : null}
-                      {pickupAddr ? (
-                        <div className="truncate">Pickup: {pickupAddr}</div>
-                      ) : null}
-                    </div>
-                  )}
-
-                {isFormsClients(serviceType) && (
-                  <div className="mt-3 text-xs text-[#4B5563]">
-                    <div className="truncate">
-                      Page: {items?.pagePath || "—"}
-                    </div>
-                  </div>
-                )}
-
-                <div className="mt-4 flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteBooking(r);
-                    }}
-                    className="h-9 px-3 rounded-2xl border bg-white text-sm font-semibold"
-                  >
-                    Delete
-                  </button>
-
-                  <div className="flex-1" />
-                  <span className="text-sm font-semibold">View →</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Desktop table */}
-        <div className="hidden md:block w-full overflow-x-auto bg-white rounded-3xl border">
-          <table className="w-full min-w-[1100px] text-sm">
-            <thead>
-              <tr className="border-b bg-gray-50 text-[#6B7280] text-xs">
-                <th className="p-3">ID</th>
-                <th className="p-3">Created</th>
-                <th className="p-3">Customer</th>
-                <th className="p-3">Service</th>
-                <th className="p-3">Status</th>
-                <th className="p-3">Pickup / Page</th>
-                <th className="p-3 text-right">Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filtered.map(({ row: r, items }) => {
-                const contact = getContact(items, r);
-                const serviceType = r.service_type || activeMenu;
-                const pickupAddr = getPickupAddress(items);
-
-                return (
-                  <tr
-                    key={String(
-                      r.id ?? r._id ?? `${r.created_at}-${contact?.email ?? ""}`
-                    )}
-                    className="border-b hover:bg-[#FAFAFB] cursor-pointer"
-                    onClick={() => setSelectedRow(r)}
-                  >
-                    <td className="p-3">{r.id}</td>
-
-                    <td className="p-3 whitespace-nowrap">
-                      {formatDateTime(r.created_at)}
-                    </td>
-
-                    <td className="p-3">
-                      <div className="font-semibold text-[#111827]">
-                        {contact.fullName || "—"}
-                      </div>
-                      {contact.email ? (
-                        <div className="text-xs text-gray-500">
-                          {contact.email}
-                        </div>
-                      ) : null}
-                      {contact.phone ? (
-                        <div className="text-xs text-gray-500">
-                          {contact.phone}
-                        </div>
-                      ) : null}
-                    </td>
-
-                    <td className="p-3">
-                      <div className="font-medium text-[#111827]">
-                        {summarizeType(serviceType, items)}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {categoryLabelFromServiceType(serviceType)}
-                      </div>
-                    </td>
-
-                    <td className="p-3">
-                      <span className="capitalize">
-                        {humanize(r.status || "—", STATUS_LABELS)}
-                      </span>
-                    </td>
-
-                    <td className="p-3">
-                      <div className="text-xs text-[#4B5563] max-w-[260px] truncate">
-                        {isFormsClients(serviceType)
-                          ? items?.pagePath || "—"
-                          : pickupAddr || "—"}
-                      </div>
-                    </td>
-
-                    <td className="p-3 text-right whitespace-nowrap">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteBooking(r);
-                        }}
-                        className="px-3 py-2 border rounded-2xl bg-white text-sm font-semibold"
-                      >
-                        Delete
-                      </button>
-                    </td>
+        <div className="flex-1 p-6 overflow-auto">
+          {loading ? (
+            <p className="text-center py-12 text-gray-500">Loading requests...</p>
+          ) : (
+            <div className="bg-white rounded-3xl overflow-hidden shadow-sm">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-gray-50 text-xs uppercase tracking-widest text-gray-500">
+                    <th className="text-left pl-8 py-5">Date</th>
+                    <th className="text-left">Client</th>
+                    <th className="text-left">Contact</th>
+                    <th className="text-left">Status</th>
+                    <th></th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </>
-    );
-  };
+                </thead>
+                <tbody>
+                  {filteredRows.map((row) => {
+                    const items = safeJsonParse(row.items_json, {});
+                    const contact = items.contact || items.guest || {};
+                    const fullName = row.user_full_name || 
+                      `${contact.firstName || ""} ${contact.lastName || ""}`.trim() || "Guest";
+                    const phone = contact.phone || row.user_phone || "—";
 
-  function ContactInfoCard({ items, row }) {
-    const c = getContact(items, row);
-
-    const heard =
-      c.heardAbout === "Other" && c.heardOther
-        ? `Other — ${c.heardOther}`
-        : c.heardAbout;
-
-    return (
-      <Card title="Contact Information">
-        <FieldRow>
-          <Field label="Full name" value={c.fullName} />
-          <Field label="Phone" value={c.phone} />
-          <Field label="Email" value={c.email} />
-          <Field label="Company" value={c.companyName} />
-        </FieldRow>
-
-        {isFilled(heard) ? (
-          <div className="mt-4">
-            <Field label="How did you hear about us?" value={heard} />
-          </div>
-        ) : null}
-      </Card>
-    );
-  }
-
-  const MobileDetailsModal = () => {
-    if (!selectedRow) return null;
-
-    const items = safeJsonParse(selectedRow.items_json, {});
-    const serviceType = selectedRow.service_type || "";
-
-    const isCleaningCommercial =
-      selectedRow?.service_type === "cleaning_quote_commercial" ||
-      items?.propertyType === "commercial";
-
-    return (
-      <Modal onClose={() => setSelectedRow(null)} title="Request details">
-        <div className="grid gap-3">
-          <Card title="Overview" strong>
-            <div className="text-xs text-[#6B7280]">
-              Request #{selectedRow.id}
+                    return (
+                      <tr
+                        key={row.id || row._id}
+                        onClick={() => setSelectedRow(row)}
+                        className="border-b hover:bg-[#FFF7E6] cursor-pointer transition"
+                      >
+                        <td className="pl-8 py-5 text-sm font-medium">{formatDate(row.created_at || row.createdAt)}</td>
+                        <td className="text-sm font-semibold">{fullName}</td>
+                        <td className="text-sm text-gray-600">{phone}</td>
+                        <td>
+                          <span className={`inline-flex items-center px-4 h-7 rounded-full text-xs font-semibold border ${STATUS_META[row.status]?.cls || "bg-gray-100"}`}>
+                            {STATUS_META[row.status]?.label || row.status || "New"}
+                          </span>
+                        </td>
+                        <td className="pr-6 text-right text-gray-400">⋯</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-            <div className="text-lg font-extrabold text-[#111827] mt-1">
-              {categoryLabelFromServiceType(serviceType)}
-            </div>
-            <div className="text-xs text-[#9CA3AF] mt-1">
-              Created: {formatDateTime(selectedRow.created_at)}
-            </div>
-            <div className="mt-3 inline-flex px-3 py-1 rounded-full border bg-white text-sm font-semibold">
-              Status: {humanize(selectedRow.status || "—", STATUS_LABELS)}
-            </div>
-          </Card>
-
-          <Card title="Status & Internal note">
-            <div className="grid gap-3">
-              <div>
-                <div className="text-xs text-[#6B7280] mb-1">Status</div>
-                <select
-                  value={editStatus}
-                  onChange={(e) => setEditStatus(e.target.value)}
-                  className="h-11 w-full px-3 rounded-2xl border bg-white text-sm outline-none"
-                >
-                  <option value="new">New</option>
-                  <option value="in_progress">In progress</option>
-                  <option value="completed">Completed</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-              </div>
-
-              <div>
-                <div className="text-xs text-[#6B7280] mb-1">Admin note</div>
-                <textarea
-                  value={editAdminNote}
-                  onChange={(e) => setEditAdminNote(e.target.value)}
-                  className="w-full min-h-[90px] px-3 py-2 rounded-2xl border bg-white text-sm outline-none resize-none"
-                  placeholder="Write internal note…"
-                />
-              </div>
-
-              <button
-                type="button"
-                onClick={saveEdits}
-                className="h-12 rounded-2xl font-semibold text-black shadow"
-                style={{ background: gradient }}
-              >
-                Save changes
-              </button>
-            </div>
-          </Card>
-
-          <Card title="Details">
-            {serviceType === "detailing_quote_personal" && (
-              <DetailingPersonalDetails items={items} />
-            )}
-
-            {serviceType === "detailing_quote_business" && (
-              <DetailingBusinessDetails items={items} />
-            )}
-
-            {serviceType === "cleaning_quote_residential" && (
-              <CleaningResidentialBlocks items={items} />
-            )}
-
-            {isCleaningCommercial && <CleaningCommercialBlocks items={items} />}
-
-            {serviceType === "forms_clients" && (
-              <FormsClientsDetails items={items} row={selectedRow} />
-            )}
-          </Card>
-
-          <button
-            onClick={() => deleteBooking(selectedRow)}
-            className="h-11 w-full rounded-2xl border bg-white text-sm font-semibold"
-          >
-            Delete request
-          </button>
-        </div>
-      </Modal>
-    );
-  };
-
-  return (
-    <div className="min-h-screen w-full bg-[#F4F4F5] flex pt-[90px]">
-      {Sidebar}
-
-      <div className="flex-1 min-w-0">
-        {Header}
-
-        <div className="px-4 sm:px-6 py-5 w-full">
-          <div className="w-full">
-            <ListArea />
-          </div>
+          )}
         </div>
       </div>
 
-      {MobileDrawer}
-      <MobileDetailsModal />
+      {selectedRow && <DetailModal row={selectedRow} onClose={() => setSelectedRow(null)} onSave={saveEdits} />}
     </div>
   );
 }
 
-/* ================== DETAILS BLOCKS ================== */
+// ================== DETAIL MODAL ==================
+function DetailModal({ row, onClose, onSave }) {
+  const [editStatus, setEditStatus] = useState(row.status || "new");
+  const [editAdminNote, setEditAdminNote] = useState(row.notes_admin || "");
+  const items = safeJsonParse(row.items_json, {});
 
-function DetailingPersonalDetails({ items }) {
-  const vehicle = items?.vehicle || {};
-  const history = items?.history || {};
-  const services = items?.services || {};
-  const contact = items?.contact || items?.personal?.contact || {};
+  const handleSave = () => onSave(row, editStatus, editAdminNote);
 
-  const conditionFlags = Array.isArray(history?.conditionFlags)
-    ? history.conditionFlags
-    : [];
-  const selectedServices = Array.isArray(services?.selected)
-    ? services.selected
-    : [];
+  const contact = items.contact || items.guest || {};
+  const vehicle = items.vehicle || {};
+  const business = items.business || {};
+  const fleet = items.fleet || {};
+  const location = items.location || {};
+  const services = items.services || {};
+  const multipleVehicles = items.multipleVehicles || { enabled: false };
+  const commercial = items.cleaningCommercial || {};
 
-  const conditionFlagsHuman = conditionFlags.map(prettifyKey);
-  const selectedServicesHuman = selectedServices.map(prettifyKey);
+  const fullName = row.user_full_name || 
+    `${contact.firstName || contact.name || ""} ${contact.lastName || ""}`.trim() || "Guest";
 
-  const vehicleTitle =
-    [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(" ") ||
-    "—";
+  const isOffice = commercial.businessType === "office" || commercial.projectTypeText?.toLowerCase().includes("office");
+  const isAirbnb = commercial.businessType === "retail" || commercial.projectTypeText?.toLowerCase().includes("airbnb");
+  const isPostConstruction = commercial.businessType === "medical" || 
+                            commercial.businessType === "property_mgmt" || 
+                            commercial.businessTypeText?.toLowerCase().includes("medical") ||
+                            commercial.businessTypeText?.toLowerCase().includes("property");
 
   return (
-    <div className="space-y-4">
-      <Section title="Contact information">
-        {contact.firstName || contact.lastName ? (
-          <div className="font-semibold text-[#111827]">
-            {`${contact.firstName || ""} ${contact.lastName || ""}`.trim()}
-          </div>
-        ) : null}
-
-        {contact.phone ? <div>Phone: {contact.phone}</div> : null}
-        {contact.email ? <div>Email: {contact.email}</div> : null}
-
-        {contact.heardAbout ? (
+    <div className="fixed inset-0 z-[999999] flex items-end sm:items-center justify-center bg-black/70 backdrop-blur p-4 sm:p-6">
+      <div className="bg-white w-full max-w-4xl rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden">
+        
+        <div className="px-6 py-5 border-b flex justify-between items-center sticky top-0 bg-white z-10">
           <div>
-            How did you hear:{" "}
-            <span className="font-semibold text-[#111827]">
-              {contact.heardAbout === "Other" && contact.heardOther
-                ? `Other — ${contact.heardOther}`
-                : contact.heardAbout}
-            </span>
+            <div className="text-xs uppercase tracking-widest text-gray-500">REQUEST DETAILS</div>
+            <div className="font-extrabold text-xl">#{String(row.id || row._id).slice(0, 8)}</div>
           </div>
-        ) : null}
-      </Section>
-
-      <Section title="Vehicle">
-        <FieldRow>
-          <Field label="Vehicle" value={vehicleTitle} />
-          <Field label="Color" value={prettifyKey(vehicle.color)} />
-          <Field
-            label="Seat material"
-            value={prettifyKey(vehicle.seatMaterial)}
-          />
-        </FieldRow>
-      </Section>
-
-      <Section title="Condition">
-        <FieldRow>
-          <Field
-            label="Last detailed"
-            value={prettifyKey(history.lastDetailed)}
-          />
-          <Field
-            label="Condition rating"
-            value={prettifyKey(history.conditionRating)}
-          />
-          <Field label="Other notes" value={history.other} />
-        </FieldRow>
-
-        <div className="mt-4">
-          <Chips label="Selected condition flags" items={conditionFlagsHuman} />
+          <button onClick={onClose} className="text-3xl text-gray-400 hover:text-black">✕</button>
         </div>
-      </Section>
 
-      <Section title="Requested services">
-        <Chips label="Services" items={selectedServicesHuman} />
-        <div className="mt-3">
-          <Field label="Other service requests" value={services.other} />
-        </div>
-      </Section>
-    </div>
-  );
-}
+        <div className="flex-1 overflow-auto p-6 space-y-8">
+          {/* Status */}
+          <div>
+            <div className="text-xs font-extrabold uppercase mb-2 text-[#6B7280]">Status</div>
+            <select value={editStatus} onChange={e => setEditStatus(e.target.value)}
+              className="w-full h-12 rounded-2xl border px-5 font-medium focus:border-[#A8834E]">
+              <option value="new">New</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
 
-function DetailingBusinessDetails({ items }) {
-  const business = items?.business || {};
-  const contact = items?.contact || {};
-  const fleet = items?.fleet || {};
-  const timeline = items?.timeline || {};
-  const preferences = items?.preferences || {};
-
-  const businessType = business.businessTypeOther
-    ? `${prettifyKey(business.businessType)} — ${business.businessTypeOther}`
-    : prettifyKey(business.businessType);
-
-  const frequency = business.serviceFrequencyOther
-    ? `${humanize(business.serviceFrequency, FREQUENCY_LABELS)} — ${
-        business.serviceFrequencyOther
-      }`
-    : humanize(business.serviceFrequency, FREQUENCY_LABELS);
-
-  const serviceLocation = humanize(
-    fleet.serviceLocation,
-    SERVICE_LOCATION_LABELS
-  );
-
-  const contactMethod = humanize(
-    preferences.preferredContactMethod,
-    CONTACT_METHOD_LABELS
-  );
-
-  const bestTime = humanize(
-    preferences.contactTimePreference,
-    CONTACT_TIME_LABELS
-  );
-
-  return (
-    <div className="space-y-4">
-      <Section title="Company">
-        <FieldRow>
-          <Field label="Company name" value={contact.companyName} />
-          <Field label="Company address" value={contact.companyAddress} />
-          <Field
-            label="How did you hear"
-            value={
-              contact.hearAbout === "Other" && contact.hearAboutOther
-                ? `Other — ${contact.hearAboutOther}`
-                : humanize(contact.hearAbout, HEARD_ABOUT_LABELS)
-            }
-          />
-        </FieldRow>
-      </Section>
-      <Section title="Contact information">
-        <FieldRow>
-          <Field
-            label="Full name"
-            value={`${contact.firstName || ""} ${
-              contact.lastName || ""
-            }`.trim()}
-          />
-          <Field label="Phone" value={contact.phone} />
-          <Field label="Email" value={contact.email} />
-        </FieldRow>
-      </Section>
-
-      <Section title="Business details">
-        <FieldRow>
-          <Field label="Vehicles count" value={business.vehiclesCount} />
-          <Field label="Business type" value={businessType} />
-          <Field label="Service frequency" value={frequency} />
-        </FieldRow>
-      </Section>
-
-      <Section title="Fleet / service setup">
-        <FieldRow>
-          <Field label="Service location" value={serviceLocation} />
-          <Field
-            label="Services"
-            value={
-              Array.isArray(fleet.services) && fleet.services.length
-                ? fleet.services.map(prettifyKey).join(", ")
-                : ""
-            }
-          />
-          <Field label="Other services" value={fleet.servicesOther} />
-        </FieldRow>
-      </Section>
-
-      <Section title="Timeline / preferences">
-        <FieldRow>
-          <Field label="Preferred start date" value={timeline.startDate} />
-          <Field label="Preferred contact method" value={contactMethod} />
-          <Field label="Best time to contact" value={bestTime} />
-        </FieldRow>
-        <div className="mt-3">
-          <PrimaryText>{preferences.notes}</PrimaryText>
-        </div>
-      </Section>
-    </div>
-  );
-}
-
-function CleaningResidentialBlocks({ items }) {
-  const location = items?.location || {};
-  const contact = items?.contact || {};
-
-  const propertyType = humanize(items?.propertyType, RES_PROPERTY_TYPE_LABELS);
-  const projectType = humanize(items?.projectType, RES_PROJECT_TYPE_LABELS);
-
-  const areas = Array.isArray(items?.areas) ? items.areas : [];
-  const generalTasks = Array.isArray(items?.generalTasks)
-    ? items.generalTasks
-    : [];
-  const kitchenTasks = Array.isArray(items?.kitchenTasks)
-    ? items.kitchenTasks
-    : [];
-
-  const frequency = humanize(items?.frequency, FREQUENCY_LABELS);
-  const budget = humanize(items?.resBudget || items?.budget, BUDGET_LABELS);
-
-  const summaryLines = [
-    propertyType && projectType ? `${projectType} (${propertyType}).` : "",
-    items?.bedrooms ? `Bedrooms: ${items.bedrooms}.` : "",
-    items?.bathrooms ? `Bathrooms: ${items.bathrooms}.` : "",
-    frequency ? `Frequency: ${frequency}.` : "",
-    budget ? `Estimated budget: ${budget}.` : "",
-  ].filter(Boolean);
-
-  return (
-    <div className="space-y-4">
-      <Section
-        title="Main info"
-        right={
-          <span className="px-3 py-1 rounded-full text-xs font-bold border bg-[#FAFAFB] text-[#111827]">
-            Cleaning — Residential
-          </span>
-        }
-      >
-        <PrimaryText>{summaryLines.join("\n")}</PrimaryText>
-
-        <div className="mt-4">
-          <FieldRow>
-            <Field label="Property type" value={propertyType} />
-            <Field label="Project type" value={projectType} />
-            <Field label="Bedrooms" value={items?.bedrooms} />
-            <Field label="Bathrooms" value={items?.bathrooms} />
-          </FieldRow>
-        </div>
-      </Section>
-
-      <Section title="Client & Contact">
-        <FieldRow>
-          <Field
-            label="Full name"
-            value={`${contact.firstName || ""} ${
-              contact.lastName || ""
-            }`.trim()}
-          />
-          <Field label="Phone" value={contact.phone} />
-          <Field label="Email" value={contact.email} />
-          <Field
-            label="How did you hear"
-            value={humanize(contact.heardAbout, HEARD_ABOUT_LABELS)}
-          />
-        </FieldRow>
-      </Section>
-
-      <Section title="Address">
-        <FieldRow>
-          <Field
-            label="Base address"
-            value={location.baseAddress || items?.baseAddress}
-          />
-          <Field label="Service address" value={location.service_address} />
-          <Field label="Pickup address" value={location.pickup_address} />
-          <Field label="Dropoff address" value={location.dropoff_address} />
-        </FieldRow>
-      </Section>
-
-      <Section title="Areas & Tasks">
-        <div className="space-y-4">
-          <Chips label="Areas" items={areas.map(prettifyKey)} />
-          <Chips label="General tasks" items={generalTasks.map(prettifyKey)} />
-          <Chips label="Kitchen tasks" items={kitchenTasks.map(prettifyKey)} />
-        </div>
-      </Section>
-
-      <Section title="Additional notes">
-        <PrimaryText>{items?.extraDetails}</PrimaryText>
-      </Section>
-
-      <Section title="Debug">
-        <details>
-          <summary className="cursor-pointer text-sm font-bold text-[#111827]">
-            Show raw form data
-          </summary>
-          <pre className="mt-3 text-xs bg-[#FAFAFB] border rounded-2xl p-3 overflow-auto">
-            {JSON.stringify(items, null, 2)}
-          </pre>
-        </details>
-      </Section>
-    </div>
-  );
-}
-
-function CleaningCommercialBlocks({ items }) {
-  const c = items?.cleaningCommercial || {};
-  const contact = items?.contact || c?.contact || {};
-  const location = items?.location || {};
-
-  const projectTypeKey = items?.projectType;
-  const projectType = humanize(projectTypeKey, CLEANING_PROJECT_TYPE_LABELS);
-
-  // Build a client-friendly summary per project type
-  const lines = [];
-
-  if (projectTypeKey === "office") {
-    const sqft = c.officeSquareFootage ? `${c.officeSquareFootage} sq ft` : "";
-    if (sqft) lines.push(`Office cleaning, ${sqft}.`);
-    const freq = humanize(c.officeFrequency, FREQUENCY_LABELS);
-    if (isFilled(c.officeFrequency)) lines.push(`Frequency: ${freq}.`);
-    const bud = humanize(c.officeBudget, BUDGET_LABELS);
-    if (isFilled(c.officeBudget)) lines.push(`Estimated budget: ${bud}.`);
-    if (isFilled(c.officeStartDate))
-      lines.push(`Start date: ${c.officeStartDate}.`);
-  }
-
-  if (projectTypeKey === "airbnb") {
-    if (isFilled(c.airbnbUnits))
-      lines.push(`Airbnb turnover for ${c.airbnbUnits} unit(s).`);
-    if (isFilled(c.airbnbTurnover))
-      lines.push(
-        `Turnover: ${humanize(c.airbnbTurnover, AIRBNB_TURNOVER_LABELS)}.`
-      );
-    if (isFilled(c.airbnbBudgetPerUnit))
-      lines.push(
-        `Budget per unit: ${humanize(c.airbnbBudgetPerUnit, BUDGET_LABELS)}.`
-      );
-    if (isFilled(c.airbnbStartDate))
-      lines.push(`Start date: ${c.airbnbStartDate}.`);
-  }
-
-  if (projectTypeKey === "post_construction") {
-    if (isFilled(c.pcSquareFootage))
-      lines.push(`Post-construction cleaning, ${c.pcSquareFootage} sq ft.`);
-    if (isFilled(c.pcConstructionType))
-      lines.push(
-        `Construction type: ${humanize(
-          c.pcConstructionType,
-          PC_CONSTRUCTION_TYPE_LABELS
-        )}.`
-      );
-    if (isFilled(c.pcFrequency))
-      lines.push(`Frequency: ${humanize(c.pcFrequency, FREQUENCY_LABELS)}.`);
-    if (isFilled(c.pcBudget))
-      lines.push(`Estimated budget: ${humanize(c.pcBudget, BUDGET_LABELS)}.`);
-    if (isFilled(c.pcCompletionDate))
-      lines.push(`Completion date: ${c.pcCompletionDate}.`);
-  }
-
-  if (projectTypeKey === "other") {
-    if (isFilled(c.otherProjectOther))
-      lines.push(`Commercial cleaning — ${prettifyKey(c.otherProjectOther)}.`);
-    if (isFilled(c.otherSquareFootage))
-      lines.push(`Approx. size: ${c.otherSquareFootage} sq ft.`);
-    if (isFilled(c.otherFrequency))
-      lines.push(`Frequency: ${humanize(c.otherFrequency, FREQUENCY_LABELS)}.`);
-    if (isFilled(c.otherBudget))
-      lines.push(
-        `Estimated budget: ${humanize(c.otherBudget, BUDGET_LABELS)}.`
-      );
-    if (isFilled(c.otherStartDate))
-      lines.push(`Start date: ${c.otherStartDate}.`);
-  }
-
-  // fallback to any textual summary/description
-  const extraText =
-    c.projectSummary ||
-    c.otherProjectDescription ||
-    c.comExtraDetails ||
-    items?.comExtraDetails ||
-    "";
-
-  const officeAreas = humanizeList(c.officeAreas, OFFICE_AREAS_LABELS);
-
-  return (
-    <div className="space-y-4">
-      <Section
-        title="Main info"
-        right={
-          <span className="px-3 py-1 rounded-full text-xs font-bold border bg-[#FAFAFB] text-[#111827]">
-            {prettifyKey(items?.propertyType || "commercial")} /{" "}
-            {projectType || "—"}
-          </span>
-        }
-      >
-        <FieldRow>
-          <Field label="Company" value={c.companyName || items?.companyName} />
-          <Field
-            label="Company address"
-            value={c.companyAddress || items?.companyAddress}
-          />
-        </FieldRow>
-
-        <div className="mt-4 space-y-3">
-          <PrimaryText>{lines.join("\n")}</PrimaryText>
-        </div>
-      </Section>
-
-      <Section title="Client & Contact">
-        <FieldRow>
-          <Field
-            label="Full name"
-            value={`${contact.firstName || ""} ${
-              contact.lastName || ""
-            }`.trim()}
-          />
-          <Field label="Phone" value={contact.phone} />
-          <Field label="Email" value={contact.email} />
-          <Field
-            label="How did you hear"
-            value={humanize(c.hearAboutText || c.hearAbout, HEARD_ABOUT_LABELS)}
-          />
-        </FieldRow>
-      </Section>
-
-      <Section title="Address & Logistics">
-        <FieldRow>
-          <Field
-            label="Base address"
-            value={location.baseAddress || items?.baseAddress}
-          />
-          <Field label="Service address" value={location.service_address} />
-          <Field label="Pickup address" value={location.pickup_address} />
-          <Field label="Dropoff address" value={location.dropoff_address} />
-        </FieldRow>
-      </Section>
-
-      <Section title="Project details">
-        {projectTypeKey === "office" && (
-          <>
-            <FieldRow>
-              <Field label="Square footage" value={c.officeSquareFootage} />
-              <Field label="Floors" value={c.officeFloors} />
-              <Field label="Restrooms" value={c.officeRestrooms} />
-              <Field label="Private offices" value={c.officePrivateOffices} />
-              <Field label="Conference rooms" value={c.officeConferenceRooms} />
-              <Field
-                label="Frequency"
-                value={humanize(c.officeFrequency, FREQUENCY_LABELS)}
-              />
-              <Field
-                label="Budget"
-                value={humanize(c.officeBudget, BUDGET_LABELS)}
-              />
-              <Field
-                label="One-time budget"
-                value={humanize(c.officeOneTimeBudget, BUDGET_LABELS)}
-              />
-              <Field label="Start date" value={c.officeStartDate} />
-            </FieldRow>
-            <div className="mt-4">
-              <Chips label="Office areas" items={officeAreas} />
+          {/* Client Information */}
+          <Section title="Client Information">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <Field label="Full Name" value={fullName} />
+              <Field label="Email" value={contact.email || row.user_email} />
+              <Field label="Phone" value={contact.phone || row.user_phone} />
+              <Field label="Company Name" value={contact.companyName || business.companyName || commercial.companyName} />
             </div>
-          </>
-        )}
+          </Section>
 
-        {projectTypeKey === "airbnb" && (
-          <>
-            <FieldRow>
-              <Field label="Units" value={c.airbnbUnits} />
-              <Field label="Avg. sq ft" value={c.airbnbAvgSqft} />
-              <Field label="Avg. bedrooms" value={c.airbnbAvgBedrooms} />
-              <Field label="Avg. bathrooms" value={c.airbnbAvgBathrooms} />
-              <Field
-                label="Turnover"
-                value={humanize(c.airbnbTurnover, AIRBNB_TURNOVER_LABELS)}
-              />
-              <Field
-                label="Budget per unit"
-                value={humanize(c.airbnbBudgetPerUnit, BUDGET_LABELS)}
-              />
-              <Field
-                label="Linen / Laundry"
-                value={humanize(c.airbnbLinenLaundry, AIRBNB_LINEN_LABELS)}
-              />
-              <Field label="Start date" value={c.airbnbStartDate} />
-            </FieldRow>
-            <div className="mt-4 space-y-4">
-              <Chips
-                label="Property types"
-                items={humanizeList(c.airbnbPropertyTypes)}
-              />
-              <Chips label="Areas" items={humanizeList(c.airbnbAreas)} />
-              <Chips
-                label="Kitchen tasks"
-                items={humanizeList(c.airbnbKitchenTasks)}
-              />
-            </div>
-          </>
-        )}
-
-        {projectTypeKey === "post_construction" && (
-          <>
-            <FieldRow>
-              <Field
-                label="Construction type"
-                value={humanize(
-                  c.pcConstructionType,
-                  PC_CONSTRUCTION_TYPE_LABELS
-                )}
-              />
-              <Field label="Square footage" value={c.pcSquareFootage} />
-              <Field label="Floors" value={c.pcFloors} />
-              <Field
-                label="Frequency"
-                value={humanize(c.pcFrequency, FREQUENCY_LABELS)}
-              />
-              <Field
-                label="Budget"
-                value={humanize(c.pcBudget, BUDGET_LABELS)}
-              />
-              <Field label="Completion date" value={c.pcCompletionDate} />
-            </FieldRow>
-            <div className="mt-4">
-              <Chips label="Surfaces" items={humanizeList(c.pcSurfaces)} />
-            </div>
-          </>
-        )}
-
-        {projectTypeKey === "other" && (
-          <>
-            <FieldRow>
-              <Field
-                label="Project type"
-                value={prettifyKey(c.otherProjectOther)}
-              />
-              <Field label="Square footage" value={c.otherSquareFootage} />
-              <Field label="Floors" value={c.otherFloors} />
-              <Field label="Restrooms" value={c.otherRestrooms} />
-              <Field
-                label="Service type"
-                value={prettifyKey(c.otherCleaningService)}
-              />
-              <Field
-                label="Frequency"
-                value={humanize(c.otherFrequency, FREQUENCY_LABELS)}
-              />
-              <Field
-                label="Budget"
-                value={humanize(c.otherBudget, BUDGET_LABELS)}
-              />
-              <Field
-                label="Contract type"
-                value={prettifyKey(c.otherContractType)}
-              />
-              <Field label="Start date" value={c.otherStartDate} />
-              <Field
-                label="Urgent"
-                value={humanize(String(c.otherUrgent), YES_NO_LABELS)}
-              />
-            </FieldRow>
-
-            <div className="mt-4 space-y-4">
-              <PrimaryText>{c.otherProjectDescription}</PrimaryText>
-              <Chips label="Areas" items={humanizeList(c.otherAreas)} />
-            </div>
-          </>
-        )}
-
-        {!projectTypeKey && (
-          <PrimaryText>
-            Project type is missing. Check request payload.
-          </PrimaryText>
-        )}
-      </Section>
-
-      <Section title="Debug">
-        <details>
-          <summary className="cursor-pointer text-sm font-bold text-[#111827]">
-            Show raw form data
-          </summary>
-          <pre className="mt-3 text-xs bg-[#FAFAFB] border rounded-2xl p-3 overflow-auto">
-            {JSON.stringify(items, null, 2)}
-          </pre>
-        </details>
-      </Section>
-    </div>
-  );
-}
-
-function FormsClientsDetails({ items, row }) {
-  const firstName = items?.firstName || items?.contact?.firstName || "";
-  const lastName = items?.lastName || items?.contact?.lastName || "";
-  const email = items?.email || row?.user_email || "";
-  const phone = items?.phone || row?.user_phone || "";
-
-  const service = items?.service || "—";
-  const pagePath = items?.pagePath || items?.page_path || "—";
-  const desc = items?.description || items?.message || "—";
-
-  return (
-    <div className="space-y-4">
-      <Section title="Client">
-        <FieldRow>
-          <Field
-            label="Full name"
-            value={
-              `${firstName} ${lastName}`.trim() || row?.user_full_name || "—"
-            }
-          />
-          <Field label="Email" value={email} />
-          <Field label="Phone" value={phone} />
-        </FieldRow>
-      </Section>
-
-      <Section title="Form">
-        <FieldRow>
-          <Field label="Service" value={service} />
-          <Field label="Page" value={pagePath} />
-        </FieldRow>
-      </Section>
-
-      <Section title="Message">
-        <PrimaryText>{desc}</PrimaryText>
-      </Section>
-    </div>
-  );
-}
-
-/* ================== UI HELPERS ================== */
-
-function Card({ title, children, strong = false }) {
-  return (
-    <div
-      className={`border rounded-3xl p-4 shadow-sm bg-white`}
-      style={strong ? { boxShadow: "0 10px 30px rgba(0,0,0,0.08)" } : undefined}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <div className="text-[12px] text-[#6B7280] uppercase font-extrabold tracking-wide">
-          {title}
-        </div>
-      </div>
-
-      <div className="mt-3">{children}</div>
-    </div>
-  );
-}
-
-function Modal({ children, onClose, title }) {
-  return (
-    <div className="fixed inset-0 z-[99999999]">
-      {/* Backdrop: dark + blur */}
-      <div
-        className="absolute inset-0 bg-black/55 backdrop-blur-md"
-        onClick={onClose}
-      />
-
-      <div className="absolute inset-0 flex items-end sm:items-center justify-center p-3 sm:p-6">
-        <div
-          className="
-            w-full sm:w-[min(820px,96vw)]
-            bg-white border shadow-2xl
-            rounded-3xl
-            overflow-hidden
-          "
-          style={{ maxHeight: "92vh" }}
-        >
-          <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-4 border-b bg-white">
-            <div className="min-w-0">
-              <div className="text-[12px] text-[#6B7280] uppercase font-semibold">
-                {title || "Details"}
+          {/* Detailing Personal */}
+          {vehicle.make && !business.vehiclesCount && (
+            <Section title="Vehicle & Requested Services">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+                <Field label="Year" value={vehicle.year} />
+                <Field label="Make" value={vehicle.make} />
+                <Field label="Model" value={vehicle.model} />
+                <Field label="Color" value={vehicle.color} />
+                <Field label="Seat Material" value={vehicle.seatMaterial} />
               </div>
+              {services.selected && services.selected.length > 0 && (
+                <Chips label="Services Requested" items={services.selected} />
+              )}
+            </Section>
+          )}
+
+          {/* Detailing Business */}
+          {business.vehiclesCount && (
+            <Section title="Business Information">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <Field label="Company Name" value={contact.companyName || business.companyName} />
+                <Field label="Company Address" value={contact.companyAddress} />
+                <Field label="Vehicles Count" value={business.vehiclesCount} />
+                <Field label="Business Type" value={business.businessType} />
+                <Field label="Service Frequency" value={business.serviceFrequency} />
+              </div>
+              {fleet.services && fleet.services.length > 0 && (
+                <Chips label="Services Requested" items={fleet.services} />
+              )}
+            </Section>
+          )}
+
+          {/* Multiple Vehicles */}
+          {multipleVehicles.enabled === true && (
+            <Section title="Multiple Vehicles">
+              <Field label="Number of Vehicles" value={multipleVehicles.count} />
+              {multipleVehicles.vehicles && multipleVehicles.vehicles.length > 0 && (
+                <div className="mt-6 space-y-6">
+                  {multipleVehicles.vehicles.map((v, index) => (
+                    <div key={index} className="border rounded-2xl p-5 bg-gray-50">
+                      <div className="font-semibold mb-3">Vehicle #{index + 1}</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <Field label="Year" value={v.year} />
+                        <Field label="Make" value={v.make} />
+                        <Field label="Model" value={v.model} />
+                        <Field label="Color" value={v.color} />
+                        <Field label="Seat Material" value={v.seatMaterial} />
+                        <Field label="Service" value={v.service} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Section>
+          )}
+
+          {/* Cleaning Residential */}
+          {items.propertyType === "residential" && (
+            <Section title="Property & Project Details">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <Field label="Property Type" value={items.propertyType} />
+                <Field label="Project Type" value={items.projectType} />
+                <Field label="Bedrooms" value={items.bedrooms} />
+                <Field label="Bathrooms" value={items.bathrooms} />
+                <Field label="Budget" value={items.resBudget} />
+              </div>
+              <Chips label="Areas to Clean" items={items.areas} />
+              <Chips label="General Tasks" items={items.generalTasks} />
+              <Chips label="Kitchen Tasks" items={items.kitchenTasks} />
+              {items.extraDetails && <Field label="Extra Details from Client" value={items.extraDetails} />}
+            </Section>
+          )}
+
+          {/* Cleaning Commercial */}
+          {items.propertyType === "commercial" && (
+            <Section title="Commercial Cleaning">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <Field label="Company Name" value={commercial.companyName} />
+                <Field label="Company Address" value={commercial.companyAddress} />
+                <Field label="Business Type" value={commercial.businessTypeText || commercial.businessType} />
+                <Field label="Project Type" value={commercial.projectTypeText || items.projectType} />
+              </div>
+
+              {/* Office */}
+              {isOffice && (
+                <div className="mt-6 pt-6 border-t">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <Field label="Square Footage" value={commercial.officeSquareFootage} />
+                    <Field label="Number of Floors" value={commercial.officeFloors} />
+                    <Field label="Private Offices" value={commercial.officePrivateOffices} />
+                    <Field label="Restrooms" value={commercial.officeRestrooms} />
+                    <Field label="Conference Rooms" value={commercial.officeConferenceRooms} />
+                    <Field label="Frequency" value={commercial.officeFrequency} />
+                    <Field label="Budget" value={formatBudget(commercial.officeBudget)} />
+                  </div>
+                  <Chips label="Areas" items={commercial.officeAreas} />
+                </div>
+              )}
+
+              {/* Airbnb */}
+              {isAirbnb && (
+                <div className="mt-6 pt-6 border-t">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <Field label="Number of Units" value={commercial.airbnbUnits} />
+                    <Field label="Average Sqft per Unit" value={commercial.airbnbAvgSqft} />
+                    <Field label="Average Bedrooms" value={commercial.airbnbAvgBedrooms} />
+                    <Field label="Average Bathrooms" value={commercial.airbnbAvgBathrooms} />
+                    <Field label="Turnover" value={commercial.airbnbTurnover} />
+                    <Field label="Budget per Unit" value={formatBudget(commercial.airbnbBudgetPerUnit)} />
+                    <Field label="Linen & Laundry" value={commercial.airbnbLinenLaundry === "yes" ? "Yes" : "No"} />
+                  </div>
+                  <Chips label="Property Types" items={commercial.airbnbPropertyTypes} />
+                  <Chips label="Areas" items={commercial.airbnbAreas} />
+                  <Chips label="Kitchen Tasks" items={commercial.airbnbKitchenTasks} />
+                  <Chips label="Preferred Days & Times" items={commercial.preferredDaysTimes} />
+
+                  {commercial.projectSummary && <Field label="Project Summary" value={commercial.projectSummary} />}
+                  {commercial.productPreferences && <Field label="Product Preferences" value={commercial.productPreferences} />}
+                  {commercial.additionalInfo && <Field label="Additional Information" value={commercial.additionalInfo} />}
+                  {commercial.accessInstructions && <Field label="Access Instructions" value={commercial.accessInstructions} />}
+                </div>
+              )}
+
+              {/* Post-Construction / Medical / Property Management */}
+              {isPostConstruction && (
+                <div className="mt-6 pt-6 border-t">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <Field label="Construction Type" value={commercial.pcConstructionType} />
+                    <Field label="Square Footage" value={commercial.pcSquareFootage} />
+                    <Field label="Number of Floors" value={commercial.pcFloors} />
+                    <Field label="Property Type" value={commercial.pcPropertyType} />
+                    <Field label="Frequency" value={commercial.pcFrequency} />
+                    <Field label="Budget" value={formatBudget(commercial.pcBudget)} />
+                    <Field label="Completion Date" value={commercial.pcCompletionDate} />
+                  </div>
+
+                  <Chips label="Surfaces to Clean" items={commercial.pcSurfaces} />
+
+                  {commercial.pcSurfacesOther && (
+                    <Field label="Other Surfaces" value={commercial.pcSurfacesOther} />
+                  )}
+                  {commercial.projectSummary && (
+                    <Field label="Project Summary" value={commercial.projectSummary} />
+                  )}
+                  {commercial.productPreferences && (
+                    <Field label="Product Preferences" value={commercial.productPreferences} />
+                  )}
+                  {commercial.additionalInfo && (
+                    <Field label="Additional Information" value={commercial.additionalInfo} />
+                  )}
+                  {commercial.accessInstructions && (
+                    <Field label="Access Instructions" value={commercial.accessInstructions} />
+                  )}
+                </div>
+              )}
+            </Section>
+          )}
+
+          {/* Service Location */}
+          <Section title="Service Location">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <Field label="Service Address" value={location.service_address || row.service_address} />
+              <Field label="Pickup Address" value={location.pickup_address} />
+              <Field label="Dropoff Address" value={location.dropoff_address} />
             </div>
+          </Section>
 
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="h-10 w-10 rounded-2xl border bg-white text-lg leading-none font-semibold"
-                aria-label="Close modal"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-
-          <div
-            className="px-4 sm:px-6 py-4 overflow-auto"
-            style={{ maxHeight: "calc(92vh - 70px)" }}
-          >
-            {children}
-          </div>
-
-          <div className="sm:hidden px-4 pb-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-full h-12 rounded-2xl border bg-white text-sm font-semibold"
-            >
-              Close
-            </button>
-          </div>
+          {/* Admin Notes */}
+          <Section title="Admin Notes">
+            <textarea
+              value={editAdminNote}
+              onChange={e => setEditAdminNote(e.target.value)}
+              className="w-full h-52 p-5 border rounded-3xl focus:border-[#A8834E] outline-none resize-y text-sm"
+              placeholder="Internal notes, follow-up tasks, discounts..."
+            />
+          </Section>
         </div>
-      </div>
-    </div>
-  );
-}
 
-function Drawer({ open, onClose, children }) {
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-50 md:hidden">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="absolute left-0 top-0 bottom-0 w-[min(360px,88vw)] bg-white shadow-xl border-r">
-        <div className="p-3 flex justify-end border-b">
-          <button
-            className="h-10 px-4 rounded-2xl border bg-white text-sm font-semibold"
-            onClick={onClose}
-          >
-            Close
+        <div className="p-6 border-t flex gap-3 bg-white">
+          <button onClick={handleSave} className="flex-1 h-14 rounded-3xl bg-[#111827] text-white font-semibold hover:brightness-110 transition">
+            Save Changes
           </button>
+          <button onClick={onClose} className="flex-1 h-14 rounded-3xl border font-semibold">Close</button>
         </div>
-        {children}
       </div>
     </div>
   );
