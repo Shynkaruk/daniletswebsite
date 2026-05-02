@@ -15,4 +15,9 @@ export default defineConfig({
     },
   },
   plugins: [react(), tailwindcss()],
+  base: '/',                    // правильно для DO
+  build: {
+    outDir: 'dist',             // явно вказуємо (за замовчуванням і так)
+    sourcemap: false,           // можна вимкнути в продакшені
+  },
 });

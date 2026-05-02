@@ -22,6 +22,29 @@ const App = () => {
     typeof window !== "undefined" ? window.innerWidth <= 768 : false
   );
 
+  const [domainType, setDomainType] = useState("main"); // main | cleaning | detailing
+
+  // === Визначення домену ===
+  useEffect(() => {
+    const host = typeof window !== "undefined" ? window.location.hostname.toLowerCase() : "";
+
+    if (host === "daniletsdetailing.com" || host === "www.daniletsdetailing.com") {
+      setDomainType("detailing");
+    } else if (host === "daniletscleaning.com" || host === "www.daniletscleaning.com") {
+      setDomainType("cleaning");
+    } else {
+      setDomainType("main");
+    }
+  }, []);
+
+  // === Головна сторінка залежно від домену ===
+  const getHomeElement = () => {
+    if (domainType === "detailing") return <DetailingPage />;
+    if (domainType === "cleaning") return <Cleaning />;
+    return isMobile ? <MainMobile /> : <Main />;
+  };
+
+  // Resize для мобільної версії
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -40,16 +63,21 @@ const App = () => {
       <ScrollToTop />
       <Routes>
         <Route element={<Layout />}>
-          <Route path="/" element={isMobile ? <MainMobile /> : <Main />} />
-          <Route path="/home" element={isMobile ? <MainMobile /> : <Main />} />
+          {/* Головна сторінка — різна для кожного домену */}
+          <Route path="/" element={getHomeElement()} />
+          <Route path="/home" element={getHomeElement()} />
+
+          {/* Спільні сторінки */}
           <Route path="/about-us" element={<AboutUs />} />
           <Route path="/contact" element={<ContactForm />} />
           <Route path="/newsletter" element={<Newsletter />} />
           <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/legal/terms-conditions" element={<PrivacyPolicy />} />
           <Route path="/legal/faq" element={<PrivacyPolicy />} />
+
           <Route path="/services/cleaning" element={<Cleaning />} />
           <Route path="/services/detailing" element={<DetailingPage />} />
+
           <Route path="/book-online" element={<Booking />} />
           <Route path="/admin" element={<AdminRequests />} />
           <Route path="/account" element={<Account />} />

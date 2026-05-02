@@ -506,4 +506,4 @@ function DetailModal({ row, onClose, onSave }) {
       </div>
     </div>
   );
-}
+}2
