@@ -18,7 +18,7 @@ import AccountMenu from "./AccountMenu.jsx";
 import SocialModal from "./SocialModal.jsx";
 
 /* ==================== MOBILE ==================== */
-const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial, domainType = "main" }) => {
+const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const toggleMenu = () => setIsMenuOpen((v) => !v);
 
@@ -62,6 +62,7 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial, domainType = "mai
                 </button>
               </Link>
 
+              {/* Важливо: onShowAuth має бути функцією */}
               <AccountMenu variant="icon" onShowAuth={onOpenAuth} />
             </div>
           </div>
@@ -124,24 +125,25 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial, domainType = "mai
                   </summary>
 
                   <div className="mt-2 ml-2 flex flex-col gap-2">
-                    <a
-                      href={domainType === "main" ? "https://daniletsdetailing.com" : "/services/detailing"}
+                    <Link
+                      to="/services/detailing"
                       className="text-[#676767] border border-[#DADADA] rounded-[40px] text-[13px] font-semibold py-2 px-4 hover:bg-[rgba(245,218,147,0.3)] transition"
                       onClick={toggleMenu}
                     >
                       Detailing
-                    </a>
+                    </Link>
 
-                    <a
-                      href={domainType === "main" ? "https://daniletscleaning.com" : "/services/cleaning"}
+                    <Link
+                      to="/services/cleaning"
                       className="text-[#676767] border border-[#DADADA] rounded-[40px] text-[13px] font-semibold py-2 px-4 hover:bg-[rgba(245,218,147,0.3)] transition"
                       onClick={toggleMenu}
                     >
                       Cleaning
-                    </a>
+                    </Link>
                   </div>
                 </details>
 
+                {/* Contact */}
                 <button
                   type="button"
                   onClick={() => {
@@ -206,7 +208,7 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial, domainType = "mai
 };
 
 /* ==================== DESKTOP ==================== */
-const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial, domainType = "main" }) => {
+const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
   const [openServices, setOpenServices] = useState(false);
   const btnRef = useRef(null);
   const menuRef = useRef(null);
@@ -287,21 +289,22 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial, domainType = "ma
                       role="menu"
                       className="absolute left-1/2 -translate-x-1/2 mt-2 w-56 z-[300] rounded-2xl border border-[#E6E6EA] bg-white shadow-lg overflow-hidden"
                     >
-                      <a
-                        href={domainType === "main" ? "https://daniletsdetailing.com" : "/services/detailing"}
-                        onClick={() => setOpenServices(false)}
-                        className="block w-full text-left px-4 py-3 text-sm font-semibold text-black hover:bg-[rgba(245,218,147,0.25)]"
-                      >
-                        Detailing
-                      </a>
-
-                      <a
-                        href={domainType === "main" ? "https://daniletscleaning.com" : "/services/cleaning"}
-                        onClick={() => setOpenServices(false)}
-                        className="block w-full text-left px-4 py-3 text-sm font-semibold text-black hover:bg-[rgba(245,218,147,0.25)] border-t border-[#F2F2F5]"
-                      >
-                        Cleaning
-                      </a>
+                      {[
+                        { label: "Detailing", to: "/services/detailing" },
+                        { label: "Cleaning", to: "/services/cleaning" },
+                      ].map(({ label, to }, idx) => (
+                        <Link
+                          key={label}
+                          to={to}
+                          role="menuitem"
+                          onClick={() => setOpenServices(false)}
+                          className={`block w-full text-left px-4 py-3 text-sm font-semibold text-black hover:bg-[rgba(245,218,147,0.25)] ${
+                            idx !== 0 ? "border-t border-[#F2F2F5]" : ""
+                          }`}
+                        >
+                          {label}
+                        </Link>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -331,6 +334,7 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial, domainType = "ma
 
             {/* Правий блок */}
             <div className="flex items-center gap-2 xl:gap-3 shrink-0">
+              {/* md–lg — … */}
               <button
                 type="button"
                 onClick={() => onOpenSocial?.()}
@@ -340,6 +344,7 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial, domainType = "ma
                 <FaEllipsisH />
               </button>
 
+              {/* xl — всі соц */}
               <div className="hidden xl:flex items-center gap-2">
                 {[FaGoogle, FaTiktok, FaYoutube, FaFacebookF].map((Icon, idx) => (
                   <button
@@ -369,6 +374,7 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial, domainType = "ma
                 </button>
               </Link>
 
+              {/* ✅ ОЦЕ ГОЛОВНЕ: тепер onOpenAuth точно є */}
               <AccountMenu variant="icon" onShowAuth={onOpenAuth} />
             </div>
           </div>
@@ -378,8 +384,8 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial, domainType = "ma
   );
 };
 
-/* ==================== WRAPPER ==================== */
-export default function Head({ domainType = "main", onOpenContact, onOpenAuth, onOpenSocial }) {
+/* ==================== WRAPPER WITH MODALS ==================== */
+export default function Head() {
   const [authOpen, setAuthOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [socialOpen, setSocialOpen] = useState(false);
@@ -392,12 +398,16 @@ export default function Head({ domainType = "main", onOpenContact, onOpenAuth, o
   const closeContact = useCallback(() => setContactOpen(false), []);
   const closeSocial = useCallback(() => setSocialOpen(false), []);
 
+  // (опційно) блок скролу коли відкрита будь-яка модалка
   useEffect(() => {
     const anyOpen = authOpen || contactOpen || socialOpen;
     if (!anyOpen) return;
+
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
+    return () => {
+      document.body.style.overflow = prev;
+    };
   }, [authOpen, contactOpen, socialOpen]);
 
   return (
@@ -405,23 +415,41 @@ export default function Head({ domainType = "main", onOpenContact, onOpenAuth, o
       <header className="fixed top-0 left-0 right-0 z-[200000]">
         <div className="pt-4">
           <MobileHead
-            onOpenContact={onOpenContact}
-            onOpenAuth={onOpenAuth}
-            onOpenSocial={onOpenSocial}
-            domainType={domainType}
+            onOpenAuth={openAuth}
+            onOpenContact={openContact}
+            onOpenSocial={openSocial}
           />
           <DesktopHead
-            onOpenContact={onOpenContact}
-            onOpenAuth={onOpenAuth}
-            onOpenSocial={onOpenSocial}
-            domainType={domainType}
+            onOpenAuth={openAuth}
+            onOpenContact={openContact}
+            onOpenSocial={openSocial}
           />
         </div>
       </header>
 
-      {authOpen && <AuthModal open={authOpen} onClose={closeAuth} initialTab="login" />}
-      {contactOpen && <ContactForm open={contactOpen} onClose={closeContact} />}
-      {socialOpen && <SocialModal open={socialOpen} onClose={closeSocial} />}
+      {/* ✅ Auth modal */}
+      {authOpen && (
+        <AuthModal
+          open={authOpen}
+          onClose={closeAuth}
+        />
+      )}
+
+      {/* ✅ Contact modal (якщо ContactForm у тебе вже модалка — ок; якщо ні, обгорни в свою) */}
+      {contactOpen && (
+        <ContactForm
+          open={contactOpen}
+          onClose={closeContact}
+        />
+      )}
+
+      {/* ✅ Social modal */}
+      {socialOpen && (
+        <SocialModal
+          open={socialOpen}
+          onClose={closeSocial}
+        />
+      )}
     </>
   );
 }
