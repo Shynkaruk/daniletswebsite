@@ -37,7 +37,7 @@ const Step7ContactDetails = ({
   const isCleaningFlow =
     isCleaning ||
     path.includes("cleaning") ||
-    path.includes("/services/cleaning");
+    path.includes("/cleaning");
 
   const isLoggedIn = !!user;
   const [enterNew, setEnterNew] = useState(false);

@@ -106,7 +106,7 @@ const Footer = () => {
                 {["Detailing", "Cleaning"].map((text, i) => (
                   <Link
                     key={i}
-                    to={`/services/${text.toLowerCase()}`}
+                    to={`${text.toLowerCase()}`}
                     className="text-[15px] lg:text-[16px] font-normal text-[#18181B] hover:text-yellow-600"
                   >
                     {text}
