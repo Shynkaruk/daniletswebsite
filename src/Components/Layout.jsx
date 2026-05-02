@@ -11,9 +11,23 @@ export default function Layout() {
   const [socialOpen, setSocialOpen] = useState(false);
   const [authTab, setAuthTab] = useState("login");
 
+  // === Domain detection (дублюємо, бо Layout вище роутів) ===
+  const [domainType, setDomainType] = useState("main");
+
+  useEffect(() => {
+    const host = window.location.hostname.toLowerCase();
+
+    if (host === "daniletsdetailing.com" || host === "www.daniletsdetailing.com") {
+      setDomainType("detailing");
+    } else if (host === "daniletscleaning.com" || host === "www.daniletscleaning.com") {
+      setDomainType("cleaning");
+    } else {
+      setDomainType("main");
+    }
+  }, []);
+
   const anyModalOpen = contactOpen || authOpen || socialOpen;
 
-  // Можна ще й скролл блокувати (корисно)
   useEffect(() => {
     document.body.style.overflow = anyModalOpen ? "hidden" : "";
     return () => (document.body.style.overflow = "");
@@ -26,12 +40,12 @@ export default function Layout() {
 
   return (
     <>
-      {/* Ховаємо Head, коли модалка відкрита */}
       {!anyModalOpen && (
         <Head
           onOpenContact={() => setContactOpen(true)}
           onOpenAuth={showAuth}
           onOpenSocial={() => setSocialOpen(true)}
+          domainType={domainType}        // ← передаємо
         />
       )}
 
@@ -39,7 +53,6 @@ export default function Layout() {
         <Outlet />
       </div>
 
-      {/* Модалки завжди зверху (і незалежні від Head) */}
       <ContactForm open={contactOpen} onClose={() => setContactOpen(false)} />
       <AuthModal
         open={authOpen}
