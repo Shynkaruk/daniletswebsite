@@ -1,6 +1,6 @@
 // App.jsx
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 
 import Main from "./Components/Main.jsx";
 import MainMobile from "./Components/MainMobile.jsx";
@@ -24,7 +24,7 @@ const App = () => {
 
   const [domainType, setDomainType] = useState("main"); // main | cleaning | detailing
 
-  // === Визначення домену ===
+  // Визначення домену
   useEffect(() => {
     const host = typeof window !== "undefined" ? window.location.hostname.toLowerCase() : "";
 
@@ -37,7 +37,7 @@ const App = () => {
     }
   }, []);
 
-  // === Головна сторінка залежно від домену ===
+  // Головна сторінка залежно від домену
   const getHomeElement = () => {
     if (domainType === "detailing") return <DetailingPage />;
     if (domainType === "cleaning") return <Cleaning />;
@@ -63,25 +63,35 @@ const App = () => {
       <ScrollToTop />
       <Routes>
         <Route element={<Layout />}>
-          {/* Головна сторінка — різна для кожного домену */}
+          {/* Головна сторінка */}
           <Route path="/" element={getHomeElement()} />
           <Route path="/home" element={getHomeElement()} />
+
+          {/* === DETAILING === */}
+          <Route path="/services/detailing" element={<DetailingPage />} />
+          <Route path="/detailing" element={<Navigate to="/services/detailing" replace />} />
+          <Route path="/detail" element={<Navigate to="/services/detailing" replace />} />
+
+          {/* === CLEANING === */}
+          <Route path="/services/cleaning" element={<Cleaning />} />
 
           {/* Спільні сторінки */}
           <Route path="/about-us" element={<AboutUs />} />
           <Route path="/contact" element={<ContactForm />} />
           <Route path="/newsletter" element={<Newsletter />} />
+
+          {/* Legal pages */}
           <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/legal/terms-conditions" element={<PrivacyPolicy />} />
           <Route path="/legal/faq" element={<PrivacyPolicy />} />
 
-          <Route path="/services/cleaning" element={<Cleaning />} />
-          <Route path="/services/detailing" element={<DetailingPage />} />
-
+          {/* Інші сторінки */}
           <Route path="/book-online" element={<Booking />} />
+          <Route path="/booking/success" element={<BookingSuccess />} />
           <Route path="/admin" element={<AdminRequests />} />
           <Route path="/account" element={<Account />} />
-          <Route path="/booking/success" element={<BookingSuccess />} />
+
+          {/* Якщо хтось зайде на неіснуючий маршрут — можна додати 404 пізніше */}
         </Route>
       </Routes>
     </Router>
