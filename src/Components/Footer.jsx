@@ -17,8 +17,8 @@ const Footer = () => {
   const location = useLocation();
 
   // Перевірка сторінок
-  const isDetailingPage = location.pathname.startsWith("/services/detailing");
-  const isCleaningPage = location.pathname.startsWith("/services/cleaning");
+  const isDetailingPage = location.pathname.startsWith("/detailing");
+  const isCleaningPage = location.pathname.startsWith("/cleaning");
 
   // Вибір логотипу
   const logoSrc = isDetailingPage ? logoRed : isCleaningPage ? logoRed : logo;

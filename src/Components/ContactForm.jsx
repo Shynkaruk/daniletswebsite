@@ -21,9 +21,9 @@ const ContactForm = ({ open, onClose, initialService = "Danilets Detailing" }) =
 const location = useLocation();
 
 useEffect(() => {
-  if (location.pathname.includes("/services/detailing")) {
+  if (location.pathname.includes("/detailing")) {
     setForm((s) => ({ ...s, service: "Danilets Detailing" }));
-  } else if (location.pathname.includes("/services/cleaning")) {
+  } else if (location.pathname.includes("/cleaning")) {
     setForm((s) => ({ ...s, service: "Danilets Cleaning" }));
   }
 }, [location.pathname]);

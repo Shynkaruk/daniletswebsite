@@ -11,11 +11,11 @@ const OurReviews = ({ className = "" }) => {
   const location = useLocation();
 
   const isDetailingPage = useMemo(
-    () => location.pathname.includes("/services/detailing"),
+    () => location.pathname.includes("/detailing"),
     [location.pathname]
   );
   const isCleaningPage = useMemo(
-    () => location.pathname.includes("/services/cleaning"),
+    () => location.pathname.includes("/cleaning"),
     [location.pathname]
   );
 

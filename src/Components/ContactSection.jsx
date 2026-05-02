@@ -13,8 +13,8 @@ import arrow from "../assets/icons/arrow_right_button_sumbit_icon.svg";
 const ContactSection = () => {
   const location = useLocation();
 
-  const isDetailingPage = location.pathname.startsWith("/services/detailing");
-  const isCleaningPage = location.pathname.startsWith("/services/cleaning");
+  const isDetailingPage = location.pathname.startsWith("/detailing");
+  const isCleaningPage = location.pathname.startsWith("/cleaning");
   const isAboutPage = location.pathname === "/about-us";
 
   const theme = isDetailingPage

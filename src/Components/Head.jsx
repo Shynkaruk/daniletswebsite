@@ -126,7 +126,7 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
 
                   <div className="mt-2 ml-2 flex flex-col gap-2">
                     <Link
-                      to="/services/detailing"
+                      to="/detailing"
                       className="text-[#676767] border border-[#DADADA] rounded-[40px] text-[13px] font-semibold py-2 px-4 hover:bg-[rgba(245,218,147,0.3)] transition"
                       onClick={toggleMenu}
                     >
@@ -134,7 +134,7 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                     </Link>
 
                     <Link
-                      to="/services/cleaning"
+                      to="/cleaning"
                       className="text-[#676767] border border-[#DADADA] rounded-[40px] text-[13px] font-semibold py-2 px-4 hover:bg-[rgba(245,218,147,0.3)] transition"
                       onClick={toggleMenu}
                     >
@@ -290,8 +290,8 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                       className="absolute left-1/2 -translate-x-1/2 mt-2 w-56 z-[300] rounded-2xl border border-[#E6E6EA] bg-white shadow-lg overflow-hidden"
                     >
                       {[
-                        { label: "Detailing", to: "/services/detailing" },
-                        { label: "Cleaning", to: "/services/cleaning" },
+                        { label: "Detailing", to: "/detailing" },
+                        { label: "Cleaning", to: "/cleaning" },
                       ].map(({ label, to }, idx) => (
                         <Link
                           key={label}

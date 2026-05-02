@@ -7,8 +7,8 @@ const FAQ = ({ className = "" }) => {
   const [openIndex, setOpenIndex] = useState(null);
   const location = useLocation();
 
-  const isDetailingPage = location.pathname.startsWith("/services/detailing");
-  const isCleaningPage = location.pathname.startsWith("/services/cleaning");
+  const isDetailingPage = location.pathname.startsWith("/detailing");
+  const isCleaningPage = location.pathname.startsWith("/cleaning");
   const isLegalFaqPage = location.pathname.startsWith("/legal/faq");
 
   const defaultFaqItems = [
