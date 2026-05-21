@@ -1,3 +1,4 @@
+// src/Components/Footer.jsx
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { FaGoogle, FaTiktok, FaYoutube, FaFacebookF } from "react-icons/fa";
@@ -12,9 +13,11 @@ import RightArrowIcon from "../assets/icons/angle-right-icon.png";
 // Модалки
 import SocialModal from "./SocialModal.jsx";
 import ContactForm from "./ContactForm.jsx";
+import { useNavigationGuard } from "../contexts/NavigationGuard";
 
 const Footer = () => {
   const location = useLocation();
+  const { confirmNavigation } = useNavigationGuard();
 
   // Перевірка сторінок
   const isDetailingPage = location.pathname.startsWith("/detailing");
@@ -52,7 +55,7 @@ const Footer = () => {
 
   const handleCloseSocial = () => setSocialOpen(false);
 
-  // Модалка Contact (аналогічно Head.jsx)
+  // Модалка Contact
   const [isContactOpen, setIsContactOpen] = useState(false);
 
   // Який сервіс підставляти в форму
@@ -69,11 +72,16 @@ const Footer = () => {
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-14 items-start justify-between">
             {/* Logo + соцмережі */}
             <div className="flex flex-col gap-4 h-full min-w-[180px]">
-              <img
-                src={logoSrc}
-                alt="Logo"
-                className="h-10 w-auto object-contain mr-15"
-              />
+              <button 
+                onClick={() => confirmNavigation("https://danilets.com")}
+                className="flex items-start"
+              >
+                <img
+                  src={logoSrc}
+                  alt="Logo"
+                  className="h-10 w-auto object-contain mr-15"
+                />
+              </button>
 
               <div className="flex space-x-3">
                 {[FaGoogle, FaTiktok, FaYoutube, FaFacebookF].map(
@@ -103,77 +111,71 @@ const Footer = () => {
                 <h3 className="text-[18px] lg:text-[19px] font-extrabold text-[#18181B] mb-1">
                   Services
                 </h3>
-                {["Detailing", "Cleaning"].map((text, i) => (
-                  <Link
-                    key={i}
-                    to={`${text.toLowerCase()}`}
-                    className="text-[15px] lg:text-[16px] font-normal text-[#18181B] hover:text-yellow-600"
-                  >
-                    {text}
-                  </Link>
-                ))}
+                <button
+                  onClick={() => { confirmNavigation("https://daniletsdetailing.com"); }}
+                  className="text-[15px] lg:text-[16px] font-normal text-[#18181B] hover:text-yellow-600 text-left"
+                >
+                  Detailing
+                </button>
+                <button
+                  onClick={() => { confirmNavigation("https://daniletscleaning.com"); }}
+                  className="text-[15px] lg:text-[16px] font-normal text-[#18181B] hover:text-yellow-600 text-left"
+                >
+                  Cleaning
+                </button>
               </div>
 
               <div className="flex flex-col gap-1">
                 <h3 className="text-[18px] lg:text-[19px] font-extrabold text-[#18181B] mb-1">
                   Menu
                 </h3>
-                {["Home", "About Us", "Contact"].map((text, i) => {
-                  if (text === "Contact") {
-                    return (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => setIsContactOpen(true)}
-                        className="text-left text-[15px] lg:text-[16px] font-normal text-[#18181B] hover:text-yellow-600"
-                      >
-                        Contact
-                      </button>
-                    );
-                  }
-
-                  const path = `/${text.toLowerCase().replace(" ", "-")}`;
-                  return (
-                    <Link
-                      key={i}
-                      to={path}
-                      className={
-                        "text-[15px] lg:text-[16px] font-normal text-[#18181B] hover:text-yellow-600" +
-                        (text === "About Us" ? " whitespace-nowrap" : "")
-                      }
-                    >
-                      {text}
-                    </Link>
-                  );
-                })}
+                <button
+                  onClick={() => confirmNavigation("https://danilets.com")}
+                  className="text-[15px] lg:text-[16px] font-normal text-[#18181B] hover:text-yellow-600 text-left"
+                >
+                  Home
+                </button>
+                <button
+                  onClick={() => confirmNavigation("https://danilets.com/about-us")}
+                  className="text-[15px] lg:text-[16px] font-normal text-[#18181B] hover:text-yellow-600 text-left"
+                >
+                  About Us
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsContactOpen(true)}
+                  className="text-left text-[15px] lg:text-[16px] font-normal text-[#18181B] hover:text-yellow-600"
+                >
+                  Contact
+                </button>
               </div>
 
-              {/* ✅ Виправлений Legal блок */}
+              {/* Legal — ВСІ ПОСИЛАННЯ НА danilets.com */}
               <div className="flex flex-col gap-1">
                 <h3 className="text-[18px] lg:text-[19px] font-extrabold text-[#18181B] mb-1">
                   Legal
                 </h3>
 
-                <Link
-                  to="/legal/privacy-policy"
-                  className="text-[15px] lg:text-[16px] font-normal text-[#18181B] hover:text-yellow-600"
+                <button
+                  onClick={() => confirmNavigation("https://danilets.com/legal/privacy-policy")}
+                  className="text-[15px] lg:text-[16px] font-normal text-[#18181B] hover:text-yellow-600 text-left"
                 >
                   Privacy Policy
-                </Link>
+                </button>
 
-                <Link
-                  to="/legal/terms-conditions"
-                  className="text-[15px] lg:text-[16px] font-normal text-[#18181B] hover:text-yellow-600"
+                <button
+                  onClick={() => confirmNavigation("https://danilets.com/legal/terms-conditions")}
+                  className="text-[15px] lg:text-[16px] font-normal text-[#18181B] hover:text-yellow-600 text-left"
                 >
                   Terms & Conditions
-                </Link>
+                </button>
 
-                <Link
-                  to="/legal/faq"
-                  className="text-[15px] lg:text-[16px] font-normal text-[#18181B] hover:text-yellow-600"
+                <button
+                  onClick={() => confirmNavigation("https://danilets.com/legal/faq")}
+                  className="text-[15px] lg:text-[16px] font-normal text-[#18181B] hover:text-yellow-600 text-left"
                 >
                   FAQ
-                </Link>
+                </button>
               </div>
 
               <div className="flex flex-col gap-2">
@@ -211,8 +213,8 @@ const Footer = () => {
 
             {/* Кнопка Book Online — великі десктопи */}
             <div className="hidden lg:flex lg:items-start lg:ml-auto lg:self-start">
-              <Link
-                to="/book-online"
+              <button
+                onClick={() => confirmNavigation("https://danilets.com/book-online")}
                 className="
                   group relative
                   h-[50px] min-w-[170px] max-w-[200px]
@@ -237,13 +239,13 @@ const Footer = () => {
                   alt="Arrow Right"
                   className="w-4 h-4 shrink-0 relative z-10"
                 />
-              </Link>
+              </button>
             </div>
 
             {/* Кнопка Book Online — мобілка + менші екрани */}
             <div className="flex lg:hidden w-full pt-2">
-              <Link
-                to="/book-online"
+              <button
+                onClick={() => confirmNavigation("https://danilets.com/book-online")}
                 className="
                   group relative
                   mx-auto w-full max-w-[320px] h-[50px]
@@ -268,7 +270,7 @@ const Footer = () => {
                   alt="Arrow Right"
                   className="w-4 h-4 relative z-10"
                 />
-              </Link>
+              </button>
             </div>
           </div>
 
@@ -287,7 +289,7 @@ const Footer = () => {
         initialTab={socialTab}
       />
 
-      {/* Модалка Contact — як у Head.jsx */}
+      {/* Модалка Contact */}
       <ContactForm
         open={isContactOpen}
         onClose={() => setIsContactOpen(false)}

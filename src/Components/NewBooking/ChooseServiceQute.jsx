@@ -1,3 +1,4 @@
+// src/Components/Booking/Step1Search.jsx
 import React, { useEffect, useState } from "react";
 
 const GOLD_GRADIENT =
@@ -6,8 +7,8 @@ const GOLD_GRADIENT =
 export default function Step1Search({
   visible,
   onSearch,
-  value, // "cleaning" | "detailing"
-  onChange, // (service) => void
+  value,
+  onChange,
   initial = "cleaning",
 }) {
   const [local, setLocal] = useState(initial);
@@ -26,19 +27,25 @@ export default function Step1Search({
 
   const handleContinue = () => {
     if (!selected) return;
-    if (typeof onSearch === "function") onSearch(selected);
+
+    const domain =
+      selected === "detailing"
+        ? "https://daniletsdetailing.com"
+        : "https://daniletscleaning.com";
+
+    const targetUrl = `${domain}/book-online`;
+
+    // Якщо є callback onSearch — викликаємо його (для внутрішньої логіки)
+    if (typeof onSearch === "function") {
+      onSearch(selected);
+    }
+
+    // Переходимо на правильний домен
+    window.location.href = targetUrl;
   };
 
   return (
-    <section
-      className="
-        relative w-full
-        min-h-[520px]
-        flex items-center justify-center
-        px-4
-      "
-    >
-      {/* Невидимий “обмежувач” ширини, але НЕ контейнер-картка */}
+    <section className="relative w-full min-h-[520px] flex items-center justify-center px-4">
       <div className="w-full max-w-[980px]">
         {/* Заголовок */}
         <div className="text-center">
@@ -120,7 +127,6 @@ function Pill({ label, active, onClick }) {
     >
       <span className="text-[22px] font-medium text-black">{label}</span>
 
-      {/* Правий кружок-індикатор */}
       <span
         className={`
           w-[34px] h-[34px]
