@@ -28,6 +28,12 @@ export default function Step1Search({
   const handleContinue = () => {
     if (!selected) return;
 
+    // Викликаємо onSearch — це важливо для внутрішньої логіки Booking
+    if (typeof onSearch === "function") {
+      onSearch(selected);
+    }
+
+    // Переходимо на правильний домен + book-online
     const domain =
       selected === "detailing"
         ? "https://daniletsdetailing.com"
@@ -35,12 +41,6 @@ export default function Step1Search({
 
     const targetUrl = `${domain}/book-online`;
 
-    // Якщо є callback onSearch — викликаємо його (для внутрішньої логіки)
-    if (typeof onSearch === "function") {
-      onSearch(selected);
-    }
-
-    // Переходимо на правильний домен
     window.location.href = targetUrl;
   };
 
