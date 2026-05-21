@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useState, useCallback } from "react";
 import { FiChevronLeft } from "react-icons/fi";
 import ProgressBar from "../../ProgressBar";
 import { GOLD_GRADIENT } from "../_ui";
@@ -27,7 +27,7 @@ export default function StepCleaningCommercialContactInfo({
   setEmail,
 
   hearAbout,
-  setHearAbout, // string
+  setHearAbout,
   referralName,
   setReferralName,
   hearOther,
@@ -37,23 +37,109 @@ export default function StepCleaningCommercialContactInfo({
   progressStepIndex = 2,
   totalSteps = 10,
 }) {
+  // === ВСІ ХУКИ НА САМОМУ ВЕРХУ ===
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+
+  const firstVal = firstName ?? "";
+  const lastVal = lastName ?? "";
+  const phoneVal = phone ?? "";
+  const emailVal = email ?? "";
+  const hearVal = hearAbout ?? "";
+  const referralVal = referralName ?? "";
+  const otherVal = hearOther ?? "";
+
+  const validateField = useCallback((field) => {
+    setErrors(prevErrors => {
+      const newErrors = { ...prevErrors };
+
+      switch (field) {
+        case "firstName": {
+          if (!firstVal.trim()) newErrors.firstName = "First name is required";
+          else delete newErrors.firstName;
+          break;
+        }
+        case "lastName": {
+          if (!lastVal.trim()) newErrors.lastName = "Last name is required";
+          else delete newErrors.lastName;
+          break;
+        }
+        case "phone": {
+          const phoneRegex = /^(\+1\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/;
+          if (!phoneVal.trim()) {
+            newErrors.phone = "Phone number is required";
+          } else if (!phoneRegex.test(phoneVal)) {
+            newErrors.phone = "Please enter a valid US phone number (e.g. (123) 456-7890)";
+          } else {
+            delete newErrors.phone;
+          }
+          break;
+        }
+        case "email": {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailVal) newErrors.email = "Email is required";
+          else if (!emailRegex.test(emailVal)) newErrors.email = "Please enter a valid email address";
+          else delete newErrors.email;
+          break;
+        }
+        case "hearAbout": {
+          if (!hearVal) newErrors.hearAbout = "Please tell us how you heard about us";
+          else delete newErrors.hearAbout;
+          break;
+        }
+        case "referralName": {
+          if (hearVal === "referral" && !referralVal.trim()) {
+            newErrors.referralName = "Name is required";
+          } else {
+            delete newErrors.referralName;
+          }
+          break;
+        }
+        case "hearOther": {
+          if (hearVal === "other" && !otherVal.trim()) {
+            newErrors.hearOther = "Please specify";
+          } else {
+            delete newErrors.hearOther;
+          }
+          break;
+        }
+        default:
+          break;
+      }
+      return newErrors;
+    });
+  }, [firstVal, lastVal, phoneVal, emailVal, hearVal, referralVal, otherVal]);
+
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    validateField(field);
+  };
+
+  const handleContinue = () => {
+    const allFields = ["firstName", "lastName", "phone", "email", "hearAbout"];
+
+    if (hearVal === "referral") allFields.push("referralName");
+    if (hearVal === "other") allFields.push("hearOther");
+
+    allFields.forEach(field => {
+      setTouched(prev => ({ ...prev, [field]: true }));
+      validateField(field);
+    });
+
+    if (Object.keys(errors).length === 0) {
+      onNext?.();
+    }
+  };
+
+  // Тепер можна робити ранній return
   if (!visible) return null;
 
-  const canContinue = useMemo(() => {
-    const base =
-      String(firstName || "").trim() &&
-      String(lastName || "").trim() &&
-      String(phone || "").trim() &&
-      String(email || "").trim() &&
-      String(hearAbout || "").trim();
+  const inputClass = "mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none";
 
-    if (!base) return false;
-
-    if (hearAbout === "referral") return String(referralName || "").trim();
-    if (hearAbout === "other") return String(hearOther || "").trim();
-
-    return true;
-  }, [firstName, lastName, phone, email, hearAbout, referralName, hearOther]);
+  const getInputClass = (field) => `
+    ${inputClass} 
+    ${touched[field] && errors[field] ? "border-2 border-red-500 bg-red-50" : ""}
+  `;
 
   return (
     <div className="w-full max-w-full min-w-0 text-left">
@@ -84,50 +170,60 @@ export default function StepCleaningCommercialContactInfo({
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-semibold text-[#111827]">
-                First Name
-              </label>
+              <label className="text-sm font-semibold text-[#111827]">First Name</label>
               <input
-                value={firstName}
+                value={firstVal}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                onBlur={() => handleBlur("firstName")}
+                className={getInputClass("firstName")}
               />
+              {touched.firstName && errors.firstName && (
+                <p className="text-red-600 text-sm mt-1">{errors.firstName}</p>
+              )}
             </div>
 
             <div>
-              <label className="text-sm font-semibold text-[#111827]">
-                Last Name
-              </label>
+              <label className="text-sm font-semibold text-[#111827]">Last Name</label>
               <input
-                value={lastName}
+                value={lastVal}
                 onChange={(e) => setLastName(e.target.value)}
-                className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                onBlur={() => handleBlur("lastName")}
+                className={getInputClass("lastName")}
               />
+              {touched.lastName && errors.lastName && (
+                <p className="text-red-600 text-sm mt-1">{errors.lastName}</p>
+              )}
             </div>
           </div>
 
           <div>
-            <label className="text-sm font-semibold text-[#111827]">
-              Phone Number
-            </label>
+            <label className="text-sm font-semibold text-[#111827]">Phone Number</label>
             <input
-              value={phone}
+              value={phoneVal}
               onChange={(e) => setPhone(e.target.value)}
-              className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+              onBlur={() => handleBlur("phone")}
+              className={getInputClass("phone")}
               inputMode="tel"
+              placeholder="(123) 456-7890"
             />
+            {touched.phone && errors.phone && (
+              <p className="text-red-600 text-sm mt-1">{errors.phone}</p>
+            )}
           </div>
 
           <div>
-            <label className="text-sm font-semibold text-[#111827]">
-              Email
-            </label>
+            <label className="text-sm font-semibold text-[#111827]">Email</label>
             <input
-              value={email}
+              value={emailVal}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+              onBlur={() => handleBlur("email")}
+              className={getInputClass("email")}
               inputMode="email"
+              placeholder="name@email.com"
             />
+            {touched.email && errors.email && (
+              <p className="text-red-600 text-sm mt-1">{errors.email}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -137,7 +233,7 @@ export default function StepCleaningCommercialContactInfo({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {HEAR_OPTIONS.map((opt) => {
-                const active = hearAbout === opt.key;
+                const active = hearVal === opt.key;
                 return (
                   <button
                     key={opt.key}
@@ -148,11 +244,7 @@ export default function StepCleaningCommercialContactInfo({
                       if (opt.key !== "other") setHearOther("");
                     }}
                     className={`min-h-[44px] rounded-[16px] border text-sm font-semibold px-3 text-left
-                      ${
-                        active
-                          ? "border-transparent text-black"
-                          : "border-[#E5E7EB] text-[#4B5563] bg-white"
-                      }`}
+                      ${active ? "border-transparent text-black" : "border-[#E5E7EB] text-[#4B5563] bg-white"}`}
                     style={{ background: active ? GOLD_GRADIENT : undefined }}
                   >
                     {opt.label}
@@ -161,30 +253,34 @@ export default function StepCleaningCommercialContactInfo({
               })}
             </div>
 
-            {hearAbout === "referral" && (
+            {hearVal === "referral" && (
               <div className="pt-2">
-                <label className="text-sm font-semibold text-[#111827]">
-                  Name
-                </label>
+                <label className="text-sm font-semibold text-[#111827]">Name</label>
                 <input
-                  value={referralName}
+                  value={referralVal}
                   onChange={(e) => setReferralName(e.target.value)}
-                  className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  onBlur={() => handleBlur("referralName")}
+                  className={getInputClass("referralName")}
                   placeholder="Name of that person"
                 />
+                {touched.referralName && errors.referralName && (
+                  <p className="text-red-600 text-sm mt-1">{errors.referralName}</p>
+                )}
               </div>
             )}
 
-            {hearAbout === "other" && (
+            {hearVal === "other" && (
               <div className="pt-2">
-                <label className="text-sm font-semibold text-[#111827]">
-                  Please specify
-                </label>
+                <label className="text-sm font-semibold text-[#111827]">Please specify</label>
                 <input
-                  value={hearOther}
+                  value={otherVal}
                   onChange={(e) => setHearOther(e.target.value)}
-                  className="mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none"
+                  onBlur={() => handleBlur("hearOther")}
+                  className={getInputClass("hearOther")}
                 />
+                {touched.hearOther && errors.hearOther && (
+                  <p className="text-red-600 text-sm mt-1">{errors.hearOther}</p>
+                )}
               </div>
             )}
           </div>
@@ -201,13 +297,13 @@ export default function StepCleaningCommercialContactInfo({
 
           <button
             type="button"
-            onClick={onNext}
-            disabled={!canContinue}
+            onClick={handleContinue}
             className={[
               "h-[46px] px-8 rounded-full text-sm font-semibold text-black",
-              !canContinue ? "opacity-60 cursor-not-allowed" : "",
+              Object.keys(errors).length > 0 ? "opacity-60 cursor-not-allowed" : "",
             ].join(" ")}
             style={{ background: GOLD_GRADIENT }}
+            disabled={Object.keys(errors).length > 0}
           >
             Continue
           </button>

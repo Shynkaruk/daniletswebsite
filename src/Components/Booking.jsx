@@ -6,9 +6,10 @@ import Header from "./Head";
 import Footer from "./Footer";
 import fon_booking from "../assets/photo/fon_booking.png";
 import { auth, meApi, reqApi } from "../lib/api";
+import { useNavigationGuard } from "../contexts/NavigationGuard";
 
 // Спільний крок
-import Step1Search from "../Components/Booking/Step1Search";
+import Step1Search from "../Components/NewBooking/ChooseServiceQute";
 
 // Cleaning – RESIDENTIAL (існуючі кроки — пропси НЕ міняю)
 import StepCleaningPropertyType from "../Components/NewBooking/Cleaning/StepCleaningPropertyType";
@@ -173,6 +174,10 @@ const Booking = () => {
   const [service, setService] = useState("detailing");
   const isCleaning = service === "cleaning";
 
+   // ==================== ЗАХИСТ ВІД ВИХОДУ ====================
+    const { confirmNavigation, showModal, setShowModal, handleLeave, handleStay } = useNavigationGuard();
+  // ===========================================================
+
   // ======= Global step тільки для: Search + Detailing =========
   // 1 = Search (спільний)
   // Detailing: 2..12 як у тебе
@@ -210,6 +215,7 @@ const Booking = () => {
     region: "US",
     countries: ["us"],
   });
+
 
   /** ---------- STEP 1: Search (спільний) ---------- */
   const [query, setQuery] = useState("");
@@ -392,6 +398,45 @@ const Booking = () => {
       projectTypeText: ptText,
     });
   };
+
+  // Всередині компонента Booking, після всіх useState:
+const { setIsDirty } = useNavigationGuard();
+
+// Десь в useEffect, який слідкує за заповненням форми:
+useEffect(() => {
+    const hasData = 
+      // Загальні поля
+      firstName?.trim() || 
+      lastNameState?.trim() || 
+      phone?.trim() || 
+      email?.trim() ||
+
+      // Detailing
+      detYear?.trim() || 
+      detMake?.trim() || 
+      detModel?.trim() ||
+
+      // Cleaning Residential
+      propertyType || 
+      projectType ||
+
+      // Cleaning Commercial — найважливіше!
+      (cleaningCommercial && 
+        (cleaningCommercial.companyName?.trim() ||
+         cleaningCommercial.address?.trim() ||
+         cleaningCommercial.firstName?.trim() ||
+         cleaningCommercial.lastName?.trim() ||
+         cleaningCommercial.phone?.trim() ||
+         cleaningCommercial.email?.trim() ||
+         Object.keys(cleaningCommercial).length > 3));
+
+    setIsDirty(!!hasData);
+  }, [
+    firstName, lastNameState, phone, email,
+    detYear, detMake, detModel,
+    propertyType, projectType,
+    cleaningCommercial   // ← обов'язково має бути тут
+  ]);
 
   /** ---------- User + модалки ---------- */
   const user = auth.getUser();
@@ -1037,7 +1082,6 @@ const Booking = () => {
       setLastRequestId(saved?.id || null);
       setShowSuccessModal(true);
     } catch (e) {
-      const m = e?.error || e?.message || "Failed to submit cleaning request.";
       openInfoModal("Submission failed", m);
     } finally {
       setSubmitting(false);

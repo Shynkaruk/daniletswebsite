@@ -13,9 +13,10 @@ import Booking from "./Components/Booking.jsx";
 import DetailingPage from "./Components/Services/Detailing/DetailingPage.jsx";
 import AdminRequests from "./Accounts/AdminRequests.jsx";
 import Account from "./Accounts/Account.jsx";
-import ScrollToTop from "./ScrollToTop.jsx";     // ← імпорт
+import ScrollToTop from "./ScrollToTop.jsx";
 import BookingSuccess from "./Components/payments/BookingSuccess.jsx";
 import Layout from "./Components/Layout.jsx";
+import { NavigationGuardProvider } from "./contexts/NavigationGuard.jsx";
 
 const AppContent = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -36,11 +37,26 @@ const AppContent = () => {
     }
   }, []);
 
-  // Примусовий редирект на root для detailing/cleaning доменів
+  // === Редирект на головну сторінку для спеціалізованих доменів ===
   useEffect(() => {
-    if ((domainType === "detailing" || domainType === "cleaning") && location.pathname !== "/") {
+    const isDetailingDomain = domainType === "detailing";
+    const isCleaningDomain = domainType === "cleaning";
+
+    if (!isDetailingDomain && !isCleaningDomain) return;
+
+    const path = location.pathname;
+
+    // Якщо на detailing-домені заходять на /cleaning або /detailing — редирект на /
+    if (isDetailingDomain && (path === "/cleaning" || path === "/detailing")) {
       navigate("/", { replace: true });
     }
+
+    // Якщо на cleaning-домені заходять на /cleaning або /detailing — редирект на /
+    if (isCleaningDomain && (path === "/cleaning" || path === "/detailing")) {
+      navigate("/", { replace: true });
+    }
+
+    // Якщо хтось зайшов на будь-який інший шлях (крім / і /home) — теж можна редиректити, але залишимо для гнучкості
   }, [domainType, location.pathname, navigate]);
 
   const getHomeElement = () => {
@@ -68,8 +84,9 @@ const AppContent = () => {
         <Route path="/newsletter" element={<Newsletter />} />
         <Route path="/legal/*" element={<PrivacyPolicy />} />
 
-        <Route path="/cleaning" element={<Cleaning />} />
-        <Route path="/detailing" element={<DetailingPage />} />
+        {/* Ці два роути залишаємо, але вони будуть редиректитись через useEffect */}
+        <Route path="/cleaning" element={getHomeElement()} />
+        <Route path="/detailing" element={getHomeElement()} />
 
         <Route path="/book-online" element={<Booking />} />
         <Route path="/admin" element={<AdminRequests />} />
@@ -82,8 +99,10 @@ const AppContent = () => {
 
 const App = () => (
   <Router>
-    <ScrollToTop />        
-    <AppContent />
+    <ScrollToTop />
+    <NavigationGuardProvider>
+      <AppContent />
+    </NavigationGuardProvider>
   </Router>
 );
 

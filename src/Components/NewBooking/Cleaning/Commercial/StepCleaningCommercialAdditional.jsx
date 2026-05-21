@@ -12,8 +12,8 @@ export default function StepCleaningCommercialAdditional({
   setCleaningCommercial,
 
   renderProgress,
-  progressStepIndex = 8,
-  totalSteps = 9,
+  progressStepIndex = 10,   // ← Змінено на 10
+  totalSteps = 10,          // ← Змінено на 10
 }) {
   if (!visible) return null;
 
@@ -25,23 +25,31 @@ export default function StepCleaningCommercialAdditional({
   return (
     <div className="w-full max-w-full min-w-0 text-left">
       <div className="bg-white/90 backdrop-blur rounded-[24px] p-4 sm:p-6 shadow space-y-5">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onBack}
-            className="w-10 h-10 rounded-full bg-[#F2F2F2] inline-flex items-center justify-center"
-            aria-label="Back"
-            type="button"
-          >
-            <FiChevronLeft className="text-[18px] text-[#18181B]" />
-          </button>
+        
+        {/* Header + Step під заголовком */}
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onBack}
+              className="w-10 h-10 rounded-full bg-[#F2F2F2] inline-flex items-center justify-center flex-shrink-0"
+              aria-label="Back"
+              type="button"
+            >
+              <FiChevronLeft className="text-[18px] text-[#18181B]" />
+            </button>
 
-          <div>
             <h2 className="text-[26px] font-extrabold text-[#111827]">
               Additional Information
             </h2>
           </div>
+
+          {/* Step під заголовком */}
+          <p className="text-[13px] sm:text-[14px] text-[#9CA3AF] pl-12">
+            Step {progressStepIndex} of {totalSteps}
+          </p>
         </div>
 
+        {/* Progress Bar */}
         {renderProgress ? (
           renderProgress(progressStepIndex)
         ) : (
@@ -55,7 +63,7 @@ export default function StepCleaningCommercialAdditional({
           <textarea
             value={additionalInfo}
             onChange={(e) => setField("additionalInfo", e.target.value)}
-            className="w-full min-h-[140px] rounded-[18px] border border-[#E5E7EB] px-4 py-3 outline-none"
+            className="w-full min-h-[140px] rounded-[18px] border border-[#E5E7EB] px-4 py-3 outline-none resize-y"
             placeholder="Type here..."
           />
         </div>

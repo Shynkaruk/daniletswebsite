@@ -16,11 +16,17 @@ import ContactForm from "./ContactForm.jsx";
 import AuthModal from "./AuthModal.jsx";
 import AccountMenu from "./AccountMenu.jsx";
 import SocialModal from "./SocialModal.jsx";
+import { useNavigationGuard } from "../contexts/NavigationGuard";
+
+// ==================== GOLD GRADIENT ====================
+const GOLD_GRADIENT = "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)";
 
 /* ==================== MOBILE ==================== */
 const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const toggleMenu = () => setIsMenuOpen((v) => !v);
+
+  const { confirmNavigation } = useNavigationGuard();
 
   return (
     <div className="block md:hidden w-full">
@@ -53,8 +59,7 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                   type="button"
                   className="text-1xl font-bold px-5 py-[10px] rounded-full"
                   style={{
-                    background:
-                      "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)",
+                    background: GOLD_GRADIENT,
                     color: "rgba(62, 38, 12, 1)",
                   }}
                 >
@@ -62,7 +67,6 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                 </button>
               </Link>
 
-              {/* Важливо: onShowAuth має бути функцією */}
               <AccountMenu variant="icon" onShowAuth={onOpenAuth} />
             </div>
           </div>
@@ -72,10 +76,7 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
       {/* Mobile side menu */}
       {isMenuOpen && (
         <>
-          <div
-            className="fixed inset-0 bg-black/50 z-[60]"
-            onClick={toggleMenu}
-          />
+          <div className="fixed inset-0 bg-black/50 z-[60]" onClick={toggleMenu} />
           <div
             className={`fixed top-0 left-0 z-[70] w-[80%] max-w-[307px] h-full bg-white shadow-md border-r border-[#A1A1A5] transition-transform duration-300 ease-in-out ${
               isMenuOpen ? "translate-x-0" : "-translate-x-full"
@@ -119,31 +120,32 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                       hover:bg-[rgba(245,218,147,0.8)] hover:text-black transition"
                   >
                     <span>Services</span>
-                    <span className="transition-transform group-open:rotate-180">
-                      ▾
-                    </span>
+                    <span className="transition-transform group-open:rotate-180">▾</span>
                   </summary>
 
                   <div className="mt-2 ml-2 flex flex-col gap-2">
-                    <Link
-                      to="/detailing"
+                    <button
+                      onClick={() => { 
+                        confirmNavigation("https://daniletsdetailing.com"); 
+                        toggleMenu(); 
+                      }}
                       className="text-[#676767] border border-[#DADADA] rounded-[40px] text-[13px] font-semibold py-2 px-4 hover:bg-[rgba(245,218,147,0.3)] transition"
-                      onClick={toggleMenu}
                     >
                       Detailing
-                    </Link>
+                    </button>
 
-                    <Link
-                      to="/cleaning"
+                    <button
+                      onClick={() => { 
+                        confirmNavigation("https://daniletscleaning.com"); 
+                        toggleMenu(); 
+                      }}
                       className="text-[#676767] border border-[#DADADA] rounded-[40px] text-[13px] font-semibold py-2 px-4 hover:bg-[rgba(245,218,147,0.3)] transition"
-                      onClick={toggleMenu}
                     >
                       Cleaning
-                    </Link>
+                    </button>
                   </div>
                 </details>
 
-                {/* Contact */}
                 <button
                   type="button"
                   onClick={() => {
@@ -190,8 +192,7 @@ const MobileHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                     type="button"
                     className="text-1xl font-bold px-5 py-[10px] rounded-full transition-all duration-200 hover:scale-[1.05] hover:brightness-90"
                     style={{
-                      background:
-                        "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)",
+                      background: GOLD_GRADIENT,
                       color: "rgba(62, 38, 12, 1)",
                     }}
                   >
@@ -212,6 +213,8 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
   const [openServices, setOpenServices] = useState(false);
   const btnRef = useRef(null);
   const menuRef = useRef(null);
+
+  const { confirmNavigation } = useNavigationGuard();
 
   useEffect(() => {
     const onClickOutside = (e) => {
@@ -289,22 +292,25 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                       role="menu"
                       className="absolute left-1/2 -translate-x-1/2 mt-2 w-56 z-[300] rounded-2xl border border-[#E6E6EA] bg-white shadow-lg overflow-hidden"
                     >
-                      {[
-                        { label: "Detailing", to: "/detailing" },
-                        { label: "Cleaning", to: "/cleaning" },
-                      ].map(({ label, to }, idx) => (
-                        <Link
-                          key={label}
-                          to={to}
-                          role="menuitem"
-                          onClick={() => setOpenServices(false)}
-                          className={`block w-full text-left px-4 py-3 text-sm font-semibold text-black hover:bg-[rgba(245,218,147,0.25)] ${
-                            idx !== 0 ? "border-t border-[#F2F2F5]" : ""
-                          }`}
-                        >
-                          {label}
-                        </Link>
-                      ))}
+                      <button
+                        onClick={() => { 
+                          confirmNavigation("https://daniletsdetailing.com"); 
+                          setOpenServices(false); 
+                        }}
+                        className="block w-full text-left px-4 py-3 text-sm font-semibold text-black hover:bg-[rgba(245,218,147,0.25)] border-b border-[#F2F2F5]"
+                      >
+                        Detailing
+                      </button>
+
+                      <button
+                        onClick={() => { 
+                          confirmNavigation("https://daniletscleaning.com"); 
+                          setOpenServices(false); 
+                        }}
+                        className="block w-full text-left px-4 py-3 text-sm font-semibold text-black hover:bg-[rgba(245,218,147,0.25)]"
+                      >
+                        Cleaning
+                      </button>
                     </div>
                   )}
                 </div>
@@ -366,15 +372,13 @@ const DesktopHead = ({ onOpenContact, onOpenAuth, onOpenSocial }) => {
                     px-4 py-3 text-sm md:px-5 md:py-3 md:text-sm xl:px-6 xl:py-4 xl:text-base
                     transition-all duration-200 hover:scale-[1.05] hover:brightness-90"
                   style={{
-                    background:
-                      "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)",
+                    background: GOLD_GRADIENT,
                   }}
                 >
                   Get Quote
                 </button>
               </Link>
 
-              {/* ✅ ОЦЕ ГОЛОВНЕ: тепер onOpenAuth точно є */}
               <AccountMenu variant="icon" onShowAuth={onOpenAuth} />
             </div>
           </div>
@@ -398,7 +402,6 @@ export default function Head() {
   const closeContact = useCallback(() => setContactOpen(false), []);
   const closeSocial = useCallback(() => setSocialOpen(false), []);
 
-  // (опційно) блок скролу коли відкрита будь-яка модалка
   useEffect(() => {
     const anyOpen = authOpen || contactOpen || socialOpen;
     if (!anyOpen) return;
@@ -427,7 +430,6 @@ export default function Head() {
         </div>
       </header>
 
-      {/* ✅ Auth modal */}
       {authOpen && (
         <AuthModal
           open={authOpen}
@@ -435,7 +437,6 @@ export default function Head() {
         />
       )}
 
-      {/* ✅ Contact modal (якщо ContactForm у тебе вже модалка — ок; якщо ні, обгорни в свою) */}
       {contactOpen && (
         <ContactForm
           open={contactOpen}
@@ -443,7 +444,6 @@ export default function Head() {
         />
       )}
 
-      {/* ✅ Social modal */}
       {socialOpen && (
         <SocialModal
           open={socialOpen}

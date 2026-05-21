@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { FiChevronLeft } from "react-icons/fi";
 import ProgressBar from "../ProgressBar";
 
@@ -28,7 +28,6 @@ function HeardRow({ label, checked, onToggle }) {
       style={{ background: checked ? GOLD_GRADIENT : undefined }}
     >
       <span>{label}</span>
-
       <span
         className={[
           "w-5 h-5 rounded-[6px] border flex items-center justify-center",
@@ -57,45 +56,41 @@ export default function StepCleaningContactDetails({
 
   heardAbout,
   setHeardAbout,
-  extraInfo,
-  setExtraInfo,
+  // extraInfo, setExtraInfo — видалено, бо не використовуються
 
-  // ✅ ДОДАЄМО user (як у personal contact step)
   user,
 
   renderProgress,
   progressStepIndex = 9,
   totalSteps = 10,
 }) {
-  if (!visible) return null;
+  // === ВСІ ХУКИ НАГОРІ ===
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
 
   const isLoggedIn = !!user;
+  const [mode, setMode] = useState(isLoggedIn ? "account" : "manual");
 
-  // ✅ режим: account / manual
-  const [mode, setMode] = React.useState(isLoggedIn ? "account" : "manual");
+  const firstVal = firstName ?? "";
+  const lastVal = lastName ?? "";
+  const phoneVal = phone ?? "";
+  const emailVal = email ?? "";
+  const safeHeard = Array.isArray(heardAbout) ? heardAbout : [];
 
-  // якщо юзер залогінився вже після рендера — переключимо дефолт
+  // Перемикання режиму
   useEffect(() => {
-    if (isLoggedIn) setMode((m) => (m ? m : "account"));
+    if (isLoggedIn) setMode((m) => m || "account");
   }, [isLoggedIn]);
 
-  // ✅ коли mode=account — підтягнути дані з user
+  // Підтягування даних з акаунту
   useEffect(() => {
-    if (!isLoggedIn) return;
-    if (mode !== "account") return;
+    if (!isLoggedIn || mode !== "account") return;
 
-    const accFirst = user?.first_name || "";
-    const accLast = user?.last_name || "";
-    const accPhone = user?.phone || "";
-    const accEmail = user?.email || "";
-
-    if (accFirst) setFirstName(accFirst);
-    if (accLast) setLastName(accLast);
-    if (accPhone) setPhone(accPhone);
-    if (accEmail) setEmail(accEmail);
+    if (user?.first_name) setFirstName(user.first_name);
+    if (user?.last_name) setLastName(user.last_name);
+    if (user?.phone) setPhone(user.phone);
+    if (user?.email) setEmail(user.email);
   }, [isLoggedIn, mode, user, setFirstName, setLastName, setPhone, setEmail]);
-
-  const safeHeard = Array.isArray(heardAbout) ? heardAbout : [];
 
   const toggleHeard = (val) => {
     setHeardAbout((prev) => {
@@ -104,17 +99,72 @@ export default function StepCleaningContactDetails({
     });
   };
 
-  const isEmailOk = (v) => /\S+@\S+\.\S+/.test(v || "");
-  const isPhoneOk = (v) => (v || "").replace(/[^\d]/g, "").length >= 7;
+  const validateField = useCallback((field) => {
+    setErrors(prevErrors => {
+      const newErrors = { ...prevErrors };
 
-  const canContinue = useMemo(() => {
-    return (
-      firstName?.trim() &&
-      lastName?.trim() &&
-      isPhoneOk(phone) &&
-      isEmailOk(email)
-    );
-  }, [firstName, lastName, phone, email]);
+      switch (field) {
+        case "firstName": {
+          if (!firstVal.trim()) newErrors.firstName = "First name is required";
+          else delete newErrors.firstName;
+          break;
+        }
+        case "lastName": {
+          if (!lastVal.trim()) newErrors.lastName = "Last name is required";
+          else delete newErrors.lastName;
+          break;
+        }
+        case "phone": {
+          const phoneRegex = /^(\+1\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/;
+          if (!phoneVal.trim()) {
+            newErrors.phone = "Phone number is required";
+          } else if (!phoneRegex.test(phoneVal)) {
+            newErrors.phone = "Please enter a valid US phone number (e.g. (123) 456-7890)";
+          } else {
+            delete newErrors.phone;
+          }
+          break;
+        }
+        case "email": {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailVal) newErrors.email = "Email is required";
+          else if (!emailRegex.test(emailVal)) newErrors.email = "Please enter a valid email address";
+          else delete newErrors.email;
+          break;
+        }
+        default:
+          break;
+      }
+      return newErrors;
+    });
+  }, [firstVal, lastVal, phoneVal, emailVal]);
+
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    validateField(field);
+  };
+
+  const handleContinue = () => {
+    const allFields = ["firstName", "lastName", "phone", "email"];
+
+    allFields.forEach(field => {
+      setTouched(prev => ({ ...prev, [field]: true }));
+      validateField(field);
+    });
+
+    if (Object.keys(errors).length === 0) {
+      onNext?.();
+    }
+  };
+
+  if (!visible) return null;
+
+  const inputClass = "h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none w-full";
+
+  const getInputClass = (field) => `
+    ${inputClass} 
+    ${touched[field] && errors[field] ? "border-2 border-red-500 bg-red-50" : ""}
+  `;
 
   return (
     <div className="w-full max-w-full min-w-0 text-left">
@@ -140,7 +190,7 @@ export default function StepCleaningContactDetails({
           <ProgressBar activeCount={progressStepIndex} total={totalSteps} />
         )}
 
-        {/* ✅ ВСТАВИВ твій блок, адаптований під cleaning */}
+        {/* Режим Account / Manual */}
         {isLoggedIn && (
           <section className="space-y-3">
             <div className="text-sm text-[#6B7280] font-medium">
@@ -152,14 +202,8 @@ export default function StepCleaningContactDetails({
                 type="button"
                 onClick={() => setMode("account")}
                 className={`h-[44px] rounded-[16px] border text-sm font-semibold
-                  ${
-                    mode === "account"
-                      ? "border-transparent text-black"
-                      : "border-[#E5E7EB] text-[#4B5563] bg-white"
-                  }`}
-                style={{
-                  background: mode === "account" ? GOLD_GRADIENT : undefined,
-                }}
+                  ${mode === "account" ? "border-transparent text-black" : "border-[#E5E7EB] text-[#4B5563] bg-white"}`}
+                style={{ background: mode === "account" ? GOLD_GRADIENT : undefined }}
               >
                 Use my account
               </button>
@@ -168,14 +212,8 @@ export default function StepCleaningContactDetails({
                 type="button"
                 onClick={() => setMode("manual")}
                 className={`h-[44px] rounded-[16px] border text-sm font-semibold
-                  ${
-                    mode === "manual"
-                      ? "border-transparent text-black"
-                      : "border-[#E5E7EB] text-[#4B5563] bg-white"
-                  }`}
-                style={{
-                  background: mode === "manual" ? GOLD_GRADIENT : undefined,
-                }}
+                  ${mode === "manual" ? "border-transparent text-black" : "border-[#E5E7EB] text-[#4B5563] bg-white"}`}
+                style={{ background: mode === "manual" ? GOLD_GRADIENT : undefined }}
               >
                 Enter different details
               </button>
@@ -184,24 +222,10 @@ export default function StepCleaningContactDetails({
             {mode === "account" && (
               <div className="bg-white rounded-[20px] border border-[#E5E7EB] p-3 text-[13px] text-[#4B5563]">
                 <div className="font-semibold text-[#111827]">
-                  {(user?.first_name || firstName || "")}{" "}
-                  {(user?.last_name || lastName || "")}
+                  {(user?.first_name || firstVal)} {(user?.last_name || lastVal)}
                 </div>
-
-                {(user?.phone || phone) && (
-                  <div className="mt-1">
-                    Phone:{" "}
-                    <span className="font-medium">{user?.phone || phone}</span>
-                  </div>
-                )}
-
-                {(user?.email || email) && (
-                  <div>
-                    Email:{" "}
-                    <span className="font-medium">{user?.email || email}</span>
-                  </div>
-                )}
-
+                {(user?.phone || phoneVal) && <div className="mt-1">Phone: <span className="font-medium">{user?.phone || phoneVal}</span></div>}
+                {(user?.email || emailVal) && <div>Email: <span className="font-medium">{user?.email || emailVal}</span></div>}
                 <div className="mt-1 text-[11px] text-[#9CA3AF]">
                   You can still edit these details below before submitting.
                 </div>
@@ -210,57 +234,66 @@ export default function StepCleaningContactDetails({
           </section>
         )}
 
-        {/* форма (залишається як була) */}
+        {/* Форма */}
         <section className="bg-white rounded-[20px] border border-[#E5E7EB] p-4 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-2">
-              <div className="text-sm text-[#6B7280] font-medium">
-                First name *
-              </div>
+              <div className="text-sm text-[#6B7280] font-medium">First name</div>
               <input
-                value={firstName}
+                value={firstVal}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none w-full"
+                onBlur={() => handleBlur("firstName")}
+                className={getInputClass("firstName")}
               />
+              {touched.firstName && errors.firstName && (
+                <p className="text-red-600 text-[11px] mt-0.5">{errors.firstName}</p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <div className="text-sm text-[#6B7280] font-medium">
-                Last name *
-              </div>
+              <div className="text-sm text-[#6B7280] font-medium">Last name</div>
               <input
-                value={lastName}
+                value={lastVal}
                 onChange={(e) => setLastName(e.target.value)}
-                className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none w-full"
+                onBlur={() => handleBlur("lastName")}
+                className={getInputClass("lastName")}
               />
+              {touched.lastName && errors.lastName && (
+                <p className="text-red-600 text-[11px] mt-0.5">{errors.lastName}</p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <div className="text-sm text-[#6B7280] font-medium">Phone *</div>
+              <div className="text-sm text-[#6B7280] font-medium">Phone</div>
               <input
-                value={phone}
+                value={phoneVal}
                 onChange={(e) => setPhone(e.target.value)}
-                className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none w-full"
-                placeholder="+1 ..."
+                onBlur={() => handleBlur("phone")}
+                placeholder="+1 (123) 456-7890"
+                className={getInputClass("phone")}
               />
+              {touched.phone && errors.phone && (
+                <p className="text-red-600 text-[11px] mt-0.5">{errors.phone}</p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <div className="text-sm text-[#6B7280] font-medium">Email *</div>
+              <div className="text-sm text-[#6B7280] font-medium">Email</div>
               <input
-                value={email}
+                value={emailVal}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none w-full"
+                onBlur={() => handleBlur("email")}
                 placeholder="name@email.com"
+                className={getInputClass("email")}
               />
+              {touched.email && errors.email && (
+                <p className="text-red-600 text-[11px] mt-0.5">{errors.email}</p>
+              )}
             </div>
           </div>
 
           <div className="space-y-2">
-            <div className="text-sm text-[#6B7280] font-medium">
-              How did you hear about us?
-            </div>
-
+            <div className="text-sm text-[#6B7280] font-medium">How did you hear about us?</div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {HEARD_OPTIONS.map((x) => (
                 <HeardRow
@@ -276,11 +309,11 @@ export default function StepCleaningContactDetails({
 
         <button
           type="button"
-          onClick={onNext}
-          disabled={!canContinue}
+          onClick={handleContinue}
           className={`w-full h-[52px] rounded-[88px] font-semibold text-black shadow inline-flex items-center justify-center gap-2
-            ${!canContinue ? "opacity-60 cursor-not-allowed" : ""}`}
+            ${Object.keys(errors).length > 0 ? "opacity-60 cursor-not-allowed" : ""}`}
           style={{ background: GOLD_GRADIENT }}
+          disabled={Object.keys(errors).length > 0}
         >
           Continue <span className="text-lg">›</span>
         </button>

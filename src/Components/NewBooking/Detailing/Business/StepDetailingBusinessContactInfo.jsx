@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { FiChevronLeft } from "react-icons/fi";
 import ProgressBar from "../../ProgressBar";
 import { AddressAutocomplete } from "./AddressAutocomplete";
@@ -15,22 +15,15 @@ const HEAR_OPTIONS = [
   "Other",
 ];
 
-// --- Google Places loader (один раз на сторінку) ---
+// Google Places loader (без змін)
 let __gmapsPromise = null;
 function loadGooglePlaces() {
   const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-
-  // якщо вже є google.maps.places — готово
   if (window.google?.maps?.places) return Promise.resolve(true);
-
-  // якщо вже грузимо — повертаємо той самий проміс
   if (__gmapsPromise) return __gmapsPromise;
-
-  // якщо нема ключа — просто не включаємо автокомпліт (щоб не падало)
   if (!key) return Promise.resolve(false);
 
   __gmapsPromise = new Promise((resolve) => {
-    // якщо скрипт вже є в DOM
     const existing = document.querySelector('script[data-gmaps="places"]');
     if (existing) {
       existing.addEventListener("load", () => resolve(true));
@@ -40,21 +33,16 @@ function loadGooglePlaces() {
 
     const script = document.createElement("script");
     script.setAttribute("data-gmaps", "places");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(
-      key
-    )}&libraries=places`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=places`;
     script.async = true;
     script.defer = true;
-
     script.onload = () => resolve(true);
     script.onerror = () => resolve(false);
-
     document.head.appendChild(script);
   });
 
   return __gmapsPromise;
 }
-
 
 export default function StepDetailingBusinessContactInfo({
   visible,
@@ -83,7 +71,9 @@ export default function StepDetailingBusinessContactInfo({
   progressStepIndex = 2,
   totalSteps = 11,
 }) {
-  // ✅ SAFE values
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+
   const first = firstName ?? "";
   const last = lastName ?? "";
   const comp = companyName ?? "";
@@ -93,37 +83,94 @@ export default function StepDetailingBusinessContactInfo({
   const heard = heardAbout ?? "";
   const heardO = heardOther ?? "";
 
-  const isEmail = (v) => /\S+@\S+\.\S+/.test(v || "");
-  const isPhone = (v) => (v || "").replace(/[^\d]/g, "").length >= 7;
+  const validateField = useCallback((field) => {
+    setErrors(prevErrors => {
+      const newErrors = { ...prevErrors };
 
-  const canContinue = Boolean(
-    first.trim() &&
-      last.trim() &&
-      comp.trim() &&
-      addr.trim() &&
-      isPhone(ph) &&
-      isEmail(em) &&
-      heard.trim() &&
-      (heard !== "Other" || heardO.trim())
-  );
+      switch (field) {
+        case "firstName": {
+          if (!first.trim()) newErrors.firstName = "First name is required";
+          else delete newErrors.firstName;
+          break;
+        }
+        case "lastName": {
+          if (!last.trim()) newErrors.lastName = "Last name is required";
+          else delete newErrors.lastName;
+          break;
+        }
+        case "companyName": {
+          if (!comp.trim()) newErrors.companyName = "Company name is required";
+          else delete newErrors.companyName;
+          break;
+        }
+        case "companyAddress": {
+          if (!addr.trim()) newErrors.companyAddress = "Company address is required";
+          else delete newErrors.companyAddress;
+          break;
+        }
+        case "phone": {
+          // === СТРОГА ВАЛІДАЦІЯ АМЕРИКАНСЬКОГО НОМЕРА ===
+          const phoneRegex = /^(\+1\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/;
+          if (!ph.trim()) {
+            newErrors.phone = "Phone number is required";
+          } else if (!phoneRegex.test(ph)) {
+            newErrors.phone = "Please enter a valid US phone number (e.g. (123) 456-7890)";
+          } else {
+            delete newErrors.phone;
+          }
+          break;
+        }
+        case "email": {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!em) newErrors.email = "Email is required";
+          else if (!emailRegex.test(em)) newErrors.email = "Please enter a valid email address";
+          else delete newErrors.email;
+          break;
+        }
+        case "heardAbout": {
+          if (!heard) newErrors.heardAbout = "Please tell us how you heard about us";
+          else delete newErrors.heardAbout;
+          break;
+        }
+        case "heardOther": {
+          if (heard === "Other" && !heardO.trim()) newErrors.heardOther = "Please specify how you heard about us";
+          else delete newErrors.heardOther;
+          break;
+        }
+        default:
+          break;
+      }
 
-  const handleContinue = () => {
-    if (!canContinue) return;
-    onNext?.();
+      return newErrors;
+    });
+  }, [first, last, comp, addr, ph, em, heard, heardO]);
+
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    validateField(field);
   };
 
-  const inputClass =
-    "w-full h-[52px] rounded-[16px] bg-[#F4F4F5] px-4 text-[15px] outline-none";
+  const handleContinue = () => {
+    const allFields = ["firstName", "lastName", "companyName", "companyAddress", "phone", "email", "heardAbout"];
+    if (heard === "Other") allFields.push("heardOther");
 
-  // ✅ Google Places Autocomplete
+    allFields.forEach(field => {
+      setTouched(prev => ({ ...prev, [field]: true }));
+      validateField(field);
+    });
+
+    if (Object.keys(errors).length === 0) {
+      onNext?.();
+    }
+  };
+
+  // Google Places (без змін)
   const addressInputRef = useRef(null);
   const autocompleteRef = useRef(null);
   const [placesReady, setPlacesReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-
-    // підключаємо тільки коли крок видимий
     if (!visible) return;
 
     loadGooglePlaces().then((ok) => {
@@ -131,24 +178,15 @@ export default function StepDetailingBusinessContactInfo({
       setPlacesReady(!!ok);
     });
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [visible]);
 
   useEffect(() => {
-    if (!visible) return;
-    if (!placesReady) return;
-    if (!addressInputRef.current) return;
-    if (!window.google?.maps?.places) return;
-
-    // не створюємо двічі
+    if (!visible || !placesReady || !addressInputRef.current || !window.google?.maps?.places) return;
     if (autocompleteRef.current) return;
 
     const ac = new window.google.maps.places.Autocomplete(addressInputRef.current, {
       fields: ["formatted_address", "address_components", "geometry", "name"],
-      // опційно можна обмежити країною:
-      // componentRestrictions: { country: "us" },
     });
 
     ac.addListener("place_changed", () => {
@@ -160,8 +198,14 @@ export default function StepDetailingBusinessContactInfo({
     autocompleteRef.current = ac;
   }, [visible, placesReady, setCompanyAddress]);
 
-  // ✅ return null тільки після хуків
   if (!visible) return null;
+
+  const inputClass = "w-full h-[52px] rounded-[16px] bg-[#F4F4F5] px-4 text-[15px] outline-none";
+
+  const getInputClass = (field) => `
+    ${inputClass} 
+    ${touched[field] && errors[field] ? "border-2 border-red-500 bg-red-50" : ""}
+  `;
 
   return (
     <div className="w-full max-w-full min-w-0 text-left">
@@ -199,108 +243,96 @@ export default function StepDetailingBusinessContactInfo({
           {/* First + Last */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <div className="text-sm text-[#6B7280] font-medium">
-                First Name *
-              </div>
+              <div className="text-sm text-[#6B7280] font-medium">First Name</div>
               <input
                 value={first}
                 onChange={(e) => setFirstName?.(e.target.value)}
-                className={inputClass}
+                onBlur={() => handleBlur("firstName")}
+                className={getInputClass("firstName")}
                 placeholder="Enter first name"
               />
+              {touched.firstName && errors.firstName && <p className="text-red-600 text-sm mt-1">{errors.firstName}</p>}
             </div>
 
             <div>
-              <div className="text-sm text-[#6B7280] font-medium">
-                Last Name *
-              </div>
+              <div className="text-sm text-[#6B7280] font-medium">Last Name</div>
               <input
                 value={last}
                 onChange={(e) => setLastName?.(e.target.value)}
-                className={inputClass}
+                onBlur={() => handleBlur("lastName")}
+                className={getInputClass("lastName")}
                 placeholder="Enter last name"
               />
+              {touched.lastName && errors.lastName && <p className="text-red-600 text-sm mt-1">{errors.lastName}</p>}
             </div>
           </div>
 
           {/* Company Name */}
           <div>
-            <div className="text-sm text-[#6B7280] font-medium">
-              Company Name *
-            </div>
+            <div className="text-sm text-[#6B7280] font-medium">Company Name</div>
             <input
               value={comp}
               onChange={(e) => setCompanyName?.(e.target.value)}
-              className={inputClass}
+              onBlur={() => handleBlur("companyName")}
+              className={getInputClass("companyName")}
               placeholder="Enter your company name"
             />
+            {touched.companyName && errors.companyName && <p className="text-red-600 text-sm mt-1">{errors.companyName}</p>}
           </div>
 
-          {/* Company Address (Google Places) */}
+          {/* Company Address */}
           <div>
-            <div className="text-sm text-[#6B7280] font-medium">
-              Company Address *
-            </div>
-  <AddressAutocomplete
-    value={addr}
-    onChange={(v) => setCompanyAddress?.(v)}
-    onSelectAddress={(formatted) => setCompanyAddress?.(formatted)}
-    inputClass={inputClass}
-    placeholder="Start typing address…"
-  />
-
-            {/* міні-підказка якщо ключа нема/скрипт не завантажився */}
+            <div className="text-sm text-[#6B7280] font-medium">Company Address</div>
+            <AddressAutocomplete
+              value={addr}
+              onChange={(v) => setCompanyAddress?.(v)}
+              onSelectAddress={(formatted) => setCompanyAddress?.(formatted)}
+              inputClass={getInputClass("companyAddress")}
+              placeholder="Start typing address…"
+              ref={addressInputRef}
+              onBlur={() => handleBlur("companyAddress")}
+            />
+            {touched.companyAddress && errors.companyAddress && <p className="text-red-600 text-sm mt-1">{errors.companyAddress}</p>}
             {!placesReady && import.meta.env.VITE_GOOGLE_MAPS_API_KEY && (
-              <p className="text-[11px] text-[#9CA3AF] mt-1">
-                Loading address suggestions…
-              </p>
+              <p className="text-[11px] text-[#9CA3AF] mt-1">Loading address suggestions…</p>
             )}
           </div>
 
           {/* Phone + Email */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <div className="text-sm text-[#6B7280] font-medium">
-                Phone Number *
-              </div>
+              <div className="text-sm text-[#6B7280] font-medium">Phone Number</div>
               <input
                 value={ph}
                 onChange={(e) => setPhone?.(e.target.value)}
-                placeholder="(xxx) xxx-xxxx"
-                className={inputClass}
+                onBlur={() => handleBlur("phone")}
+                placeholder="(123) 456-7890"
+                className={getInputClass("phone")}
               />
-              {!isPhone(ph) && ph && (
-                <p className="text-xs text-red-500 mt-1">
-                  Invalid phone number
-                </p>
-              )}
+              {touched.phone && errors.phone && <p className="text-red-600 text-sm mt-1">{errors.phone}</p>}
             </div>
 
             <div>
-              <div className="text-sm text-[#6B7280] font-medium">Email *</div>
+              <div className="text-sm text-[#6B7280] font-medium">Email</div>
               <input
                 value={em}
                 type="email"
                 onChange={(e) => setEmail?.(e.target.value)}
-                className={inputClass}
+                onBlur={() => handleBlur("email")}
+                className={getInputClass("email")}
                 placeholder="Enter email"
               />
-              {!isEmail(em) && em && (
-                <p className="text-xs text-red-500 mt-1">Invalid email</p>
-              )}
+              {touched.email && errors.email && <p className="text-red-600 text-sm mt-1">{errors.email}</p>}
             </div>
           </div>
 
           {/* Heard about */}
           <div>
-            <div className="text-sm text-[#6B7280] font-medium">
-              How did you hear about us? *
-            </div>
+            <div className="text-sm text-[#6B7280] font-medium">How did you hear about us?</div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
               {HEAR_OPTIONS.map((opt) => {
                 const active = heard === opt;
-
                 return (
                   <button
                     key={opt}
@@ -318,15 +350,18 @@ export default function StepDetailingBusinessContactInfo({
                 );
               })}
             </div>
+            {touched.heardAbout && errors.heardAbout && <p className="text-red-600 text-sm mt-1">{errors.heardAbout}</p>}
 
             {heard === "Other" && (
               <input
                 value={heardO}
                 onChange={(e) => setHeardOther?.(e.target.value)}
-                className={`${inputClass} mt-3`}
+                onBlur={() => handleBlur("heardOther")}
+                className={`${inputClass} mt-3 ${getInputClass("heardOther")}`}
                 placeholder="Please specify"
               />
             )}
+            {touched.heardOther && errors.heardOther && <p className="text-red-600 text-sm mt-1">{errors.heardOther}</p>}
           </div>
         </section>
 
@@ -334,13 +369,13 @@ export default function StepDetailingBusinessContactInfo({
         <button
           type="button"
           onClick={handleContinue}
-          disabled={!canContinue}
           className={`
             w-full h-[52px] sm:h-[56px] rounded-[88px] font-semibold text-black shadow
             inline-flex items-center justify-between px-6
-            ${!canContinue ? "opacity-60 cursor-not-allowed" : ""}
+            ${Object.keys(errors).length > 0 ? "opacity-60 cursor-not-allowed" : ""}
           `}
           style={{ background: GOLD_GRADIENT }}
+          disabled={Object.keys(errors).length > 0}
         >
           <span>Continue</span>
           <span className="text-lg">›</span>
