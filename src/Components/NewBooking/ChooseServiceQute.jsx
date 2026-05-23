@@ -1,5 +1,5 @@
 // src/Components/Booking/Step1Search.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 
 const GOLD_GRADIENT =
   "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)";
@@ -14,6 +14,16 @@ export default function Step1Search({
   const [local, setLocal] = useState(initial);
   const selected = value ?? local;
 
+  // === ВИЗНАЧАЄМО ТИП САЙТУ ===
+  const domainType = useMemo(() => {
+    const host = window.location.hostname.toLowerCase();
+    if (host.includes("daniletsdetailing")) return "detailing";
+    if (host.includes("daniletscleaning")) return "cleaning";
+    return "main"; // fallback
+  }, []);
+
+  const isDetailingSite = domainType === "detailing";
+
   useEffect(() => {
     if (value == null) setLocal(initial);
   }, [initial, value]);
@@ -27,8 +37,6 @@ export default function Step1Search({
 
   const handleContinue = () => {
     if (!selected) return;
-
-    // ✅ Просто передаємо вибір в Booking — без жорсткого редиректу тут
     if (typeof onSearch === "function") {
       onSearch(selected);
     }
@@ -42,26 +50,43 @@ export default function Step1Search({
           <h1 className="text-[44px] sm:text-[64px] md:text-[64px] font-extrabold tracking-[-0.02em] text-black">
             Choose Your Service
           </h1>
-          <p className="mt-3 text-[22px] sm:text-[18px] text-black/50">
-            Select service type on the next step
+          <p className="mt-3 text-[20px] sm:text-[18px] text-black/60">
+            What type of service are you looking for?
           </p>
         </div>
 
-        {/* Два пілли */}
+        {/* Динамічні опції залежно від домену */}
         <div className="mt-10 flex flex-col sm:flex-row gap-6 justify-center">
-          <Pill
-            label="Detailing"
-            active={selected === "detailing"}
-            onClick={() => setSelected("detailing")}
-          />
-          <Pill
-            label="Cleaning"
-            active={selected === "cleaning"}
-            onClick={() => setSelected("cleaning")}
-          />
+          {isDetailingSite ? (
+            <>
+              <Pill
+                label="Personal"
+                active={selected === "personal"}
+                onClick={() => setSelected("personal")}
+              />
+              <Pill
+                label="Business"
+                active={selected === "business"}
+                onClick={() => setSelected("business")}
+              />
+            </>
+          ) : (
+            <>
+              <Pill
+                label="Residential"
+                active={selected === "residential"}
+                onClick={() => setSelected("residential")}
+              />
+              <Pill
+                label="Commercial"
+                active={selected === "commercial"}
+                onClick={() => setSelected("commercial")}
+              />
+            </>
+          )}
         </div>
 
-        {/* Continue */}
+        {/* Continue Button */}
         <div className="mt-10 flex justify-center">
           <button
             type="button"

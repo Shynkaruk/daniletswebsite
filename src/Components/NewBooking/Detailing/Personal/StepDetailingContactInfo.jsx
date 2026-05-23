@@ -2,6 +2,7 @@
 import React, { useState, useCallback } from "react";
 import { FiChevronLeft } from "react-icons/fi";
 import ProgressBar from "../../ProgressBar";
+import { AddressAutocomplete } from "../../Detailing/Business/AddressAutocomplete"; // перевір шлях!
 
 const GOLD_GRADIENT =
   "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
@@ -19,6 +20,8 @@ const StepDetailingContactInfo = ({
   setPhone,
   email,
   setEmail,
+  address,           // ← НОВЕ
+  setAddress,        // ← НОВЕ
   heardAbout,
   setHeardAbout,
 
@@ -34,6 +37,7 @@ const StepDetailingContactInfo = ({
   const lastVal = lastName ?? "";
   const phoneVal = phone ?? "";
   const emailVal = email ?? "";
+  const addressVal = address ?? "";
   const heardVal = Array.isArray(heardAbout)
     ? heardAbout.join(", ")
     : heardAbout ?? "";
@@ -43,17 +47,15 @@ const StepDetailingContactInfo = ({
       const newErrors = { ...prevErrors };
 
       switch (field) {
-        case "firstName": {
+        case "firstName":
           if (!firstVal.trim()) newErrors.firstName = "First name is required";
           else delete newErrors.firstName;
           break;
-        }
-        case "lastName": {
+        case "lastName":
           if (!lastVal.trim()) newErrors.lastName = "Last name is required";
           else delete newErrors.lastName;
           break;
-        }
-        case "phone": {
+        case "phone":
           const phoneRegex = /^(\+1\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/;
           if (!phoneVal.trim()) {
             newErrors.phone = "Phone number is required";
@@ -63,25 +65,26 @@ const StepDetailingContactInfo = ({
             delete newErrors.phone;
           }
           break;
-        }
-        case "email": {
+        case "email":
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           if (!emailVal) newErrors.email = "Email is required";
           else if (!emailRegex.test(emailVal)) newErrors.email = "Please enter a valid email address";
           else delete newErrors.email;
           break;
-        }
-        case "heardAbout": {
+        case "address":
+          if (!addressVal.trim()) newErrors.address = "Address is required";
+          else delete newErrors.address;
+          break;
+        case "heardAbout":
           if (!heardVal.trim()) newErrors.heardAbout = "Please tell us how you heard about us";
           else delete newErrors.heardAbout;
           break;
-        }
         default:
           break;
       }
       return newErrors;
     });
-  }, [firstVal, lastVal, phoneVal, emailVal, heardVal]);
+  }, [firstVal, lastVal, phoneVal, emailVal, addressVal, heardVal]);
 
   const handleBlur = (field) => {
     setTouched(prev => ({ ...prev, [field]: true }));
@@ -89,7 +92,7 @@ const StepDetailingContactInfo = ({
   };
 
   const handleContinue = () => {
-    const allFields = ["firstName", "lastName", "phone", "email", "heardAbout"];
+    const allFields = ["firstName", "lastName", "phone", "email", "address", "heardAbout"];
 
     allFields.forEach(field => {
       setTouched(prev => ({ ...prev, [field]: true }));
@@ -101,7 +104,6 @@ const StepDetailingContactInfo = ({
     }
   };
 
-  // Тепер можна робити ранній return
   if (!visible) return null;
 
   const inputClass = "w-full h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none";
@@ -199,6 +201,20 @@ const StepDetailingContactInfo = ({
             />
             {touched.email && errors.email && (
               <p className="text-red-600 text-[11px] mt-0.5">{errors.email}</p>
+            )}
+          </div>
+
+          {/* ========== ADDRESS FIELD ========== */}
+          <div className="space-y-1">
+            <div className="text-sm text-[#6B7280] font-medium">Address</div>
+            <AddressAutocomplete
+              value={addressVal}
+              onChange={setAddress}
+              inputClass={getInputClass("address")}
+              placeholder="Start typing your address..."
+            />
+            {touched.address && errors.address && (
+              <p className="text-red-600 text-[11px] mt-0.5">{errors.address}</p>
             )}
           </div>
 

@@ -265,15 +265,19 @@ const Booking = () => {
     setPredictions([]);
   };
 
-  const onSearch = () => {
-    // Після адреси:
-    // - Detailing -> step=2
-    // - Cleaning  -> step=2 + cleaningStep=2 (PropertyType = step 1/9)
-    if (isCleaning) {
+  const onSearch = (selectedService) => {
+    // selectedService може бути: "personal", "business", "residential", "commercial"
+
+    if (selectedService === "personal" || selectedService === "business") {
+      setService("detailing");
+      setDetailingMode(selectedService);   // personal або business
+      setStep(2);                          // переходимо на StepDetailingGetQuoteType або одразу в потік
+    } 
+    else if (selectedService === "residential" || selectedService === "commercial") {
+      setService("cleaning");
+      setPropertyType(selectedService);    // residential або commercial
       setStep(2);
       setCleaningStep(2);
-    } else {
-      setStep(2);
     }
   };
 
@@ -339,6 +343,7 @@ const Booking = () => {
   const [lastNameState, setLastNameState] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
 
   const [heardAbout, setHeardAbout] = useState([]);
   const [extraInfo, setExtraInfo] = useState("");
@@ -518,13 +523,22 @@ useEffect(() => {
 
   /** ---------- Service change ---------- */
   const onChangeService = (nextService) => {
-    setService(nextService);
+    // Визначаємо тип сервісу
+    const isDetailingService = nextService === "personal" || nextService === "business";
+    
+    setService(isDetailingService ? "detailing" : "cleaning");
 
+    if (isDetailingService) {
+      setDetailingMode(nextService);
+    } else {
+      setPropertyType(nextService);        // residential або commercial
+    }
+
+    // Повертаємося на початок
     setStep(1);
     setCleaningStep(2);
 
-    // reset cleaning
-    setPropertyType("");
+    // Reset тільки те, що потрібно
     setProjectType("");
     setProjectTypeOther("");
     setBedrooms("");
@@ -542,6 +556,8 @@ useEffect(() => {
     setFrequency("");
     setHearAboutUs("");
     setCleaningCommercial(null);
+
+    // НЕ скидаємо firstName, phone, email тощо — вони спільні
   };
 
   /** ---------- Location builders ---------- */
@@ -1414,6 +1430,8 @@ useEffect(() => {
                 phone={phone}
                 setPhone={setPhone}
                 email={email}
+                address={address}          
+                setAddress={setAddress}    
                 setEmail={setEmail}
                 heardAbout={heardAbout}
                 setHeardAbout={setHeardAbout}
@@ -1685,6 +1703,8 @@ useEffect(() => {
                     phone={phone}
                     setPhone={setPhone}
                     email={email}
+                    address={address}          
+                    setAddress={setAddress}    
                     setEmail={setEmail}
                     heardAbout={heardAbout}
                     setHeardAbout={setHeardAbout}
@@ -1864,6 +1884,8 @@ useEffect(() => {
                     referralName={c.referralName || ""}
                     setReferralName={(v) => setCC({ referralName: v })}
                     hearOther={c.hearAboutOther || ""}
+                    address={address}          
+                    setAddress={setAddress}    
                     setHearOther={(v) => setCC({ hearAboutOther: v })}
                     renderProgress={renderCleaningProgress}
                     progressStepIndex={2}

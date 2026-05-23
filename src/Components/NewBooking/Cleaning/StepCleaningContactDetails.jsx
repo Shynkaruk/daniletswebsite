@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { FiChevronLeft } from "react-icons/fi";
 import ProgressBar from "../ProgressBar";
+import { AddressAutocomplete } from "../Detailing/Business/AddressAutocomplete"; // перевір шлях!
 
 const GOLD_GRADIENT =
   "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
@@ -53,10 +54,11 @@ export default function StepCleaningContactDetails({
   setPhone,
   email,
   setEmail,
+  address,           // ← НОВЕ
+  setAddress,        // ← НОВЕ
 
   heardAbout,
   setHeardAbout,
-  // extraInfo, setExtraInfo — видалено, бо не використовуються
 
   user,
 
@@ -75,6 +77,7 @@ export default function StepCleaningContactDetails({
   const lastVal = lastName ?? "";
   const phoneVal = phone ?? "";
   const emailVal = email ?? "";
+  const addressVal = address ?? "";
   const safeHeard = Array.isArray(heardAbout) ? heardAbout : [];
 
   // Перемикання режиму
@@ -90,7 +93,8 @@ export default function StepCleaningContactDetails({
     if (user?.last_name) setLastName(user.last_name);
     if (user?.phone) setPhone(user.phone);
     if (user?.email) setEmail(user.email);
-  }, [isLoggedIn, mode, user, setFirstName, setLastName, setPhone, setEmail]);
+    if (user?.address) setAddress(user.address);   // ← додано
+  }, [isLoggedIn, mode, user, setFirstName, setLastName, setPhone, setEmail, setAddress]);
 
   const toggleHeard = (val) => {
     setHeardAbout((prev) => {
@@ -104,40 +108,36 @@ export default function StepCleaningContactDetails({
       const newErrors = { ...prevErrors };
 
       switch (field) {
-        case "firstName": {
+        case "firstName":
           if (!firstVal.trim()) newErrors.firstName = "First name is required";
           else delete newErrors.firstName;
           break;
-        }
-        case "lastName": {
+        case "lastName":
           if (!lastVal.trim()) newErrors.lastName = "Last name is required";
           else delete newErrors.lastName;
           break;
-        }
-        case "phone": {
+        case "phone":
           const phoneRegex = /^(\+1\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/;
-          if (!phoneVal.trim()) {
-            newErrors.phone = "Phone number is required";
-          } else if (!phoneRegex.test(phoneVal)) {
-            newErrors.phone = "Please enter a valid US phone number (e.g. (123) 456-7890)";
-          } else {
-            delete newErrors.phone;
-          }
+          if (!phoneVal.trim()) newErrors.phone = "Phone number is required";
+          else if (!phoneRegex.test(phoneVal)) newErrors.phone = "Please enter a valid US phone number";
+          else delete newErrors.phone;
           break;
-        }
-        case "email": {
+        case "email":
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           if (!emailVal) newErrors.email = "Email is required";
           else if (!emailRegex.test(emailVal)) newErrors.email = "Please enter a valid email address";
           else delete newErrors.email;
           break;
-        }
+        case "address":
+          if (!addressVal.trim()) newErrors.address = "Address is required";
+          else delete newErrors.address;
+          break;
         default:
           break;
       }
       return newErrors;
     });
-  }, [firstVal, lastVal, phoneVal, emailVal]);
+  }, [firstVal, lastVal, phoneVal, emailVal, addressVal]);
 
   const handleBlur = (field) => {
     setTouched(prev => ({ ...prev, [field]: true }));
@@ -145,7 +145,7 @@ export default function StepCleaningContactDetails({
   };
 
   const handleContinue = () => {
-    const allFields = ["firstName", "lastName", "phone", "email"];
+    const allFields = ["firstName", "lastName", "phone", "email", "address"];
 
     allFields.forEach(field => {
       setTouched(prev => ({ ...prev, [field]: true }));
@@ -180,7 +180,7 @@ export default function StepCleaningContactDetails({
           </button>
 
           <h2 className="text-[20px] sm:text-[22px] font-extrabold text-[#18181B]">
-            Contact details
+            Contact Information
           </h2>
         </div>
 
@@ -218,19 +218,6 @@ export default function StepCleaningContactDetails({
                 Enter different details
               </button>
             </div>
-
-            {mode === "account" && (
-              <div className="bg-white rounded-[20px] border border-[#E5E7EB] p-3 text-[13px] text-[#4B5563]">
-                <div className="font-semibold text-[#111827]">
-                  {(user?.first_name || firstVal)} {(user?.last_name || lastVal)}
-                </div>
-                {(user?.phone || phoneVal) && <div className="mt-1">Phone: <span className="font-medium">{user?.phone || phoneVal}</span></div>}
-                {(user?.email || emailVal) && <div>Email: <span className="font-medium">{user?.email || emailVal}</span></div>}
-                <div className="mt-1 text-[11px] text-[#9CA3AF]">
-                  You can still edit these details below before submitting.
-                </div>
-              </div>
-            )}
           </section>
         )}
 
@@ -290,6 +277,20 @@ export default function StepCleaningContactDetails({
                 <p className="text-red-600 text-[11px] mt-0.5">{errors.email}</p>
               )}
             </div>
+          </div>
+
+          {/* ========== NEW ADDRESS FIELD ========== */}
+          <div className="space-y-2">
+            <div className="text-sm text-[#6B7280] font-medium">Address</div>
+            <AddressAutocomplete
+              value={addressVal}
+              onChange={setAddress}
+              inputClass={getInputClass("address")}
+              placeholder="Start typing your address..."
+            />
+            {touched.address && errors.address && (
+              <p className="text-red-600 text-[11px] mt-0.5">{errors.address}</p>
+            )}
           </div>
 
           <div className="space-y-2">

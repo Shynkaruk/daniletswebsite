@@ -2,6 +2,7 @@ import React, { useState, useCallback } from "react";
 import { FiChevronLeft } from "react-icons/fi";
 import ProgressBar from "../../ProgressBar";
 import { GOLD_GRADIENT } from "../_ui";
+import { AddressAutocomplete } from "../../Detailing/Business/AddressAutocomplete"; // перевір шлях!
 
 const HEAR_OPTIONS = [
   { key: "google", label: "Google Search" },
@@ -25,6 +26,8 @@ export default function StepCleaningCommercialContactInfo({
   setPhone,
   email,
   setEmail,
+  address,          // ← НОВЕ
+  setAddress,       // ← НОВЕ
 
   hearAbout,
   setHearAbout,
@@ -45,6 +48,7 @@ export default function StepCleaningCommercialContactInfo({
   const lastVal = lastName ?? "";
   const phoneVal = phone ?? "";
   const emailVal = email ?? "";
+  const addressVal = address ?? "";
   const hearVal = hearAbout ?? "";
   const referralVal = referralName ?? "";
   const otherVal = hearOther ?? "";
@@ -54,17 +58,15 @@ export default function StepCleaningCommercialContactInfo({
       const newErrors = { ...prevErrors };
 
       switch (field) {
-        case "firstName": {
+        case "firstName":
           if (!firstVal.trim()) newErrors.firstName = "First name is required";
           else delete newErrors.firstName;
           break;
-        }
-        case "lastName": {
+        case "lastName":
           if (!lastVal.trim()) newErrors.lastName = "Last name is required";
           else delete newErrors.lastName;
           break;
-        }
-        case "phone": {
+        case "phone":
           const phoneRegex = /^(\+1\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/;
           if (!phoneVal.trim()) {
             newErrors.phone = "Phone number is required";
@@ -74,41 +76,40 @@ export default function StepCleaningCommercialContactInfo({
             delete newErrors.phone;
           }
           break;
-        }
-        case "email": {
+        case "email":
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           if (!emailVal) newErrors.email = "Email is required";
           else if (!emailRegex.test(emailVal)) newErrors.email = "Please enter a valid email address";
           else delete newErrors.email;
           break;
-        }
-        case "hearAbout": {
+        case "address":
+          if (!addressVal.trim()) newErrors.address = "Address is required";
+          else delete newErrors.address;
+          break;
+        case "hearAbout":
           if (!hearVal) newErrors.hearAbout = "Please tell us how you heard about us";
           else delete newErrors.hearAbout;
           break;
-        }
-        case "referralName": {
+        case "referralName":
           if (hearVal === "referral" && !referralVal.trim()) {
             newErrors.referralName = "Name is required";
           } else {
             delete newErrors.referralName;
           }
           break;
-        }
-        case "hearOther": {
+        case "hearOther":
           if (hearVal === "other" && !otherVal.trim()) {
             newErrors.hearOther = "Please specify";
           } else {
             delete newErrors.hearOther;
           }
           break;
-        }
         default:
           break;
       }
       return newErrors;
     });
-  }, [firstVal, lastVal, phoneVal, emailVal, hearVal, referralVal, otherVal]);
+  }, [firstVal, lastVal, phoneVal, emailVal, addressVal, hearVal, referralVal, otherVal]);
 
   const handleBlur = (field) => {
     setTouched(prev => ({ ...prev, [field]: true }));
@@ -116,7 +117,7 @@ export default function StepCleaningCommercialContactInfo({
   };
 
   const handleContinue = () => {
-    const allFields = ["firstName", "lastName", "phone", "email", "hearAbout"];
+    const allFields = ["firstName", "lastName", "phone", "email", "address", "hearAbout"];
 
     if (hearVal === "referral") allFields.push("referralName");
     if (hearVal === "other") allFields.push("hearOther");
@@ -131,7 +132,6 @@ export default function StepCleaningCommercialContactInfo({
     }
   };
 
-  // Тепер можна робити ранній return
   if (!visible) return null;
 
   const inputClass = "mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none";
@@ -168,6 +168,7 @@ export default function StepCleaningCommercialContactInfo({
         )}
 
         <div className="space-y-4">
+          {/* ========== CONTACT BLOCK (як у Residential) ========== */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-semibold text-[#111827]">First Name</label>
@@ -226,6 +227,21 @@ export default function StepCleaningCommercialContactInfo({
             )}
           </div>
 
+          {/* ========== ADDRESS FIELD ========== */}
+          <div>
+            <label className="text-sm font-semibold text-[#111827]">Address</label>
+            <AddressAutocomplete
+              value={addressVal}
+              onChange={setAddress}
+              inputClass={getInputClass("address")}
+              placeholder="Start typing your address..."
+            />
+            {touched.address && errors.address && (
+              <p className="text-red-600 text-sm mt-1">{errors.address}</p>
+            )}
+          </div>
+
+          {/* How did you hear about us? (залишив без змін) */}
           <div className="space-y-2">
             <div className="text-sm font-semibold text-[#111827]">
               How did you hear about us?
