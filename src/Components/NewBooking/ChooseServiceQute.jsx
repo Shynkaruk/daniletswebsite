@@ -28,20 +28,10 @@ export default function Step1Search({
   const handleContinue = () => {
     if (!selected) return;
 
-    // Викликаємо onSearch — це важливо для внутрішньої логіки Booking
+    // ✅ Просто передаємо вибір в Booking — без жорсткого редиректу тут
     if (typeof onSearch === "function") {
       onSearch(selected);
     }
-
-    // Переходимо на правильний домен + book-online
-    const domain =
-      selected === "detailing"
-        ? "https://daniletsdetailing.com"
-        : "https://daniletscleaning.com";
-
-    const targetUrl = `${domain}/book-online`;
-
-    window.location.href = targetUrl;
   };
 
   return (
