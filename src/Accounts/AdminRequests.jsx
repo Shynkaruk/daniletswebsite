@@ -128,6 +128,19 @@ export default function AdminRequests() {
     }
   };
 
+  const deleteRequest = async (row) => {
+    const id = row?.id || row?._id;
+    if (!id) return;
+    if (!window.confirm("Delete this request permanently? This action cannot be undone.")) return;
+    try {
+      await adminReqApi.remove(id);
+      loadBookings();
+      setSelectedRow(null);
+    } catch (e) {
+      alert("Delete error: " + (e.message || e));
+    }
+  };
+
   return (
     <div className="flex h-screen bg-[#F4F4F5] overflow-hidden pt-20">
       {/* Sidebar */}
@@ -217,18 +230,26 @@ export default function AdminRequests() {
         </div>
       </div>
 
-      {selectedRow && <DetailModal row={selectedRow} onClose={() => setSelectedRow(null)} onSave={saveEdits} />}
+      {selectedRow && (
+        <DetailModal
+          row={selectedRow}
+          onClose={() => setSelectedRow(null)}
+          onSave={saveEdits}
+          onDelete={deleteRequest}
+        />
+      )}
     </div>
   );
 }
 
 // ================== DETAIL MODAL ==================
-function DetailModal({ row, onClose, onSave }) {
+function DetailModal({ row, onClose, onSave, onDelete }) {
   const [editStatus, setEditStatus] = useState(row.status || "new");
   const [editAdminNote, setEditAdminNote] = useState(row.notes_admin || "");
   const items = safeJsonParse(row.items_json, {});
 
   const handleSave = () => onSave(row, editStatus, editAdminNote);
+  const handleDelete = () => onDelete?.(row);
 
   const contact = items.contact || items.guest || {};
   const vehicle = items.vehicle || {};
@@ -502,6 +523,13 @@ function DetailModal({ row, onClose, onSave }) {
             Save Changes
           </button>
           <button onClick={onClose} className="flex-1 h-14 rounded-3xl border font-semibold">Close</button>
+          <button
+            onClick={handleDelete}
+            className="h-14 px-6 rounded-3xl bg-red-600 text-white font-semibold hover:bg-red-700 transition"
+            title="Delete this request permanently"
+          >
+            Delete
+          </button>
         </div>
       </div>
     </div>

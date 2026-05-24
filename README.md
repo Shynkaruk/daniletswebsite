@@ -1,12 +1,30 @@
-# React + Vite
+# Danilets Website
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Customer-facing booking and marketing site for **Danilets** — a professional auto detailing and cleaning service.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Multi-step booking flows for auto detailing (personal & business) and cleaning (residential & commercial)
+- Google OAuth sign-in
+- Stripe payment integration
+- Email notifications via Resend
+- SEO-friendly pages with `react-helmet-async`
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **Frontend**: React 19, React Router 7, Tailwind CSS 4, Vite 6
+- **Backend**: Node.js (Express), MongoDB / Mongoose
+- **Payments**: Stripe
+- **Auth**: Google OAuth (`@react-oauth/google`)
+
+## Getting Started
+
+```bash
+npm install
+npm run dev       # start Vite dev server
+npm run start     # start Express API server
+npm run build     # production build
+npm run lint      # ESLint
+```
+
+Requires Node 20.x.

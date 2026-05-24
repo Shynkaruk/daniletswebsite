@@ -16,7 +16,7 @@ const GOLD_GRADIENT =
  *
  * Calls onSearch("personal" | "business" | "residential" | "commercial")
  * on final confirmation. The onSearch handler in Booking.jsx already sets
- * the service type and advances the step — onChange is not needed.
+ * the service type and advances the step — onChange is not needed internally.
  */
 export default function Step1Search({
   visible,

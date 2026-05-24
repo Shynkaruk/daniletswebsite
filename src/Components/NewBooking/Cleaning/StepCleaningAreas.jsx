@@ -74,7 +74,7 @@ export default function StepCleaningAreas({
   const safeAreas = Array.isArray(areas) ? areas : [];
 
   const isOtherSelected = safeAreas.includes("Other");
-  const otherOk = !isOtherSelected || (areasOther || "").trim().length > 1;
+  const otherOk = !isOtherSelected || (areasOther || "").trim().length > 0;
 
   const canContinue = useMemo(() => {
     if (!isResidential) return true;

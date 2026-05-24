@@ -356,8 +356,11 @@ const Booking = () => {
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
   const [areas, setAreas] = useState([]);
+  const [areasOther, setAreasOther] = useState("");
   const [generalTasks, setGeneralTasks] = useState([]);
+  const [generalTasksOther, setGeneralTasksOther] = useState("");
   const [kitchenTasks, setKitchenTasks] = useState([]);
+  const [kitchenTasksOther, setKitchenTasksOther] = useState("");
   const [resBudget, setResBudget] = useState("");
   const [extraDetails, setExtraDetails] = useState("");
 
@@ -403,6 +406,15 @@ const Booking = () => {
       projectTypeText: ptText,
     });
   };
+
+  // #7 — auto-scroll to top whenever the active step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    const root = document.getElementById("root");
+    if (root) root.scrollTop = 0;
+  }, [step, cleaningStep]);
 
   // Всередині компонента Booking, після всіх useState:
 const { setIsDirty } = useNavigationGuard();
@@ -544,8 +556,11 @@ useEffect(() => {
     setBedrooms("");
     setBathrooms("");
     setAreas([]);
+    setAreasOther("");
     setGeneralTasks([]);
+    setGeneralTasksOther("");
     setKitchenTasks([]);
+    setKitchenTasksOther("");
     setResBudget("");
     setExtraDetails("");
     setComBudget("");
@@ -1027,8 +1042,11 @@ useEffect(() => {
       bedrooms,
       bathrooms,
       areas,
+      areasOther,
       generalTasks,
+      generalTasksOther,
       kitchenTasks,
+      kitchenTasksOther,
       resBudget,
       extraDetails,
 
@@ -1061,9 +1079,9 @@ useEffect(() => {
           }`
         : null,
       bedrooms || bathrooms ? `Bedrooms: ${bedrooms || 0}, Bathrooms: ${bathrooms || 0}` : null,
-      areas?.length ? `Areas: ${areas.join(", ")}` : null,
-      generalTasks?.length ? `Tasks: ${generalTasks.join(", ")}` : null,
-      kitchenTasks?.length ? `Kitchen tasks: ${kitchenTasks.join(", ")}` : null,
+      areas?.length ? `Areas: ${areas.join(", ")}${areasOther ? ` (other: ${areasOther})` : ""}` : null,
+      generalTasks?.length ? `Tasks: ${generalTasks.join(", ")}${generalTasksOther ? ` (other: ${generalTasksOther})` : ""}` : null,
+      kitchenTasks?.length ? `Kitchen tasks: ${kitchenTasks.join(", ")}${kitchenTasksOther ? ` (other: ${kitchenTasksOther})` : ""}` : null,
       resBudget ? `Budget (res): ${resBudget}` : null,
       extraDetails ? `Extra details: ${extraDetails}` : null,
       query ? `Service address: ${query}` : null,
@@ -1233,8 +1251,11 @@ useEffect(() => {
     setBedrooms("");
     setBathrooms("");
     setAreas([]);
+    setAreasOther("");
     setGeneralTasks([]);
+    setGeneralTasksOther("");
     setKitchenTasks([]);
+    setKitchenTasksOther("");
     setResBudget("");
     setExtraDetails("");
     setHearAboutUs("");
@@ -1767,6 +1788,8 @@ useEffect(() => {
                     propertyType={propertyType}
                     areas={areas}
                     setAreas={setAreas}
+                    areasOther={areasOther}
+                    setAreasOther={setAreasOther}
                     renderProgress={renderCleaningProgress}
                     progressStepIndex={5}
                     totalSteps={CLEANING_TOTAL_STEPS}
@@ -1780,6 +1803,8 @@ useEffect(() => {
                     propertyType={propertyType}
                     generalTasks={generalTasks}
                     setGeneralTasks={setGeneralTasks}
+                    generalTasksOther={generalTasksOther}
+                    setGeneralTasksOther={setGeneralTasksOther}
                     renderProgress={renderCleaningProgress}
                     progressStepIndex={6}
                     totalSteps={CLEANING_TOTAL_STEPS}
@@ -1793,6 +1818,8 @@ useEffect(() => {
                     propertyType={propertyType}
                     kitchenTasks={kitchenTasks}
                     setKitchenTasks={setKitchenTasks}
+                    kitchenTasksOther={kitchenTasksOther}
+                    setKitchenTasksOther={setKitchenTasksOther}
                     renderProgress={renderCleaningProgress}
                     progressStepIndex={7}
                     totalSteps={CLEANING_TOTAL_STEPS}

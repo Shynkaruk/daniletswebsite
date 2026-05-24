@@ -40,7 +40,7 @@ export default function StepCleaningPropertyType({
 
           {/* Section title exactly as in the document */}
           <h2 className="text-[20px] sm:text-[22px] font-extrabold text-[#18181B]">
-            Get Quote
+            Property Type
           </h2>
         </div>
 

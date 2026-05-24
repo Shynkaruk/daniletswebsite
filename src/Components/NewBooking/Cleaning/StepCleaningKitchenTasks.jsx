@@ -71,7 +71,7 @@ export default function StepCleaningKitchenTasks({
   const safe = Array.isArray(kitchenTasks) ? kitchenTasks : [];
 
   const isOtherSelected = safe.includes("Other");
-  const otherOk = !isOtherSelected || (kitchenTasksOther || "").trim().length > 1;
+  const otherOk = !isOtherSelected || (kitchenTasksOther || "").trim().length > 0;
 
   const canContinue = useMemo(() => {
     if (!isResidential) return true;
@@ -106,7 +106,7 @@ export default function StepCleaningKitchenTasks({
           >
             <FiChevronLeft className="text-[18px] text-[#18181B]" />
           </button>
-          <h2 className="text-[22px] font-extrabold text-[#18181B]">Project Information</h2>
+          <h2 className="text-[22px] font-extrabold text-[#18181B]">Kitchen Tasks</h2>
         </div>
 
         {renderProgress ? (

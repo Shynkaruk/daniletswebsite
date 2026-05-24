@@ -10,13 +10,21 @@ const VISIBLE_CARDS = 4;
 const OurReviews = ({ className = "" }) => {
   const location = useLocation();
 
+  // Hostname wins over pathname so domain-specific sites work correctly
+  const domainType = useMemo(() => {
+    const host = window.location.hostname.toLowerCase();
+    if (host.includes("daniletsdetailing")) return "detailing";
+    if (host.includes("daniletscleaning")) return "cleaning";
+    return "main";
+  }, []);
+
   const isDetailingPage = useMemo(
-    () => location.pathname.includes("/detailing"),
-    [location.pathname]
+    () => domainType === "detailing" || location.pathname.includes("/detailing"),
+    [domainType, location.pathname]
   );
   const isCleaningPage = useMemo(
-    () => location.pathname.includes("/cleaning"),
-    [location.pathname]
+    () => domainType === "cleaning" || location.pathname.includes("/cleaning"),
+    [domainType, location.pathname]
   );
 
   const hideTabs = isDetailingPage || isCleaningPage;
