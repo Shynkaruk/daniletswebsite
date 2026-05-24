@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import cleaningIcon from "../assets/icons/services/cleaning.svg";
 import detailingIcon from "../assets/icons/services/detailing.svg";
@@ -7,13 +7,21 @@ import arrowRightIcon from "../assets/icons/arrows/arrow_right_black.svg";
 const Services = ({ className = "" }) => {
   const navigate = useNavigate();
 
-  const services = [
+  const domainType = useMemo(() => {
+    const host = window.location.hostname.toLowerCase();
+    if (host.includes("daniletsdetailing")) return "detailing";
+    if (host.includes("daniletscleaning")) return "cleaning";
+    return "main";
+  }, []);
+
+  const allServices = [
     {
       title: "Auto and Dealership Detailing",
       description:
         "Premium automotive detailing that enhances, protects, and perfects every detail of your vehicle. From dealerships to individual clients, we deliver excellence with precision.",
       icon: detailingIcon,
       link: "/detailing",
+      domain: "detailing",
     },
     {
       title: "Commercial and Residential Cleaning",
@@ -21,8 +29,18 @@ const Services = ({ className = "" }) => {
         "Professional cleaning services specializing in commercial spaces, offices, Airbnb properties, and deep cleans. We deliver meticulous results that transform your environment.",
       icon: cleaningIcon,
       link: "/cleaning",
+      domain: "cleaning",
     },
   ];
+
+  // On a domain-specific site show only that service; main domain shows both
+  const services = useMemo(
+    () =>
+      domainType === "main"
+        ? allServices
+        : allServices.filter((s) => s.domain === domainType),
+    [domainType]
+  );
 
   return (
     <section className={`w-full ${className}`}>
