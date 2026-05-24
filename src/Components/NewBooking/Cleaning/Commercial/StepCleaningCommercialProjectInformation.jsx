@@ -503,7 +503,11 @@ export default function StepCleaningCommercialProjectInformation({
     setSection(0);
   }, [projectType]);
 
-  const outerProgressValue = progressStepIndex;
+  // progressStepIndex is the outer step (5), section is the inner page (0,1,2…)
+  // so step 5+0=5, 5+1=6, 5+2=7 …
+  const outerProgressValue = progressStepIndex + section;
+  // expand the total by the number of extra screens inside this component
+  const dynamicTotal = totalSteps - 1 + totalSections;
 
   const goBack = () => {
     if (section > 0) setSection((s) => s - 1);
@@ -724,12 +728,8 @@ export default function StepCleaningCommercialProjectInformation({
           </div>
         </div>
 
-        {/* ✅ ТІЛЬКИ зовнішній прогрес */}
-        {renderProgress ? (
-          renderProgress(outerProgressValue)
-        ) : (
-          <ProgressBar activeCount={outerProgressValue} total={totalSteps} />
-        )}
+        {/* Progress — dynamic total so each section increments the bar */}
+        <ProgressBar activeCount={outerProgressValue} total={dynamicTotal} />
 
         <div className="space-y-6">
           {/* ===== OFFICE ===== */}
