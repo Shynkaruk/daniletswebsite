@@ -1,97 +1,192 @@
-// src/Components/Booking/Step1Search.jsx
+// src/Components/NewBooking/ChooseServiceQute.jsx
 import React, { useEffect, useState, useMemo } from "react";
 
 const GOLD_GRADIENT =
   "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)";
 
+/**
+ * Step 1 — service chooser.
+ *
+ * Domain routing:
+ *   danilets.com        → Phase 1: "Auto Detailing" | "House Cleaning"
+ *                         Phase 2: detailing → "Personal" | "Business"
+ *                                  cleaning  → "Residential" | "Commercial"
+ *   daniletsdetailing.* → "Personal" | "Business"
+ *   daniletscleaning.*  → "Residential" | "Commercial"
+ *
+ * Calls onSearch("personal" | "business" | "residential" | "commercial")
+ * when the user confirms their final sub-service choice.
+ */
 export default function Step1Search({
   visible,
   onSearch,
+  // value / onChange / initial kept in props for API compat but not used
+  // internally — onSearch in Booking.jsx already sets service + advances step.
   value,
   onChange,
-  initial = "cleaning",
+  initial,
 }) {
-  const [local, setLocal] = useState(initial);
-  const selected = value ?? local;
+  // Which pill is highlighted in the current phase
+  const [local, setLocal] = useState(null);
+  // Main-domain only: 1 = top-level (Detailing / Cleaning), 2 = sub-service
+  const [phase, setPhase] = useState(1);
+  // Remembers top-level choice so phase 2 knows which pills to render
+  const [serviceChoice, setServiceChoice] = useState(null); // "detailing" | "cleaning"
 
-  // === ВИЗНАЧАЄМО ТИП САЙТУ ===
+  // ── Domain detection ────────────────────────────────────────────────────
   const domainType = useMemo(() => {
     const host = window.location.hostname.toLowerCase();
     if (host.includes("daniletsdetailing")) return "detailing";
     if (host.includes("daniletscleaning")) return "cleaning";
-    return "main"; // fallback
+    return "main";
   }, []);
 
+  const isMainDomain = domainType === "main";
   const isDetailingSite = domainType === "detailing";
+  const isCleaningSite = domainType === "cleaning";
 
+  // ── Reset when step hides ───────────────────────────────────────────────
   useEffect(() => {
-    if (value == null) setLocal(initial);
-  }, [initial, value]);
+    if (!visible) {
+      setLocal(null);
+      setPhase(1);
+      setServiceChoice(null);
+    }
+  }, [visible]);
 
   if (!visible) return null;
 
-  const setSelected = (next) => {
-    if (typeof onChange === "function") onChange(next);
-    else setLocal(next);
-  };
+  // ── Pill selection ──────────────────────────────────────────────────────
+  const setSelected = (next) => setLocal(next);
 
+  // ── Continue ────────────────────────────────────────────────────────────
   const handleContinue = () => {
-    if (!selected) return;
-    if (typeof onSearch === "function") {
-      onSearch(selected);
+    if (!local) return;
+
+    if (isMainDomain && phase === 1) {
+      // Advance to phase 2 — remember top-level choice, reset pill
+      setServiceChoice(local);
+      setLocal(null);
+      setPhase(2);
+      return;
     }
+
+    // Final answer: tell Booking.jsx which sub-service was chosen
+    if (typeof onSearch === "function") onSearch(local);
   };
 
+  // ── Back (main domain phase 2 only) ────────────────────────────────────
+  const handleBack = () => {
+    setLocal(null);
+    setPhase(1);
+    setServiceChoice(null);
+  };
+
+  // ── Which pill set to render ────────────────────────────────────────────
+  const showTopLevel =
+    isMainDomain && phase === 1;
+
+  const showDetailingPills =
+    isDetailingSite ||
+    (isMainDomain && phase === 2 && serviceChoice === "detailing");
+
+  const showCleaningPills =
+    isCleaningSite ||
+    (isMainDomain && phase === 2 && serviceChoice === "cleaning");
+
+  // ── Titles ──────────────────────────────────────────────────────────────
+  const title = showTopLevel
+    ? "Choose Your Service"
+    : showDetailingPills
+    ? "Detailing"
+    : "Cleaning";
+
+  const subtitle = showTopLevel
+    ? "What type of service are you looking for?"
+    : showDetailingPills
+    ? "Select your client type"
+    : "Select your property type";
+
+  // ── Render ──────────────────────────────────────────────────────────────
   return (
     <section className="relative w-full min-h-[520px] flex items-center justify-center px-4">
       <div className="w-full max-w-[980px]">
-        {/* Заголовок */}
+        {/* Back button — main domain phase 2 only */}
+        {isMainDomain && phase === 2 && (
+          <button
+            type="button"
+            onClick={handleBack}
+            className="mb-6 flex items-center gap-2 text-black/50 hover:text-black transition text-[16px]"
+          >
+            <span className="text-[20px] leading-none">‹</span>
+            <span>Back</span>
+          </button>
+        )}
+
+        {/* Title */}
         <div className="text-center">
           <h1 className="text-[44px] sm:text-[64px] md:text-[64px] font-extrabold tracking-[-0.02em] text-black">
-            Choose Your Service
+            {title}
           </h1>
           <p className="mt-3 text-[20px] sm:text-[18px] text-black/60">
-            What type of service are you looking for?
+            {subtitle}
           </p>
         </div>
 
-        {/* Динамічні опції залежно від домену */}
+        {/* Pills */}
         <div className="mt-10 flex flex-col sm:flex-row gap-6 justify-center">
-          {isDetailingSite ? (
+          {showTopLevel && (
+            <>
+              <Pill
+                label="Detailing"
+                active={local === "detailing"}
+                onClick={() => setSelected("detailing")}
+              />
+              <Pill
+                label="Cleaning"
+                active={local === "cleaning"}
+                onClick={() => setSelected("cleaning")}
+              />
+            </>
+          )}
+
+          {showDetailingPills && (
             <>
               <Pill
                 label="Personal"
-                active={selected === "personal"}
+                active={local === "personal"}
                 onClick={() => setSelected("personal")}
               />
               <Pill
                 label="Business"
-                active={selected === "business"}
+                active={local === "business"}
                 onClick={() => setSelected("business")}
               />
             </>
-          ) : (
+          )}
+
+          {showCleaningPills && (
             <>
               <Pill
                 label="Residential"
-                active={selected === "residential"}
+                active={local === "residential"}
                 onClick={() => setSelected("residential")}
               />
               <Pill
                 label="Commercial"
-                active={selected === "commercial"}
+                active={local === "commercial"}
                 onClick={() => setSelected("commercial")}
               />
             </>
           )}
         </div>
 
-        {/* Continue Button */}
+        {/* Continue */}
         <div className="mt-10 flex justify-center">
           <button
             type="button"
             onClick={handleContinue}
-            disabled={!selected}
+            disabled={!local}
             className="
               w-full max-w-[920px]
               h-[64px]
@@ -106,7 +201,7 @@ export default function Step1Search({
               disabled:opacity-60 disabled:cursor-not-allowed
             "
             style={{
-              background: selected ? GOLD_GRADIENT : "rgba(0,0,0,0.06)",
+              background: local ? GOLD_GRADIENT : "rgba(0,0,0,0.06)",
               color: "#1a1a1a",
             }}
           >
@@ -119,6 +214,7 @@ export default function Step1Search({
   );
 }
 
+// ── Pill ──────────────────────────────────────────────────────────────────
 function Pill({ label, active, onClick }) {
   return (
     <button

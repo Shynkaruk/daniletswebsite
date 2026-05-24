@@ -48,7 +48,7 @@ export default function StepCleaningProjectType({
   }, [isResidential, isCommercial]);
 
   const isOther = projectType === "other";
-  const otherOk = !isOther || (projectTypeOther || "").trim().length > 1;
+  const otherOk = !isOther || (projectTypeOther || "").trim().length > 0;
 
   const canContinue = !!projectType && otherOk;
 

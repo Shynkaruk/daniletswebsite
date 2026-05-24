@@ -404,6 +404,15 @@ const Booking = () => {
     });
   };
 
+  // #7 — auto-scroll to top whenever the active step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    const root = document.getElementById("root");
+    if (root) root.scrollTop = 0;
+  }, [step, cleaningStep]);
+
   // Всередині компонента Booking, після всіх useState:
 const { setIsDirty } = useNavigationGuard();
 
