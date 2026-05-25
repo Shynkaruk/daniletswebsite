@@ -1282,7 +1282,8 @@ app.post("/api/auth/apple/callback", async (req, res) => {
 
     // 🔹 Редірект на фронт з токеном у query
     const FRONT_URL = process.env.FRONTEND_URL || "https://danilets.com";
-    const redirectUrl = `${FRONT_URL}/auth/callback?token=${token}`;
+    const profile_complete = !!(userDoc.first_name && userDoc.last_name && userDoc.phone) ? 1 : 0;
+    const redirectUrl = `${FRONT_URL}/auth/callback?token=${token}&profile_complete=${profile_complete}`;
 
     return res.redirect(redirectUrl);
 

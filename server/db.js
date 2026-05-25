@@ -11,13 +11,18 @@ if (!MONGODB_URI) {
 // ----- SCHEMAS -----
 
 const userSchema = new mongoose.Schema({
-  email:      { type: String, required: true, unique: true },
-  password:   { type: String, required: true }, // bcrypt hash
-  first_name: String,
-  last_name:  String,
-  phone:      String,
-  is_admin:   { type: Boolean, default: false },
-  created_at: { type: Date, default: Date.now },
+  email:          { type: String, required: true, unique: true },
+  password:       { type: String, default: null },   // null for OAuth (Google/Apple) users
+  first_name:     { type: String, default: "" },
+  last_name:      { type: String, default: "" },
+  phone:          { type: String, default: "" },
+  is_admin:       { type: Boolean, default: false },
+  // OAuth fields
+  google_id:      { type: String, default: null },
+  apple_id:       { type: String, default: null },
+  avatar:         { type: String, default: null },
+  email_verified: { type: Boolean, default: false },
+  created_at:     { type: Date, default: Date.now },
 });
 
 const contentBlockSchema = new mongoose.Schema({

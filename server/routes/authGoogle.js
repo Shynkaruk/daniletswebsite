@@ -74,7 +74,11 @@ router.post("/google-code", async (req, res) => {
 
     const token = signAppToken(user);
 
-    res.json({ user, token });
+    const profile_complete = !!(user.first_name && user.last_name && user.phone);
+    // Serialize Mongoose doc to plain object so the response is clean
+    const userObj = user.toObject ? user.toObject() : user;
+
+    res.json({ user: userObj, token, profile_complete });
   } catch (err) {
     console.error("Google auth by code error:", err?.response?.data || err);
     res.status(400).json({ error: "Google auth failed" });

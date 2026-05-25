@@ -25,6 +25,12 @@ export default function AuthCallback() {
     }
 
     // Decode the JWT payload to get user info (no verification needed — server already signed it)
+    let profileComplete = true; // default: assume complete unless told otherwise
+    const profileCompleteParam = params.get("profile_complete");
+    if (profileCompleteParam !== null) {
+      profileComplete = profileCompleteParam === "1";
+    }
+
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
       const user = {
@@ -43,7 +49,12 @@ export default function AuthCallback() {
       setToken(token);
     }
 
-    navigate("/account", { replace: true });
+    if (!profileComplete) {
+      // Apple user needs to complete their profile — Layout will detect this param
+      navigate("/?need_profile=1", { replace: true });
+    } else {
+      navigate("/account", { replace: true });
+    }
   }, [navigate]);
 
   return null; // blank screen while redirecting

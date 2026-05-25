@@ -5,7 +5,7 @@ import { auth } from "../lib/api"; // див. src/lib/api.js
 import GoogleCustomButton from "./GoogleCustomButton";
 import OtpModal from "./OtpModal";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+const API_BASE = import.meta.env.VITE_API_URL || "";
 
 const gradient =
   "linear-gradient(107.27deg, #8B6134 -27.97%, #A8834E -12.13%, #F2D892 22.69%, #FFE79E 45.99%, #E1C07B 77.51%)";
@@ -15,6 +15,7 @@ export default function AuthModal({
   onClose,
   initialTab = "login", // "login" | "signup"
   onAuth, // callback після успішної авторизації (опц.)
+  onNeedsProfileCompletion, // called with user object when OAuth user has incomplete profile
 }) {
   const [tab, setTab] = useState(initialTab);
   const cardRef = useRef(null);
@@ -142,6 +143,15 @@ return (
                 onAuth?.(user);
                 onClose?.();
                 window.location.href = "/account";
+              }}
+              onNeedsCompletion={(user) => {
+                onClose?.();
+                onNeedsProfileCompletion?.({
+                  first_name: user.first_name || "",
+                  last_name:  user.last_name  || "",
+                  phone:      user.phone      || "",
+                  email:      user.email      || "",
+                });
               }}
             />
           </div>
