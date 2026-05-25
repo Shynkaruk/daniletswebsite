@@ -148,6 +148,16 @@ const otpCodeSchema = new mongoose.Schema({
 
 export const OtpCode = mongoose.model('OtpCode', otpCodeSchema);
 
+// Push-підписки адмінів (Web Push API)
+const pushSubscriptionSchema = new mongoose.Schema({
+  user_id:      { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  subscription: { type: mongoose.Schema.Types.Mixed, required: true }, // { endpoint, keys }
+  created_at:   { type: Date, default: Date.now },
+});
+pushSubscriptionSchema.index({ user_id: 1 });
+
+export const PushSubscription = mongoose.model('PushSubscription', pushSubscriptionSchema);
+
 
 export async function initDb() {
   const uri = process.env.MONGODB_URI;

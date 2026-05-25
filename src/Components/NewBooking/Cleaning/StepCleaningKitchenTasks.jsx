@@ -106,7 +106,7 @@ export default function StepCleaningKitchenTasks({
           >
             <FiChevronLeft className="text-[18px] text-[#18181B]" />
           </button>
-          <h2 className="text-[22px] font-extrabold text-[#18181B]">Kitchen Tasks</h2>
+          <h2 className="text-[22px] font-extrabold text-[#18181B]">Project Information</h2>
         </div>
 
         {renderProgress ? (

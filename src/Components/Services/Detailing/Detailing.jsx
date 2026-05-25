@@ -11,7 +11,7 @@ const Detailing = () => {
   const navigate = useNavigate();
 
   const handleBookNow = () => {
-    navigate("/book-online");
+    navigate("/book-online?from=detailing");
   };
 
   return (

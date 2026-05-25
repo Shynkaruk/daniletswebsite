@@ -1,6 +1,6 @@
 // src/Components/Booking.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import Header from "./Head";
 import Footer from "./Footer";
@@ -169,6 +169,7 @@ const BUSINESS_TYPE_LABELS = {
 
 const Booking = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // service switch
   const [service, setService] = useState("detailing");
@@ -192,6 +193,20 @@ const Booking = () => {
   const [detailingMode, setDetailingMode] = useState("personal"); // "personal" | "business"
   const isPersonalDetailing = !isCleaning && detailingMode === "personal";
   const isBusinessDetailing = !isCleaning && detailingMode === "business";
+
+  // #9 — auto-advance past step 1 when ?from=detailing or ?from=cleaning
+  useEffect(() => {
+    const from = searchParams.get("from");
+    if (from === "detailing") {
+      setService("detailing");
+      setStep(2);
+    } else if (from === "cleaning") {
+      setService("cleaning");
+      setStep(2);
+      setCleaningStep(2);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const renderCleaningProgress = (activeIndex) => (
     <ProgressBar activeCount={activeIndex} total={CLEANING_TOTAL_STEPS} />

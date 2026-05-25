@@ -449,3 +449,22 @@ export const adminReqApi = {
   },
 };
 
+/** ================= Admin: Push Notifications ================= **/
+
+export const pushApi = {
+  async getVapidKey() {
+    return getJson(`${API}/api/admin/push/vapid-key`);
+  },
+
+  async subscribe(subscription) {
+    return sendJson(`${API}/api/admin/push/subscribe`, "POST", { subscription });
+  },
+
+  async unsubscribe() {
+    const r = await fetch(`${API}/api/admin/push/unsubscribe`, {
+      method: "DELETE",
+      headers: { ...authHeaders() },
+    });
+    return parseJsonSafe(r);
+  },
+};

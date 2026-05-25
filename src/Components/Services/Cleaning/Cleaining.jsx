@@ -10,7 +10,7 @@ const Cleaning = () => {
 
   const navigate = useNavigate()
   const handleBookNow = () => {
-    navigate("/book-online");
+    navigate("/book-online?from=cleaning");
   };
   return (
     <section

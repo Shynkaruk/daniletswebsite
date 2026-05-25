@@ -1,6 +1,7 @@
 // src/Accounts/AdminRequests.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { adminReqApi } from "../lib/api";
+import PushNotificationToggle from "../Components/PushNotificationToggle";
 
 function safeJsonParse(text, fallback = {}) {
   try {
@@ -174,12 +175,15 @@ export default function AdminRequests() {
             </h1>
             <p className="text-gray-500">Total requests: <span className="font-semibold">{rows.length}</span></p>
           </div>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, email..."
-            className="w-full sm:w-96 h-11 px-5 rounded-2xl border focus:border-[#A8834E] outline-none"
-          />
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name, email..."
+              className="flex-1 sm:w-80 h-11 px-5 rounded-2xl border focus:border-[#A8834E] outline-none"
+            />
+            <PushNotificationToggle />
+          </div>
         </div>
 
         <div className="flex-1 p-6 overflow-auto">

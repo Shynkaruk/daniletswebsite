@@ -13,6 +13,7 @@ import axios from "axios";
 import bcrypt from "bcryptjs";
 import { fileURLToPath } from "url";
 import appleSignin from "apple-signin-auth";
+import webpush from "web-push";
 import {
   initDb,
   User,
@@ -22,10 +23,11 @@ import {
   Vehicle,
   RequestModel,
   OtpCode,
+  PushSubscription,
 } from "./db.js";
 import googleCodeRouter from "./routes/authGoogle.js";
 import googleReviewsRouter from "./routes/googleReviews.js";
-import { sendOtpEmail } from "./email.js";
+import { sendOtpEmail, sendAdminNewRequestNotification } from "./email.js";
 import contactRouter from "./routes/contact.js";
 import contactsFormRouter from "./routes/contactsform.js";
 import checkoutRouter from "./routes/checkout.js";
@@ -42,6 +44,38 @@ const JWT_SECRET = process.env.JWT_SECRET || "dev_secret_change_me";
 const TOKEN_EXPIRES = process.env.TOKEN_EXPIRES || "7d";
 
 const BITRIX_BASE_URL = process.env.BITRIX_BASE_URL || "";
+
+// ---- Web Push (VAPID) ----
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    process.env.VAPID_EMAIL || "mailto:admin@danilets.com",
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+} else {
+  console.warn("[push] VAPID keys not set — push notifications disabled");
+}
+
+async function sendAdminPushNotification({ title, body, url = "/admin" }) {
+  if (!process.env.VAPID_PUBLIC_KEY) return;
+  try {
+    const subs = await PushSubscription.find({}).lean();
+    if (!subs.length) return;
+    const payload = JSON.stringify({ title, body, url });
+    await Promise.allSettled(
+      subs.map((s) =>
+        webpush.sendNotification(s.subscription, payload).catch((err) => {
+          // 410 Gone = subscription expired/unsubscribed — clean up
+          if (err.statusCode === 410) {
+            PushSubscription.deleteOne({ _id: s._id }).catch(() => {});
+          }
+        })
+      )
+    );
+  } catch (e) {
+    console.error("[push] sendAdminPushNotification error:", e);
+  }
+}
 
 // 🆕 ID воронок у Bitrix (ставиш свої значення з CRM)
 const BITRIX_CATEGORY_DETAILING = Number(
@@ -1908,6 +1942,30 @@ app.post("/api/requests/public", optionalAuth, async (req, res) => {
     row.id = row._id.toString();
     delete row._id;
 
+    // #30 — notify admin (fire-and-forget, no await to avoid delaying response)
+    {
+      let guestParsed = {};
+      try { guestParsed = JSON.parse(mergedItemsJson || "{}"); } catch {}
+      const guestInfo = guestParsed.guest || {};
+      const contactInfo = guestParsed.contact || {};
+      sendAdminNewRequestNotification({
+        serviceType: service_type,
+        requestId: row.id,
+        customerName: (guest_name || contactInfo.firstName
+          ? `${contactInfo.firstName || ""} ${contactInfo.lastName || ""}`.trim()
+          : guestInfo.name) || guest_name || "",
+        customerEmail: guest_email || contactInfo.email || guestInfo.email || "",
+        customerPhone: guest_phone || contactInfo.phone || guestInfo.phone || "",
+        notes: notes_customer || "",
+      });
+      const svcLabel = service_type?.replace(/_/g, " ") || "New request";
+      sendAdminPushNotification({
+        title: "New Request",
+        body: svcLabel,
+        url: "/admin",
+      });
+    }
+
     return res.json(row);
   } catch (e) {
     console.error("POST /api/requests/public error:", e);
@@ -1977,6 +2035,27 @@ app.post("/api/requests", optionalAuth, async (req, res) => {
     delete row._id;
     delete row.__v;
 
+    // #30 — notify admin (fire-and-forget)
+    {
+      let parsedItems = {};
+      try { parsedItems = JSON.parse(safeItemsJson || "{}"); } catch {}
+      const contact = parsedItems.contact || {};
+      sendAdminNewRequestNotification({
+        serviceType: service_type,
+        requestId: row.id,
+        customerName: `${contact.firstName || ""} ${contact.lastName || ""}`.trim() || "",
+        customerEmail: contact.email || "",
+        customerPhone: contact.phone || "",
+        notes: notes_customer || "",
+      });
+      const svcLabel2 = service_type?.replace(/_/g, " ") || "New request";
+      sendAdminPushNotification({
+        title: "New Request",
+        body: svcLabel2,
+        url: "/admin",
+      });
+    }
+
     res.json(row);
   } catch (e) {
     console.error("POST /api/requests error:", e);
@@ -2044,6 +2123,43 @@ app.delete("/api/requests/:id", auth, async (req, res) => {
 
   await RequestModel.deleteOne({ _id: id });
   res.json({ ok: true });
+});
+
+// ====================== PUSH NOTIFICATIONS ======================
+
+// Повертає VAPID public key (потрібен фронту для підписки)
+app.get("/api/admin/push/vapid-key", auth, requireAdmin, (req, res) => {
+  const key = process.env.VAPID_PUBLIC_KEY;
+  if (!key) return res.status(503).json({ error: "Push not configured" });
+  res.json({ publicKey: key });
+});
+
+// Зберігає push-підписку адміна
+app.post("/api/admin/push/subscribe", auth, requireAdmin, async (req, res) => {
+  try {
+    const { subscription } = req.body || {};
+    if (!subscription?.endpoint) return res.status(400).json({ error: "Invalid subscription" });
+    // Upsert за endpoint (щоб не дублювати)
+    await PushSubscription.findOneAndUpdate(
+      { user_id: req.user.uid },
+      { user_id: req.user.uid, subscription },
+      { upsert: true, new: true }
+    );
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("[push] subscribe error:", e);
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
+// Видаляє push-підписку
+app.delete("/api/admin/push/unsubscribe", auth, requireAdmin, async (req, res) => {
+  try {
+    await PushSubscription.deleteMany({ user_id: req.user.uid });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: "server_error" });
+  }
 });
 
 // ====================== ADMIN: REQUESTS ======================
