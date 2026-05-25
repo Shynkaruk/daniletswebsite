@@ -12,6 +12,7 @@ import mongoose from "mongoose";
 import axios from "axios";
 import bcrypt from "bcryptjs";
 import { fileURLToPath } from "url";
+import appleSignin from "apple-signin-auth";
 import {
   initDb,
   User,
@@ -1279,8 +1280,8 @@ app.post("/api/auth/apple/callback", async (req, res) => {
 
     const token = signToken(user); // твоя існуюча функція
 
-    // 🔹 Варіант 1: редірект на фронт з токеном у query
-    const FRONT_URL = process.env.FRONT_URL || "https://danilets.com";
+    // 🔹 Редірект на фронт з токеном у query
+    const FRONT_URL = process.env.FRONTEND_URL || "https://danilets.com";
     const redirectUrl = `${FRONT_URL}/auth/callback?token=${token}`;
 
     return res.redirect(redirectUrl);

@@ -16,6 +16,7 @@ import Account from "./Accounts/Account.jsx";
 import ScrollToTop from "./ScrollToTop.jsx";
 import BookingSuccess from "./Components/payments/BookingSuccess.jsx";
 import Layout from "./Components/Layout.jsx";
+import AuthCallback from "./Components/AuthCallback.jsx";
 import { NavigationGuardProvider } from "./contexts/NavigationGuard.jsx";
 
 const AppContent = () => {
@@ -92,6 +93,7 @@ const AppContent = () => {
         <Route path="/admin" element={<AdminRequests />} />
         <Route path="/account" element={<Account />} />
         <Route path="/booking/success" element={<BookingSuccess />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
       </Route>
     </Routes>
   );
