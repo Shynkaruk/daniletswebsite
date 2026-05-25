@@ -1549,6 +1549,7 @@ useEffect(() => {
                 setHeardAbout={setHearAbout}
                 heardOther={hearAboutOther}
                 setHeardOther={setHearAboutOther}
+                user={user}
                 renderProgress={renderBusinessDetailingProgress}
                 progressStepIndex={2}
                 totalSteps={DETAILING_BUSINESS_STEPS_COUNT}
@@ -1911,9 +1912,10 @@ useEffect(() => {
                     referralName={c.referralName || ""}
                     setReferralName={(v) => setCC({ referralName: v })}
                     hearOther={c.hearAboutOther || ""}
-                    address={address}          
-                    setAddress={setAddress}    
+                    address={address}
+                    setAddress={setAddress}
                     setHearOther={(v) => setCC({ hearAboutOther: v })}
+                    user={user}
                     renderProgress={renderCleaningProgress}
                     progressStepIndex={2}
                     totalSteps={CLEANING_TOTAL_STEPS}

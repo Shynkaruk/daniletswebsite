@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { FiChevronLeft } from "react-icons/fi";
 import ProgressBar from "../../ProgressBar";
 import { GOLD_GRADIENT } from "../_ui";
@@ -36,6 +36,8 @@ export default function StepCleaningCommercialContactInfo({
   hearOther,
   setHearOther,
 
+  user,
+
   renderProgress,
   progressStepIndex = 2,
   totalSteps = 10,
@@ -43,6 +45,18 @@ export default function StepCleaningCommercialContactInfo({
   // === ВСІ ХУКИ НА САМОМУ ВЕРХУ ===
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+
+  const isLoggedIn = !!user;
+  const [mode, setMode] = useState(isLoggedIn ? "account" : "manual");
+
+  // Auto-fill from account when mode = "account"
+  useEffect(() => {
+    if (!isLoggedIn || mode !== "account") return;
+    if (user?.first_name) setFirstName?.(user.first_name);
+    if (user?.last_name)  setLastName?.(user.last_name);
+    if (user?.phone)      setPhone?.(user.phone);
+    if (user?.email)      setEmail?.(user.email);
+  }, [isLoggedIn, mode, user, setFirstName, setLastName, setPhone, setEmail]);
 
   const firstVal = firstName ?? "";
   const lastVal = lastName ?? "";
@@ -117,7 +131,10 @@ export default function StepCleaningCommercialContactInfo({
   };
 
   const handleContinue = () => {
-    const allFields = ["firstName", "lastName", "phone", "email", "address", "hearAbout"];
+    const isAccountMode = isLoggedIn && mode === "account";
+    const allFields = isAccountMode
+      ? ["address", "hearAbout"]
+      : ["firstName", "lastName", "phone", "email", "address", "hearAbout"];
 
     if (hearVal === "referral") allFields.push("referralName");
     if (hearVal === "other") allFields.push("hearOther");
@@ -134,11 +151,12 @@ export default function StepCleaningCommercialContactInfo({
 
   if (!visible) return null;
 
-  const inputClass = "mt-2 w-full h-[52px] rounded-[18px] border border-[#E5E7EB] px-4 outline-none";
+  const isAccountMode = isLoggedIn && mode === "account";
+  const inputClass = `mt-2 w-full h-[52px] rounded-[18px] border px-4 outline-none ${isAccountMode ? "border-[#D1D5DB] bg-[#EBEBEB] text-[#6B7280] cursor-default" : "border-[#E5E7EB]"}`;
 
   const getInputClass = (field) => `
-    ${inputClass} 
-    ${touched[field] && errors[field] ? "border-2 border-red-500 bg-red-50" : ""}
+    ${inputClass}
+    ${!isAccountMode && touched[field] && errors[field] ? "border-2 border-red-500 bg-red-50" : ""}
   `;
 
   return (
@@ -167,6 +185,35 @@ export default function StepCleaningCommercialContactInfo({
           <ProgressBar activeCount={progressStepIndex} total={totalSteps} />
         )}
 
+        {/* Account / Manual toggle */}
+        {isLoggedIn && (
+          <section className="space-y-3">
+            <div className="text-sm text-[#6B7280] font-medium">
+              How would you like to provide your contact details?
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setMode("account")}
+                className={`h-[44px] rounded-[16px] border text-sm font-semibold
+                  ${mode === "account" ? "border-transparent text-black" : "border-[#E5E7EB] text-[#4B5563] bg-white"}`}
+                style={{ background: mode === "account" ? GOLD_GRADIENT : undefined }}
+              >
+                Use my account
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("manual")}
+                className={`h-[44px] rounded-[16px] border text-sm font-semibold
+                  ${mode === "manual" ? "border-transparent text-black" : "border-[#E5E7EB] text-[#4B5563] bg-white"}`}
+                style={{ background: mode === "manual" ? GOLD_GRADIENT : undefined }}
+              >
+                Enter different details
+              </button>
+            </div>
+          </section>
+        )}
+
         <div className="space-y-4">
           {/* ========== CONTACT BLOCK (як у Residential) ========== */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -174,11 +221,12 @@ export default function StepCleaningCommercialContactInfo({
               <label className="text-sm font-semibold text-[#111827]">First Name</label>
               <input
                 value={firstVal}
-                onChange={(e) => setFirstName(e.target.value)}
-                onBlur={() => handleBlur("firstName")}
+                readOnly={isAccountMode}
+                onChange={(e) => !isAccountMode && setFirstName(e.target.value)}
+                onBlur={() => !isAccountMode && handleBlur("firstName")}
                 className={getInputClass("firstName")}
               />
-              {touched.firstName && errors.firstName && (
+              {!isAccountMode && touched.firstName && errors.firstName && (
                 <p className="text-red-600 text-sm mt-1">{errors.firstName}</p>
               )}
             </div>
@@ -187,11 +235,12 @@ export default function StepCleaningCommercialContactInfo({
               <label className="text-sm font-semibold text-[#111827]">Last Name</label>
               <input
                 value={lastVal}
-                onChange={(e) => setLastName(e.target.value)}
-                onBlur={() => handleBlur("lastName")}
+                readOnly={isAccountMode}
+                onChange={(e) => !isAccountMode && setLastName(e.target.value)}
+                onBlur={() => !isAccountMode && handleBlur("lastName")}
                 className={getInputClass("lastName")}
               />
-              {touched.lastName && errors.lastName && (
+              {!isAccountMode && touched.lastName && errors.lastName && (
                 <p className="text-red-600 text-sm mt-1">{errors.lastName}</p>
               )}
             </div>
@@ -201,13 +250,14 @@ export default function StepCleaningCommercialContactInfo({
             <label className="text-sm font-semibold text-[#111827]">Phone Number</label>
             <input
               value={phoneVal}
-              onChange={(e) => setPhone(e.target.value)}
-              onBlur={() => handleBlur("phone")}
+              readOnly={isAccountMode}
+              onChange={(e) => !isAccountMode && setPhone(e.target.value)}
+              onBlur={() => !isAccountMode && handleBlur("phone")}
               className={getInputClass("phone")}
               inputMode="tel"
               placeholder="(123) 456-7890"
             />
-            {touched.phone && errors.phone && (
+            {!isAccountMode && touched.phone && errors.phone && (
               <p className="text-red-600 text-sm mt-1">{errors.phone}</p>
             )}
           </div>
@@ -216,13 +266,14 @@ export default function StepCleaningCommercialContactInfo({
             <label className="text-sm font-semibold text-[#111827]">Email</label>
             <input
               value={emailVal}
-              onChange={(e) => setEmail(e.target.value)}
-              onBlur={() => handleBlur("email")}
+              readOnly={isAccountMode}
+              onChange={(e) => !isAccountMode && setEmail(e.target.value)}
+              onBlur={() => !isAccountMode && handleBlur("email")}
               className={getInputClass("email")}
               inputMode="email"
               placeholder="name@email.com"
             />
-            {touched.email && errors.email && (
+            {!isAccountMode && touched.email && errors.email && (
               <p className="text-red-600 text-sm mt-1">{errors.email}</p>
             )}
           </div>

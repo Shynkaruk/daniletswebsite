@@ -11,7 +11,6 @@ const GRADIENT =
 const TABS = [
   { key: "profile", label: "Personal Information" },
   { key: "car", label: "Vehicle Information" },
-  { key: "payment", label: "Payment Information" },
   { key: "orders", label: "Past Orders" },
 ];
 
@@ -88,7 +87,6 @@ export default function Account() {
             <div className="bg-white/95 rounded-[20px] sm:rounded-[24px] md:rounded-[28px] shadow-[0_8px_26px_rgba(0,0,0,0.08)] border border-[#ECECEC] p-4 sm:p-5 md:p-8">
               {active === "profile" && <ProfileCard openModal={openModal} />}
               {active === "car" && <CarCard openModal={openModal} />}
-              {active === "payment" && <PaymentCard openModal={openModal} />}
               {active === "orders" && <OrdersCard openModal={openModal} />}
             </div>
           </div>
@@ -238,45 +236,6 @@ function CarCard({ openModal }) {
         onSave={onSave}
         saveDisabled={!canSave}
       />
-    </Section>
-  );
-}
-
-/* ======================= Payment Information ======================= */
-function PaymentCard({ openModal }) {
-  const [holder, setHolder] = useState("");
-  const [cvc, setCvc] = useState("");
-  const [exp, setExp] = useState("");
-  const [card, setCard] = useState("");
-
-  const onSave = () => {
-    openModal?.(
-      "info",
-      "Payment (demo)",
-      "Demo only. Integrate Stripe to save cards securely."
-    );
-  };
-
-  return (
-    <Section title="Payment Information">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-        <Input
-          className="md:col-span-2"
-          placeholder="Card Holder Name"
-          value={holder}
-          onChange={setHolder}
-        />
-        <Input placeholder="CVV / CVC" value={cvc} onChange={setCvc} />
-        <Input placeholder="Expiration Date" value={exp} onChange={setExp} />
-        <Input
-          className="md:col-span-2"
-          placeholder="Card Number"
-          value={card}
-          onChange={setCard}
-        />
-      </div>
-
-      <Actions onChange={() => {}} onSave={onSave} />
     </Section>
   );
 }

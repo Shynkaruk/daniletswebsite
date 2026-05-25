@@ -67,12 +67,26 @@ export default function StepDetailingBusinessContactInfo({
   heardOther,
   setHeardOther,
 
+  user,
+
   renderProgress,
   progressStepIndex = 2,
   totalSteps = 11,
 }) {
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+
+  const isLoggedIn = !!user;
+  const [mode, setMode] = useState(isLoggedIn ? "account" : "manual");
+
+  // Auto-fill personal fields from account (company fields are always manual)
+  useEffect(() => {
+    if (!isLoggedIn || mode !== "account") return;
+    if (user?.first_name) setFirstName?.(user.first_name);
+    if (user?.last_name)  setLastName?.(user.last_name);
+    if (user?.phone)      setPhone?.(user.phone);
+    if (user?.email)      setEmail?.(user.email);
+  }, [isLoggedIn, mode, user, setFirstName, setLastName, setPhone, setEmail]);
 
   const first = firstName ?? "";
   const last = lastName ?? "";
@@ -151,7 +165,10 @@ export default function StepDetailingBusinessContactInfo({
   };
 
   const handleContinue = () => {
-    const allFields = ["firstName", "lastName", "companyName", "companyAddress", "phone", "email", "heardAbout"];
+    const isAccountMode = isLoggedIn && mode === "account";
+    const allFields = isAccountMode
+      ? ["companyName", "companyAddress", "heardAbout"]
+      : ["firstName", "lastName", "companyName", "companyAddress", "phone", "email", "heardAbout"];
     if (heard === "Other") allFields.push("heardOther");
 
     allFields.forEach(field => {
@@ -200,12 +217,18 @@ export default function StepDetailingBusinessContactInfo({
 
   if (!visible) return null;
 
-  const inputClass = "w-full h-[52px] rounded-[16px] bg-[#F4F4F5] px-4 text-[15px] outline-none";
+  const isAccountMode = isLoggedIn && mode === "account";
+  const personalReadOnly = isAccountMode;
+  const inputClass = "w-full h-[52px] rounded-[16px] px-4 text-[15px] outline-none bg-[#F4F4F5]";
 
-  const getInputClass = (field) => `
-    ${inputClass} 
-    ${touched[field] && errors[field] ? "border-2 border-red-500 bg-red-50" : ""}
-  `;
+  const getInputClass = (field, isPersonal = false) => {
+    const readonly = isPersonal && personalReadOnly;
+    return [
+      inputClass,
+      readonly ? "bg-[#EBEBEB] text-[#6B7280] cursor-default" : "",
+      !readonly && touched[field] && errors[field] ? "border-2 border-red-500 bg-red-50" : "",
+    ].join(" ");
+  };
 
   return (
     <div className="w-full max-w-full min-w-0 text-left">
@@ -238,6 +261,35 @@ export default function StepDetailingBusinessContactInfo({
           <ProgressBar activeCount={progressStepIndex} total={totalSteps} />
         )}
 
+        {/* Account / Manual toggle */}
+        {isLoggedIn && (
+          <section className="space-y-3">
+            <div className="text-sm text-[#6B7280] font-medium">
+              How would you like to provide your personal details?
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setMode("account")}
+                className={`h-[44px] rounded-[16px] border text-sm font-semibold
+                  ${mode === "account" ? "border-transparent text-black" : "border-[#E5E7EB] text-[#4B5563] bg-white"}`}
+                style={{ background: mode === "account" ? GOLD_GRADIENT : undefined }}
+              >
+                Use my account
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("manual")}
+                className={`h-[44px] rounded-[16px] border text-sm font-semibold
+                  ${mode === "manual" ? "border-transparent text-black" : "border-[#E5E7EB] text-[#4B5563] bg-white"}`}
+                style={{ background: mode === "manual" ? GOLD_GRADIENT : undefined }}
+              >
+                Enter different details
+              </button>
+            </div>
+          </section>
+        )}
+
         {/* FORM */}
         <section className="space-y-4">
           {/* First + Last */}
@@ -246,24 +298,26 @@ export default function StepDetailingBusinessContactInfo({
               <div className="text-sm text-[#6B7280] font-medium">First Name</div>
               <input
                 value={first}
-                onChange={(e) => setFirstName?.(e.target.value)}
-                onBlur={() => handleBlur("firstName")}
-                className={getInputClass("firstName")}
+                readOnly={personalReadOnly}
+                onChange={(e) => !personalReadOnly && setFirstName?.(e.target.value)}
+                onBlur={() => !personalReadOnly && handleBlur("firstName")}
+                className={getInputClass("firstName", true)}
                 placeholder="Enter first name"
               />
-              {touched.firstName && errors.firstName && <p className="text-red-600 text-sm mt-1">{errors.firstName}</p>}
+              {!personalReadOnly && touched.firstName && errors.firstName && <p className="text-red-600 text-sm mt-1">{errors.firstName}</p>}
             </div>
 
             <div>
               <div className="text-sm text-[#6B7280] font-medium">Last Name</div>
               <input
                 value={last}
-                onChange={(e) => setLastName?.(e.target.value)}
-                onBlur={() => handleBlur("lastName")}
-                className={getInputClass("lastName")}
+                readOnly={personalReadOnly}
+                onChange={(e) => !personalReadOnly && setLastName?.(e.target.value)}
+                onBlur={() => !personalReadOnly && handleBlur("lastName")}
+                className={getInputClass("lastName", true)}
                 placeholder="Enter last name"
               />
-              {touched.lastName && errors.lastName && <p className="text-red-600 text-sm mt-1">{errors.lastName}</p>}
+              {!personalReadOnly && touched.lastName && errors.lastName && <p className="text-red-600 text-sm mt-1">{errors.lastName}</p>}
             </div>
           </div>
 
@@ -304,12 +358,13 @@ export default function StepDetailingBusinessContactInfo({
               <div className="text-sm text-[#6B7280] font-medium">Phone Number</div>
               <input
                 value={ph}
-                onChange={(e) => setPhone?.(e.target.value)}
-                onBlur={() => handleBlur("phone")}
+                readOnly={personalReadOnly}
+                onChange={(e) => !personalReadOnly && setPhone?.(e.target.value)}
+                onBlur={() => !personalReadOnly && handleBlur("phone")}
                 placeholder="(123) 456-7890"
-                className={getInputClass("phone")}
+                className={getInputClass("phone", true)}
               />
-              {touched.phone && errors.phone && <p className="text-red-600 text-sm mt-1">{errors.phone}</p>}
+              {!personalReadOnly && touched.phone && errors.phone && <p className="text-red-600 text-sm mt-1">{errors.phone}</p>}
             </div>
 
             <div>
@@ -317,12 +372,13 @@ export default function StepDetailingBusinessContactInfo({
               <input
                 value={em}
                 type="email"
-                onChange={(e) => setEmail?.(e.target.value)}
-                onBlur={() => handleBlur("email")}
-                className={getInputClass("email")}
+                readOnly={personalReadOnly}
+                onChange={(e) => !personalReadOnly && setEmail?.(e.target.value)}
+                onBlur={() => !personalReadOnly && handleBlur("email")}
+                className={getInputClass("email", true)}
                 placeholder="Enter email"
               />
-              {touched.email && errors.email && <p className="text-red-600 text-sm mt-1">{errors.email}</p>}
+              {!personalReadOnly && touched.email && errors.email && <p className="text-red-600 text-sm mt-1">{errors.email}</p>}
             </div>
           </div>
 

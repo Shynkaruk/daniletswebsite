@@ -1,5 +1,5 @@
 // src/Components/Booking/Detailing/Personal/StepDetailingContactInfo.jsx
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { FiChevronLeft } from "react-icons/fi";
 import ProgressBar from "../../ProgressBar";
 import { AddressAutocomplete } from "../../Detailing/Business/AddressAutocomplete"; // перевір шлях!
@@ -25,6 +25,8 @@ const StepDetailingContactInfo = ({
   heardAbout,
   setHeardAbout,
 
+  user,
+
   renderProgress,
   progressStepIndex = 9,
   totalSteps = 11,
@@ -32,6 +34,18 @@ const StepDetailingContactInfo = ({
   // === ВСІ ХУКИ НА САМОМУ ВЕРХУ ===
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+
+  const isLoggedIn = !!user;
+  const [mode, setMode] = useState(isLoggedIn ? "account" : "manual");
+
+  // Auto-fill from account when mode = "account"
+  useEffect(() => {
+    if (!isLoggedIn || mode !== "account") return;
+    if (user?.first_name) setFirstName?.(user.first_name);
+    if (user?.last_name)  setLastName?.(user.last_name);
+    if (user?.phone)      setPhone?.(user.phone);
+    if (user?.email)      setEmail?.(user.email);
+  }, [isLoggedIn, mode, user, setFirstName, setLastName, setPhone, setEmail]);
 
   const firstVal = firstName ?? "";
   const lastVal = lastName ?? "";
@@ -92,7 +106,10 @@ const StepDetailingContactInfo = ({
   };
 
   const handleContinue = () => {
-    const allFields = ["firstName", "lastName", "phone", "email", "address", "heardAbout"];
+    // When using account data, personal fields are guaranteed valid — only validate address + heardAbout
+    const allFields = isAccountMode
+      ? ["address", "heardAbout"]
+      : ["firstName", "lastName", "phone", "email", "address", "heardAbout"];
 
     allFields.forEach(field => {
       setTouched(prev => ({ ...prev, [field]: true }));
@@ -106,11 +123,12 @@ const StepDetailingContactInfo = ({
 
   if (!visible) return null;
 
-  const inputClass = "w-full h-[44px] rounded-[16px] bg-[#F4F4F5] px-4 text-[14px] outline-none";
+  const isAccountMode = isLoggedIn && mode === "account";
+  const inputClass = `w-full h-[44px] rounded-[16px] px-4 text-[14px] outline-none ${isAccountMode ? "bg-[#EBEBEB] text-[#6B7280] cursor-default" : "bg-[#F4F4F5]"}`;
 
   const getInputClass = (field) => `
-    ${inputClass} 
-    ${touched[field] && errors[field] ? "border-2 border-red-500 bg-red-50" : ""}
+    ${inputClass}
+    ${!isAccountMode && touched[field] && errors[field] ? "border-2 border-red-500 bg-red-50" : ""}
   `;
 
   return (
@@ -144,6 +162,35 @@ const StepDetailingContactInfo = ({
           <ProgressBar activeCount={progressStepIndex} total={totalSteps} />
         )}
 
+        {/* Account / Manual toggle */}
+        {isLoggedIn && (
+          <section className="space-y-3">
+            <div className="text-sm text-[#6B7280] font-medium">
+              How would you like to provide your contact details?
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setMode("account")}
+                className={`h-[44px] rounded-[16px] border text-sm font-semibold
+                  ${mode === "account" ? "border-transparent text-black" : "border-[#E5E7EB] text-[#4B5563] bg-white"}`}
+                style={{ background: mode === "account" ? GOLD_GRADIENT : undefined }}
+              >
+                Use my account
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("manual")}
+                className={`h-[44px] rounded-[16px] border text-sm font-semibold
+                  ${mode === "manual" ? "border-transparent text-black" : "border-[#E5E7EB] text-[#4B5563] bg-white"}`}
+                style={{ background: mode === "manual" ? GOLD_GRADIENT : undefined }}
+              >
+                Enter different details
+              </button>
+            </div>
+          </section>
+        )}
+
         {/* FORM */}
         <section className="space-y-3 pt-1">
           {/* First name */}
@@ -151,11 +198,12 @@ const StepDetailingContactInfo = ({
             <div className="text-sm text-[#6B7280] font-medium">First name</div>
             <input
               value={firstVal}
-              onChange={(e) => setFirstName?.(e.target.value)}
-              onBlur={() => handleBlur("firstName")}
+              readOnly={isAccountMode}
+              onChange={(e) => !isAccountMode && setFirstName?.(e.target.value)}
+              onBlur={() => !isAccountMode && handleBlur("firstName")}
               className={getInputClass("firstName")}
             />
-            {touched.firstName && errors.firstName && (
+            {!isAccountMode && touched.firstName && errors.firstName && (
               <p className="text-red-600 text-[11px] mt-0.5">{errors.firstName}</p>
             )}
           </div>
@@ -165,11 +213,12 @@ const StepDetailingContactInfo = ({
             <div className="text-sm text-[#6B7280] font-medium">Last name</div>
             <input
               value={lastVal}
-              onChange={(e) => setLastName?.(e.target.value)}
-              onBlur={() => handleBlur("lastName")}
+              readOnly={isAccountMode}
+              onChange={(e) => !isAccountMode && setLastName?.(e.target.value)}
+              onBlur={() => !isAccountMode && handleBlur("lastName")}
               className={getInputClass("lastName")}
             />
-            {touched.lastName && errors.lastName && (
+            {!isAccountMode && touched.lastName && errors.lastName && (
               <p className="text-red-600 text-[11px] mt-0.5">{errors.lastName}</p>
             )}
           </div>
@@ -179,12 +228,13 @@ const StepDetailingContactInfo = ({
             <div className="text-sm text-[#6B7280] font-medium">Phone number</div>
             <input
               value={phoneVal}
-              onChange={(e) => setPhone?.(e.target.value)}
-              onBlur={() => handleBlur("phone")}
+              readOnly={isAccountMode}
+              onChange={(e) => !isAccountMode && setPhone?.(e.target.value)}
+              onBlur={() => !isAccountMode && handleBlur("phone")}
               placeholder="(123) 456-7890"
               className={getInputClass("phone")}
             />
-            {touched.phone && errors.phone && (
+            {!isAccountMode && touched.phone && errors.phone && (
               <p className="text-red-600 text-[11px] mt-0.5">{errors.phone}</p>
             )}
           </div>
@@ -195,11 +245,12 @@ const StepDetailingContactInfo = ({
             <input
               value={emailVal}
               type="email"
-              onChange={(e) => setEmail?.(e.target.value)}
-              onBlur={() => handleBlur("email")}
+              readOnly={isAccountMode}
+              onChange={(e) => !isAccountMode && setEmail?.(e.target.value)}
+              onBlur={() => !isAccountMode && handleBlur("email")}
               className={getInputClass("email")}
             />
-            {touched.email && errors.email && (
+            {!isAccountMode && touched.email && errors.email && (
               <p className="text-red-600 text-[11px] mt-0.5">{errors.email}</p>
             )}
           </div>
