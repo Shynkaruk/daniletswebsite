@@ -112,9 +112,20 @@ return (
         {tab === "login" ? (
           <LoginForm
             onSuccess={(u) => {
-              onAuth?.(u);
-              onClose?.();
-              window.location.href = "/account";
+              const profileComplete = !!(u?.first_name && u?.last_name && u?.phone);
+              if (!profileComplete && onNeedsProfileCompletion) {
+                onClose?.();
+                onNeedsProfileCompletion({
+                  first_name: u?.first_name || "",
+                  last_name:  u?.last_name  || "",
+                  phone:      u?.phone      || "",
+                  email:      u?.email      || "",
+                });
+              } else {
+                onAuth?.(u);
+                onClose?.();
+                window.location.href = "/account";
+              }
             }}
           />
         ) : (

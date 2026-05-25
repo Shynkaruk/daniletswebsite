@@ -10,20 +10,19 @@ const GRADIENT =
 
 const TABS = [
   { key: "profile", label: "Personal Information" },
-  { key: "car", label: "Vehicle Information" },
-  { key: "orders", label: "Past Orders" },
+  { key: "car",     label: "Vehicle Information" },
+  { key: "orders",  label: "Past Orders" },
 ];
 
 export default function Account() {
   const [active, setActive] = useState("profile");
 
-  // ✅ кастомний modal (замість alert)
   const [modal, setModal] = useState({
     open: false,
     title: "",
     message: "",
-    type: "info", // info | success | error
-    content: null, // jsx
+    type: "info",
+    content: null,
   });
 
   const openModal = useCallback((type, title, message, content = null) => {
@@ -47,7 +46,6 @@ export default function Account() {
         }}
       >
         <main className="w-full flex-1">
-          {/* Top spacing from Header */}
           <div className="max-w-[1160px] mx-auto px-4 pt-24 md:pt-40 pb-3 md:pb-6 text-center">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#18181B]">
               Profile
@@ -82,12 +80,12 @@ export default function Account() {
             </div>
           </div>
 
-          {/* Content container */}
+          {/* Content */}
           <div className="max-w-[1160px] mx-auto px-3 sm:px-4 pb-16">
             <div className="bg-white/95 rounded-[20px] sm:rounded-[24px] md:rounded-[28px] shadow-[0_8px_26px_rgba(0,0,0,0.08)] border border-[#ECECEC] p-4 sm:p-5 md:p-8">
               {active === "profile" && <ProfileCard openModal={openModal} />}
-              {active === "car" && <CarCard openModal={openModal} />}
-              {active === "orders" && <OrdersCard openModal={openModal} />}
+              {active === "car"     && <CarCard openModal={openModal} />}
+              {active === "orders"  && <OrdersCard />}
             </div>
           </div>
         </main>
@@ -95,7 +93,6 @@ export default function Account() {
         <Footer />
       </div>
 
-      {/* ✅ Custom Modal */}
       {modal.open && (
         <Modal
           title={modal.title}
@@ -129,9 +126,9 @@ function ProfileCard({ openModal }) {
           setForm((f) => ({
             ...f,
             first_name: u.first_name || "",
-            last_name: u.last_name || "",
-            phone: u.phone || "",
-            email: u.email || "",
+            last_name:  u.last_name  || "",
+            phone:      u.phone      || "",
+            email:      u.email      || "",
           }));
         }
       } catch {}
@@ -143,16 +140,12 @@ function ProfileCard({ openModal }) {
     try {
       await meApi.updateProfile({
         first_name: form.first_name,
-        last_name: form.last_name,
-        phone: form.phone,
+        last_name:  form.last_name,
+        phone:      form.phone,
       });
       openModal?.("success", "Saved", "Your profile has been saved.");
     } catch (e) {
-      openModal?.(
-        "error",
-        "Save failed",
-        e?.message || "Failed to save profile."
-      );
+      openModal?.("error", "Save failed", e?.message || "Failed to save profile.");
     } finally {
       setSaving(false);
     }
@@ -195,8 +188,8 @@ function ProfileCard({ openModal }) {
 
 /* ======================= Vehicle Information ======================= */
 function CarCard({ openModal }) {
-  const [year, setYear] = useState("");
-  const [make, setMake] = useState("");
+  const [year,  setYear]  = useState("");
+  const [make,  setMake]  = useState("");
   const [model, setModel] = useState("");
 
   const canSave = (year.trim() || make.trim() || model.trim())?.length > 0;
@@ -206,19 +199,15 @@ function CarCard({ openModal }) {
       await meApi.saveVehicle({ year, make, model });
       openModal?.("success", "Saved", "Vehicle information saved.");
     } catch (e) {
-      openModal?.(
-        "error",
-        "Save failed",
-        e?.message || "Failed to save vehicle."
-      );
+      openModal?.("error", "Save failed", e?.message || "Failed to save vehicle.");
     }
   };
 
   return (
     <Section title="Vehicle Information">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-        <Input placeholder="Year" value={year} onChange={setYear} />
-        <Input placeholder="Make" value={make} onChange={setMake} />
+        <Input placeholder="Year"  value={year}  onChange={setYear} />
+        <Input placeholder="Make"  value={make}  onChange={setMake} />
         <Input
           className="md:col-span-2"
           placeholder="Model"
@@ -228,11 +217,7 @@ function CarCard({ openModal }) {
       </div>
 
       <Actions
-        onChange={() => {
-          setYear("");
-          setMake("");
-          setModel("");
-        }}
+        onChange={() => { setYear(""); setMake(""); setModel(""); }}
         onSave={onSave}
         saveDisabled={!canSave}
       />
@@ -241,180 +226,196 @@ function CarCard({ openModal }) {
 }
 
 /* ======================= Past Orders ======================= */
-function OrdersCard({ openModal }) {
-  const [list, setList] = useState([]);
-  const [loading, setLoading] = useState(true);
+function OrdersCard() {
+  const [list,     setList]     = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [selected, setSelected] = useState(null);
 
-  // тут ми показуємо ВСІ, не фільтруємо по done
   useEffect(() => {
     (async () => {
       setLoading(true);
       try {
-        if (typeof reqApi.listMine !== "function") {
-          setList([]);
-          openModal?.("error", "Orders", "reqApi.listMine is not a function.");
-          return;
-        }
-
         const raw = await reqApi.listMine();
-
         const orders =
-          Array.isArray(raw)
-            ? raw
-            : Array.isArray(raw?.data)
-            ? raw.data
-            : Array.isArray(raw?.results)
-            ? raw.results
-            : Array.isArray(raw?.items)
-            ? raw.items
-            : [];
+          Array.isArray(raw)          ? raw
+          : Array.isArray(raw?.data)    ? raw.data
+          : Array.isArray(raw?.results) ? raw.results
+          : Array.isArray(raw?.items)   ? raw.items
+          : [];
 
-        const normalized = (orders || []).map((o) => {
+        const normalized = orders.map((o) => {
           const items = safeParseJSON(o.items_json);
-
           return {
-            raw: o,
-            id: o.id ?? o._id ?? o.uuid ?? null,
-            title: humanServiceTitle(o, items),
-            created_at: o.created_at || o.createdAt || o.date || null,
+            raw:        o,
+            id:         o.id ?? o._id ?? null,
+            title:      humanServiceTitle(o, items),
+            created_at: o.created_at || o.createdAt || null,
             updated_at: o.updated_at || o.updatedAt || null,
+            status:     o.status || "new",
             items,
           };
         });
 
-        normalized.sort((a, b) => {
-          const aT = new Date(a.updated_at || a.created_at || 0).getTime();
-          const bT = new Date(b.updated_at || b.created_at || 0).getTime();
-          return bT - aT;
-        });
-
+        normalized.sort((a, b) =>
+          new Date(b.updated_at || b.created_at || 0) -
+          new Date(a.updated_at || a.created_at || 0)
+        );
         setList(normalized);
       } catch (e) {
         console.error(e);
         setList([]);
-        openModal?.(
-          "error",
-          "Orders",
-          e?.message || "Failed to load orders."
-        );
       } finally {
         setLoading(false);
       }
     })();
-  }, [openModal]);
-
-  const onOpenDetails = (order) => {
-    const details = buildOrderDetails(order);
-
-    openModal?.(
-      "info",
-      "Order details",
-      "",
-      <div className="space-y-3">
-        <div className="text-sm text-[#6B7280]">
-          {formatDate(order.updated_at || order.created_at)}
-        </div>
-
-        <div className="rounded-[16px] bg-[#F4F4F5] p-4">
-          <div className="text-[16px] font-extrabold text-[#111827]">
-            {order.title}
-          </div>
-          {details?.length ? (
-            <div className="mt-3 space-y-2">
-              {details.map((row, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-start justify-between gap-4"
-                >
-                  <div className="text-[13px] text-[#6B7280]">{row.label}</div>
-                  <div className="text-[13px] font-semibold text-[#111827] text-right whitespace-pre-line">
-                    {row.value}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="mt-2 text-[13px] text-[#6B7280]">
-              No additional details.
-            </div>
-          )}
-        </div>
-
-        {/* debug (можеш прибрати потім) */}
-        <details className="text-xs text-[#6B7280]">
-          <summary className="cursor-pointer select-none">Raw JSON</summary>
-          <pre className="mt-2 whitespace-pre-wrap break-words">
-            {JSON.stringify(order.raw, null, 2)}
-          </pre>
-        </details>
-      </div>
-    );
-  };
+  }, []);
 
   return (
     <Section title="Past Orders">
       {loading ? (
-        <div className="text-[#6B7280]">Loading…</div>
+        <div className="text-[#6B7280] py-4">Loading...</div>
       ) : list.length === 0 ? (
-        <div className="text-[#6B7280]">You don’t have any orders yet.</div>
+        <div className="text-[#6B7280] py-4">You don&apos;t have any orders yet.</div>
       ) : (
         <div className="space-y-3">
           {list.map((o, i) => (
             <button
               key={o.id ?? i}
               type="button"
-              onClick={() => onOpenDetails(o)}
+              onClick={() => setSelected(o)}
               className={[
-                "w-full text-left rounded-[16px] border px-4 py-4 flex items-center justify-between gap-3 transition",
-                "hover:shadow-[0_8px_26px_rgba(0,0,0,0.06)]",
-                i === 0
-                  ? "bg-[#FAF3E6] border-[#F0E1C8]"
-                  : "bg-white border-[#EAEAEA]",
+                "w-full text-left rounded-[18px] border px-4 py-4 flex items-center justify-between gap-3 transition",
+                "hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)]",
+                i === 0 ? "bg-[#FAF3E6] border-[#F0E1C8]" : "bg-white border-[#EAEAEA]",
               ].join(" ")}
             >
-              <div className="min-w-0">
-                <div className="font-extrabold text-[#18181B] truncate text-[18px]">
-                  {o.title}
-                </div>
-                <div className="text-sm text-[#6B7280] mt-1">
-                  {formatDate(o.updated_at || o.created_at)}
+              <div className="min-w-0 flex items-center gap-3">
+                <span className="text-2xl shrink-0">{serviceIcon(o.raw?.service_type)}</span>
+                <div>
+                  <div className="font-extrabold text-[#18181B] text-[16px] leading-snug">
+                    {o.title}
+                  </div>
+                  <div className="text-sm text-[#6B7280] mt-0.5">
+                    {formatDateHuman(o.updated_at || o.created_at)}
+                  </div>
                 </div>
               </div>
-
-              <div className="shrink-0 text-[#111827] text-[22px] leading-none">
-                ›
+              <div className="flex items-center gap-2 shrink-0">
+                <StatusBadge status={o.status} />
+                <span className="text-[#9CA3AF] text-[20px] leading-none">&#8250;</span>
               </div>
             </button>
           ))}
         </div>
       )}
 
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-        <GrayButton
-          onClick={() =>
-            openModal?.(
-              "info",
-              "Previous Order Details",
-              "Tap on any order card to view details."
-            )
-          }
-        >
-          Previous Order Details
-        </GrayButton>
-
-        <GoldButton
-          onClick={() =>
-            openModal?.(
-              "info",
-              "Repeat Order",
-              "This can be implemented next: prefill Booking from selected order."
-            )
-          }
-        >
-          Repeat Order
-        </GoldButton>
-      </div>
+      {selected && (
+        <OrderDetailModal order={selected} onClose={() => setSelected(null)} />
+      )}
     </Section>
+  );
+}
+
+/* ── Status badge ── */
+function StatusBadge({ status }) {
+  const map = {
+    new:         { label: "New",         bg: "bg-blue-50",   text: "text-blue-600"   },
+    pending:     { label: "Pending",     bg: "bg-yellow-50", text: "text-yellow-700" },
+    in_progress: { label: "In progress", bg: "bg-orange-50", text: "text-orange-600" },
+    done:        { label: "Done",        bg: "bg-green-50",  text: "text-green-700"  },
+    completed:   { label: "Completed",   bg: "bg-green-50",  text: "text-green-700"  },
+    cancelled:   { label: "Cancelled",   bg: "bg-red-50",    text: "text-red-600"    },
+  };
+  const s = map[status] || map.new;
+  return (
+    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${s.bg} ${s.text}`}>
+      {s.label}
+    </span>
+  );
+}
+
+/* ── Order Detail Modal ── */
+function OrderDetailModal({ order, onClose }) {
+  const sections = buildOrderSections(order);
+  const raw = order.raw || {};
+
+  return (
+    <div className="fixed inset-0 z-[9999] bg-black/40 flex items-end sm:items-center justify-center px-0 sm:px-4">
+      <div className="bg-white rounded-t-[28px] sm:rounded-[24px] shadow-xl w-full sm:max-w-[560px] max-h-[90dvh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-3 border-b border-[#F3F4F6]">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-2xl">{serviceIcon(raw.service_type)}</span>
+              <h3 className="text-[17px] font-extrabold text-[#18181B] leading-tight">
+                {order.title}
+              </h3>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-[#6B7280]">
+                {formatDateHuman(order.updated_at || order.created_at)}
+              </span>
+              <StatusBadge status={order.status} />
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-9 h-9 rounded-full bg-[#F2F2F2] flex items-center justify-center shrink-0 mt-0.5"
+            aria-label="Close"
+          >
+            &#10005;
+          </button>
+        </div>
+
+        {/* Scrollable body */}
+        <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
+          {sections.map((sec, si) => (
+            <div key={si} className="rounded-[16px] bg-[#F9F9F9] border border-[#EFEFEF] overflow-hidden">
+              <div className="px-4 py-2.5 bg-[#F3F4F6] border-b border-[#EBEBEB]">
+                <span className="text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider">
+                  {sec.icon} {sec.title}
+                </span>
+              </div>
+              <div className="divide-y divide-[#F0F0F0]">
+                {sec.rows.map((row, ri) =>
+                  row.type === "list" ? (
+                    <div key={ri} className="px-4 py-3">
+                      <div className="text-[12px] text-[#9CA3AF] font-medium mb-1.5">{row.label}</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {row.items.map((item, ii) => (
+                          <span key={ii} className="text-[12px] bg-white border border-[#E5E7EB] rounded-full px-2.5 py-0.5 text-[#374151] font-medium">
+                            {item}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div key={ri} className="px-4 py-2.5 flex items-start justify-between gap-3">
+                      <span className="text-[13px] text-[#9CA3AF] shrink-0 pt-px">{row.label}</span>
+                      <span className="text-[13px] font-semibold text-[#18181B] text-right leading-snug">
+                        {row.value}
+                      </span>
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 pb-5 pt-3 border-t border-[#F3F4F6]">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full h-[48px] rounded-full border border-[#D4D4D8] text-sm font-semibold text-[#18181B]"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -486,14 +487,12 @@ function GoldButton({ children, onClick, disabled }) {
   );
 }
 
-/* ======================= Modal ======================= */
+/* ======================= Info Modal ======================= */
 function Modal({ title, message, type = "info", onClose, children }) {
   const accent =
-    type === "success"
-      ? "border-green-200"
-      : type === "error"
-      ? "border-red-200"
-      : "border-[#E5E7EB]";
+    type === "success" ? "border-green-200"
+    : type === "error" ? "border-red-200"
+    : "border-[#E5E7EB]";
 
   return (
     <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center px-4">
@@ -507,9 +506,7 @@ function Modal({ title, message, type = "info", onClose, children }) {
           <div>
             <h3 className="text-xl font-extrabold text-[#18181B]">{title}</h3>
             {message ? (
-              <p className="text-sm text-[#4B5563] mt-1 whitespace-pre-line">
-                {message}
-              </p>
+              <p className="text-sm text-[#4B5563] mt-1 whitespace-pre-line">{message}</p>
             ) : null}
           </div>
 
@@ -519,7 +516,7 @@ function Modal({ title, message, type = "info", onClose, children }) {
             className="w-10 h-10 rounded-full bg-[#F2F2F2] flex items-center justify-center text-[#111827]"
             aria-label="Close"
           >
-            ✕
+            &#10005;
           </button>
         </div>
 
@@ -542,120 +539,290 @@ function Modal({ title, message, type = "info", onClose, children }) {
 /* ======================= Helpers ======================= */
 function safeParseJSON(v) {
   if (!v) return null;
-  try {
-    return JSON.parse(v);
-  } catch {
-    return null;
-  }
+  try { return JSON.parse(v); } catch { return null; }
 }
 
-function formatDate(v) {
+function formatDateHuman(v) {
   if (!v) return "";
   const d = new Date(v);
   if (isNaN(d)) return String(v);
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = d.getFullYear();
-  return `${dd}/${mm}/${yyyy}`;
+  return d.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
 }
 
-// ✅ “людські” назви з service_type
-function humanServiceType(service_type) {
-  const v = (service_type || "").toString().trim().toLowerCase();
-
-  const map = {
-    detailing_quote_personal: "Detailing — Personal quote",
-    detailing_quote_business: "Detailing — Business / Fleet quote",
-    cleaning_quote_residential: "Cleaning — Residential quote",
-    cleaning_quote_commercial: "Cleaning — Commercial quote",
-  };
-
-  return map[v] || "";
-}
-
-// ✅ дістати нормальний title з замовлення
 function humanServiceTitle(order, items) {
-  // 1) беремо service_type якщо є
-  const st = humanServiceType(order?.service_type);
+  const map = {
+    detailing_quote_personal:    "Detailing - Personal Quote",
+    detailing_quote_business:    "Detailing - Business / Fleet Quote",
+    cleaning_quote_residential:  "Cleaning - Residential",
+    cleaning_quote_commercial:   "Cleaning - Commercial",
+  };
+  const st = map[(order?.service_type || "").trim().toLowerCase()];
   if (st) return st;
-
-  // 2) пробуємо з items_json (нові payload-и)
-  // detailing
-  if (items?.quoteType === "personal") return "Detailing — Personal quote";
-  if (items?.quoteType === "business") return "Detailing — Business / Fleet quote";
-
-  // cleaning
-  if (items?.propertyType === "residential") return "Cleaning — Residential quote";
-  if (items?.propertyType === "commercial") return "Cleaning — Commercial quote";
-
-  // 3) fallback
+  if (items?.quoteType === "personal")        return "Detailing - Personal Quote";
+  if (items?.quoteType === "business")        return "Detailing - Business / Fleet Quote";
+  if (items?.propertyType === "residential")  return "Cleaning - Residential";
+  if (items?.propertyType === "commercial")   return "Cleaning - Commercial";
   return order?.service_title || order?.serviceType || "Service";
 }
 
-// ✅ Деталі для модалки
-function buildOrderDetails(order) {
-  const o = order?.raw || {};
-  const items = order?.items || {};
+function serviceIcon(serviceType) {
+  const t = (serviceType || "").toLowerCase();
+  if (t.includes("personal"))    return "🚗";  /* car */
+  if (t.includes("business"))    return "🏢";  /* office */
+  if (t.includes("residential")) return "🏠";  /* house */
+  if (t.includes("commercial"))  return "🏗️"; /* construction */
+  return "📋";
+}
 
-  // service address (у тебе часто є service_address / notes / items.location.baseAddress)
-  const addr =
-    o.service_address ||
-    items?.location?.baseAddress ||
-    items?.location?.service_address ||
-    "";
+/* Returns [{title, icon, rows:[{label,value}|{label,type:"list",items:[]}]}] */
+function buildOrderSections(order) {
+  const o   = order?.raw  || {};
+  const it  = order?.items || {};
+  const st  = (o.service_type || "").toLowerCase();
+  const sections = [];
 
-  // contact (детейлінг payload має items.contact..., cleaning теж має)
-  const contact =
-    items?.contact ||
-    items?.cleaningCommercial?.contact ||
-    items?.cleaningCommercial ||
-    {};
+  const row     = (label, value) => value ? { label, value: String(value) } : null;
+  const list    = (label, arr)   => arr?.length ? { label, type: "list", items: arr.map(String) } : null;
+  const compact = (rows) => rows.filter(Boolean);
 
-  const fullName =
-    [contact.firstName || contact.first_name, contact.lastName || contact.last_name]
-      .filter(Boolean)
-      .join(" ") || "";
+  /* ====== DETAILING PERSONAL ====== */
+  if (st === "detailing_quote_personal" || it?.quoteType === "personal") {
+    const contact = it?.contact  || {};
+    const vehicle = it?.vehicle  || {};
+    const history = it?.history  || {};
+    const svc     = it?.services || {};
+    const loc     = it?.location || {};
+    const multi   = it?.multipleVehicles || {};
 
-  const phone = contact.phone || "";
-  const email = contact.email || "";
+    const name = [contact.firstName, contact.lastName].filter(Boolean).join(" ");
+    sections.push({ title: "Contact", icon: "👤", rows: compact([
+      row("Name",  name),
+      row("Phone", contact.phone),
+      row("Email", contact.email),
+      list("Heard about us", Array.isArray(contact.heardAbout)
+        ? contact.heardAbout
+        : contact.heardAbout ? [contact.heardAbout] : []),
+    ])});
 
-  // extra notes
-  const notes =
-    items?.additionalInfo ||
-    items?.extraDetails ||
-    items?.contact?.extraInfo ||
-    o.notes_customer ||
-    "";
+    const carLabel = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(" ");
+    if (carLabel || vehicle.color || vehicle.seatMaterial) {
+      sections.push({ title: "Vehicle", icon: "🚗", rows: compact([
+        row("Car",           carLabel),
+        row("Color",         vehicle.color),
+        row("Seat material", vehicle.seatMaterial),
+      ])});
+    }
 
-  const rows = [];
+    if (history.lastDetailed || history.conditionRating || history.conditionFlags?.length) {
+      sections.push({ title: "Condition", icon: "🔍", rows: compact([
+        row("Last detailed",    history.lastDetailed),
+        row("Condition rating", history.conditionRating),
+        list("Condition flags", history.conditionFlags),
+        row("Details",          history.other),
+      ])});
+    }
 
-  if (addr) rows.push({ label: "Service address", value: addr });
-  if (fullName) rows.push({ label: "Customer", value: fullName });
-  if (phone) rows.push({ label: "Phone", value: phone });
-  if (email) rows.push({ label: "Email", value: email });
+    const selectedSvc = Array.isArray(svc.selected) ? svc.selected : [];
+    if (selectedSvc.length) {
+      sections.push({ title: "Services", icon: "✨", rows: compact([
+        list("Requested",      selectedSvc),
+        row("Other services",  svc.other),
+      ])});
+    }
 
-  // показати тип/ключові штуки, якщо вони є
-  if (items?.propertyType) rows.push({ label: "Property type", value: String(items.propertyType) });
-  if (items?.projectType) rows.push({ label: "Project type", value: String(items.projectType) });
+    if (multi.enabled && multi.vehicles?.length) {
+      sections.push({ title: "Multiple Vehicles", icon: "🚘", rows: compact([
+        row("Total vehicles", multi.count),
+        list("Fleet", multi.vehicles.map((v) => [v.year, v.make, v.model].filter(Boolean).join(" ") || v)),
+      ])});
+    }
 
-  // якщо це commercial cleaning
-  if (items?.cleaningCommercial) {
-    const c = items.cleaningCommercial || {};
-    if (c.companyName) rows.push({ label: "Company name", value: c.companyName });
-    if (c.companyAddress) rows.push({ label: "Company address", value: c.companyAddress });
-    if (c.projectSummary) rows.push({ label: "Project summary", value: c.projectSummary });
+    const addr = o.service_address || loc.baseAddress || "";
+    sections.push({ title: "Location & Timeline", icon: "📍", rows: compact([
+      row("Service type",  locLabel(o.location_type)),
+      row("Address",       addr),
+      row("Completion by", it?.location?.completionDate || o.service_date),
+    ])});
+
+    const notes = [it?.additionalInfo, contact.extraInfo].filter(Boolean).join("\n");
+    if (notes) sections.push({ title: "Additional notes", icon: "📝", rows: [{ label: "", value: notes }] });
   }
 
-  // якщо detailing
-  if (items?.vehicle) {
-    const v = items.vehicle;
-    const car = [v.year, v.make, v.model].filter(Boolean).join(" ");
-    if (car) rows.push({ label: "Vehicle", value: car });
-    if (v.color) rows.push({ label: "Color", value: v.color });
-    if (v.seatMaterial) rows.push({ label: "Seat material", value: v.seatMaterial });
+  /* ====== DETAILING BUSINESS ====== */
+  else if (st === "detailing_quote_business" || it?.business) {
+    const contact  = it?.contact     || {};
+    const biz      = it?.business    || {};
+    const fleet    = it?.fleet       || {};
+    const prefs    = it?.preferences || {};
+    const timeline = it?.timeline    || {};
+    const loc      = it?.location    || {};
+
+    const name = [contact.firstName, contact.lastName].filter(Boolean).join(" ");
+    sections.push({ title: "Contact", icon: "👤", rows: compact([
+      row("Name",            name),
+      row("Phone",           contact.phone),
+      row("Email",           contact.email),
+      row("Company",         contact.companyName),
+      row("Company address", contact.companyAddress),
+    ])});
+
+    sections.push({ title: "Business", icon: "🏢", rows: compact([
+      row("Business type",     biz.businessType === "Other" && biz.businessTypeOther
+        ? ("Other - " + biz.businessTypeOther) : biz.businessType),
+      row("Number of vehicles",biz.vehiclesCount),
+      row("Service frequency", biz.serviceFrequency === "Other" && biz.serviceFrequencyOther
+        ? ("Other - " + biz.serviceFrequencyOther) : biz.serviceFrequency),
+    ])});
+
+    const vt = fleet.vehicleTypes || {};
+    const vtRows = Object.entries(vt)
+      .filter(([, v]) => Number(v) > 0)
+      .map(([k, v]) => (vehicleTypeLabel(k) + ": " + v));
+    if (vtRows.length || fleet.services?.length) {
+      sections.push({ title: "Fleet & Services", icon: "🚛", rows: compact([
+        list("Vehicle types",    vtRows),
+        row("Service location",  serviceLocationLabel(fleet.serviceLocation)),
+        list("Services",         fleet.services),
+        row("Other services",    fleet.servicesOther),
+      ])});
+    }
+
+    const addr = o.service_address || loc.baseAddress || "";
+    sections.push({ title: "Location & Timeline", icon: "📍", rows: compact([
+      row("Address",    addr),
+      row("Start date", timeline.startDate),
+    ])});
+
+    if (prefs.preferredContactMethod || prefs.contactTimePreference) {
+      sections.push({ title: "Contact preferences", icon: "📞", rows: compact([
+        row("Preferred method", prefs.preferredContactMethod),
+        row("Best time",        prefs.contactTimePreference),
+        row("Notes",            prefs.notes),
+      ])});
+    }
   }
 
-  if (notes) rows.push({ label: "Notes", value: String(notes) });
+  /* ====== CLEANING RESIDENTIAL ====== */
+  else if (st === "cleaning_quote_residential" || it?.propertyType === "residential") {
+    const contact = it?.contact  || {};
+    const loc     = it?.location || {};
 
-  return rows;
+    const name = [contact.firstName, contact.lastName].filter(Boolean).join(" ");
+    sections.push({ title: "Contact", icon: "👤", rows: compact([
+      row("Name",    name),
+      row("Phone",   contact.phone),
+      row("Email",   contact.email),
+      row("Address", o.service_address || loc.baseAddress),
+    ])});
+
+    sections.push({ title: "Property", icon: "🏠", rows: compact([
+      row("Property type", capitalize(it?.propertyType)),
+      row("Project type",  it?.projectType === "other" && it?.projectTypeOther
+        ? ("Other - " + it.projectTypeOther) : capitalize(it?.projectType)),
+      row("Bedrooms",  it?.bedrooms),
+      row("Bathrooms", it?.bathrooms),
+    ])});
+
+    if (it?.areas?.length || it?.generalTasks?.length || it?.kitchenTasks?.length) {
+      sections.push({ title: "Cleaning scope", icon: "🧹", rows: compact([
+        list("Areas",         it?.areas),
+        row("Other areas",    it?.areasOther),
+        list("General tasks", it?.generalTasks),
+        row("Other tasks",    it?.generalTasksOther),
+        list("Kitchen tasks", it?.kitchenTasks),
+        row("Other kitchen",  it?.kitchenTasksOther),
+      ])});
+    }
+
+    if (it?.resBudget || it?.extraDetails) {
+      sections.push({ title: "Budget & Notes", icon: "💰", rows: compact([
+        row("Budget",     it?.resBudget),
+        row("Extra info", it?.extraDetails),
+      ])});
+    }
+  }
+
+  /* ====== CLEANING COMMERCIAL ====== */
+  else if (st === "cleaning_quote_commercial" || it?.propertyType === "commercial") {
+    const contact = it?.contact             || {};
+    const c       = it?.cleaningCommercial  || {};
+    const loc     = it?.location            || {};
+
+    const name = [contact.firstName, contact.lastName].filter(Boolean).join(" ");
+    sections.push({ title: "Contact", icon: "👤", rows: compact([
+      row("Name",  name),
+      row("Phone", contact.phone),
+      row("Email", contact.email),
+    ])});
+
+    sections.push({ title: "Company", icon: "🏗️", rows: compact([
+      row("Company name",    c.companyName),
+      row("Company address", c.companyAddress),
+      row("Business type",   c.businessType === "other" && c.businessTypeOther
+        ? ("Other - " + c.businessTypeOther) : c.businessType),
+    ])});
+
+    sections.push({ title: "Project", icon: "📋", rows: compact([
+      row("Project type",    it?.projectType),
+      row("Project summary", c.projectSummary),
+      row("Supplies",        c.supplies),
+      list("Preferred times", Array.isArray(c.preferredDaysTimes) ? c.preferredDaysTimes : []),
+    ])});
+
+    const addr = o.service_address || loc.baseAddress || "";
+    if (addr) sections.push({ title: "Location", icon: "📍", rows: [row("Address", addr)] });
+  }
+
+  /* ====== FALLBACK ====== */
+  else {
+    const contact = it?.contact || {};
+    const name    = [contact.firstName, contact.lastName].filter(Boolean).join(" ");
+    const addr    = o.service_address || "";
+
+    sections.push({ title: "Details", icon: "📋", rows: compact([
+      row("Customer", name || undefined),
+      row("Phone",    contact.phone),
+      row("Email",    contact.email),
+      row("Address",  addr),
+    ])});
+  }
+
+  return sections.filter((s) => s.rows.filter(Boolean).length > 0);
+}
+
+/* small label helpers */
+function locLabel(t) {
+  const m = {
+    shop:   "Drop-off at shop",
+    mobile: "Mobile (at your location)",
+    pickup: "Pickup & delivery",
+  };
+  return m[t] || t || "";
+}
+
+function vehicleTypeLabel(k) {
+  const m = {
+    sedans:        "Sedans",
+    suvs:          "SUVs",
+    pickups:       "Pick-Ups",
+    minivans:      "Mini-Vans / 3-Row SUVs",
+    transit_vans:  "Transit Vans",
+    semi_trucks:   "Semi-Trucks",
+    other:         "Other",
+  };
+  return m[k] || k;
+}
+
+function serviceLocationLabel(k) {
+  const m = {
+    mobile:           "Mobile (at your location)",
+    customer_dropoff: "Drop-off at shop",
+    pickup_dropoff:   "Pickup & delivery",
+  };
+  return m[k] || k || "";
+}
+
+function capitalize(s) {
+  if (!s) return "";
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
