@@ -118,7 +118,7 @@ export default function PushNotificationToggle() {
         busy ? "opacity-60 cursor-not-allowed" : "",
       ].join(" ")}
     >
-      <span>{isOn ? "&#128276;" : "&#128277;"}</span>
+      <span>{isOn ? "🔔" : "🔕"}</span>
       <span>{busy ? "..." : isOn ? "Push: On" : "Push: Off"}</span>
     </button>
   );

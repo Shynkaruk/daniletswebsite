@@ -56,6 +56,19 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   console.warn("[push] VAPID keys not set — push notifications disabled");
 }
 
+// Human-readable service labels for push notifications
+const PUSH_SVC_LABELS = {
+  detailing_quote_personal:   "Detailing — Personal",
+  detailing_quote_business:   "Detailing — Business",
+  cleaning_quote_residential: "Cleaning — Residential",
+  cleaning_quote_commercial:  "Cleaning — Commercial",
+  forms_clients:              "Contact Form",
+};
+
+function pushSvcLabel(serviceType) {
+  return PUSH_SVC_LABELS[serviceType] || (serviceType || "New request").replace(/_/g, " ");
+}
+
 async function sendAdminPushNotification({ title, body, url = "/admin" }) {
   if (!process.env.VAPID_PUBLIC_KEY) return;
   try {
@@ -1958,10 +1971,13 @@ app.post("/api/requests/public", optionalAuth, async (req, res) => {
         customerPhone: guest_phone || contactInfo.phone || guestInfo.phone || "",
         notes: notes_customer || "",
       });
-      const svcLabel = service_type?.replace(/_/g, " ") || "New request";
+      const pushName = (
+        `${contactInfo.firstName || ""} ${contactInfo.lastName || ""}`.trim() ||
+        guestInfo.name || guest_name || ""
+      );
       sendAdminPushNotification({
-        title: "New Request",
-        body: svcLabel,
+        title: `🔔 New Request — ${pushSvcLabel(service_type)}`,
+        body: pushName ? `From: ${pushName}` : "A new quote request has been submitted",
         url: "/admin",
       });
     }
@@ -2048,10 +2064,10 @@ app.post("/api/requests", optionalAuth, async (req, res) => {
         customerPhone: contact.phone || "",
         notes: notes_customer || "",
       });
-      const svcLabel2 = service_type?.replace(/_/g, " ") || "New request";
+      const pushName2 = `${contact.firstName || ""} ${contact.lastName || ""}`.trim();
       sendAdminPushNotification({
-        title: "New Request",
-        body: svcLabel2,
+        title: `🔔 New Request — ${pushSvcLabel(service_type)}`,
+        body: pushName2 ? `From: ${pushName2}` : "A new quote request has been submitted",
         url: "/admin",
       });
     }
