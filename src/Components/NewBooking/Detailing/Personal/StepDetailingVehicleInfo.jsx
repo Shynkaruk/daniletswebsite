@@ -227,7 +227,7 @@ const StepDetailingVehicleInfo = ({
                 model={modelVal}
                 year={yearVal}
                 color={colorVal}
-                className="h-44 sm:h-52 w-full"
+                className="w-full"
               />
             </div>
           )}

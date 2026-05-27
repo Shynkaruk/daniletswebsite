@@ -96,25 +96,23 @@ export default function CarPhoto({ make, model, year, color, className = "" }) {
   const alt = [year, make, model, color].filter(Boolean).join(" ");
 
   return (
-    <div
-      className={`relative rounded-2xl overflow-hidden bg-[#F4F4F5] flex items-center justify-center min-h-[80px] ${className}`}
-    >
-      {/* Loading pulse */}
+    <div className={`rounded-2xl overflow-hidden bg-[#F4F4F5] ${className}`}>
+      {/* Loading pulse — fixed min height while waiting */}
       {uiState === "loading" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#F4F4F5]">
+        <div className="flex items-center justify-center h-[120px]">
           <span className="text-4xl opacity-30 animate-pulse select-none">🚗</span>
         </div>
       )}
 
       {/* Not found */}
       {uiState === "error" && (
-        <div className="flex flex-col items-center justify-center gap-1 py-6 text-[#9CA3AF]">
+        <div className="flex flex-col items-center justify-center gap-1 h-[120px] text-[#9CA3AF]">
           <span className="text-5xl select-none">🚗</span>
           <span className="text-xs">No photo found</span>
         </div>
       )}
 
-      {/* Photo — hidden until fully loaded, then fades in */}
+      {/* Photo — natural proportions, no cropping, no gray bars */}
       {imgSrc && (
         <img
           key={imgSrc}
@@ -122,8 +120,8 @@ export default function CarPhoto({ make, model, year, color, className = "" }) {
           alt={alt}
           onLoad={() => setUiState("ok")}
           onError={() => { setImgSrc(null); setUiState("error"); }}
-          className={`w-full h-full object-contain transition-opacity duration-500 ${
-            uiState === "ok" ? "opacity-100" : "opacity-0 absolute inset-0"
+          className={`w-full h-auto block transition-opacity duration-500 ${
+            uiState === "ok" ? "opacity-100" : "opacity-0 h-0"
           }`}
         />
       )}

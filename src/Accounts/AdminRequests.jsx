@@ -328,7 +328,7 @@ function DetailModal({ row, onClose, onSave, onDelete }) {
                   model={vehicle.model}
                   year={vehicle.year}
                   color={vehicle.color}
-                  className="h-52 sm:h-64 w-full mb-6"
+                  className="w-full mb-6"
                 />
               )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
