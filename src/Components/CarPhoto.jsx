@@ -122,7 +122,7 @@ export default function CarPhoto({ make, model, year, color, className = "" }) {
           alt={alt}
           onLoad={() => setUiState("ok")}
           onError={() => { setImgSrc(null); setUiState("error"); }}
-          className={`w-full h-full object-cover transition-opacity duration-500 ${
+          className={`w-full h-full object-contain transition-opacity duration-500 ${
             uiState === "ok" ? "opacity-100" : "opacity-0 absolute inset-0"
           }`}
         />
