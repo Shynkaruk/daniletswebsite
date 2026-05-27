@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { adminReqApi } from "../lib/api";
 import PushNotificationToggle from "../Components/PushNotificationToggle";
+import CarPhoto from "../Components/CarPhoto";
 
 function safeJsonParse(text, fallback = {}) {
   try {
@@ -320,6 +321,16 @@ function DetailModal({ row, onClose, onSave, onDelete }) {
           {/* Detailing Personal */}
           {isPersonal && (
             <Section title="Vehicle & Requested Services">
+              {/* Car photo — auto-loads from imagin.studio based on make + year */}
+              {vehicle.make && vehicle.year && (
+                <CarPhoto
+                  make={vehicle.make}
+                  model={vehicle.model}
+                  year={vehicle.year}
+                  color={vehicle.color}
+                  className="h-52 sm:h-64 w-full mb-6"
+                />
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
                 <Field label="Year" value={vehicle.year} />
                 <Field label="Make" value={vehicle.make} />

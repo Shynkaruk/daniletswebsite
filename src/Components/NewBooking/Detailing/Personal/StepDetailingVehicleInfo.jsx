@@ -2,6 +2,7 @@
 import React from "react";
 import { FiChevronLeft } from "react-icons/fi";
 import ProgressBar from "../../ProgressBar"; // перевір шлях
+import CarPhoto from "../../../CarPhoto";
 
 const GOLD_GRADIENT =
   "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
@@ -124,6 +125,20 @@ const StepDetailingVehicleInfo = ({
               placeholder="Blue"
             />
           </div>
+
+          {/* Car Photo Preview — auto-appears when make + year are filled */}
+          {makeVal.trim() && yearVal.trim() && (
+            <div className="space-y-1">
+              <div className="text-sm text-[#6B7280] font-medium">Vehicle preview</div>
+              <CarPhoto
+                make={makeVal}
+                model={modelVal}
+                year={yearVal}
+                color={colorVal}
+                className="h-44 sm:h-52 w-full"
+              />
+            </div>
+          )}
 
           {/* Seat Material */}
           <div className="space-y-2">
