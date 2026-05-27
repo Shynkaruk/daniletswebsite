@@ -1,43 +1,126 @@
 // src/Components/Booking/Detailing/Personal/StepDetailingVehicleInfo.jsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { FiChevronLeft } from "react-icons/fi";
-import ProgressBar from "../../ProgressBar"; // перевір шлях
+import ProgressBar from "../../ProgressBar";
 import CarPhoto from "../../../CarPhoto";
+import AutocompleteInput from "../../../AutocompleteInput";
 
 const GOLD_GRADIENT =
   "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
 
 const SEAT_OPTIONS = ["Leather", "Cloth", "Mixed"];
 
+// ── Popular makes sold in the US ──────────────────────────────────────────────
+const MAKES = [
+  "Acura", "Alfa Romeo", "Aston Martin", "Audi",
+  "Bentley", "BMW", "Buick",
+  "Cadillac", "Chevrolet", "Chrysler",
+  "Dodge",
+  "Ferrari", "Fiat", "Ford",
+  "Genesis", "GMC",
+  "Honda", "Hummer", "Hyundai",
+  "Infiniti",
+  "Jaguar", "Jeep",
+  "Kia",
+  "Lamborghini", "Land Rover", "Lexus", "Lincoln", "Lucid",
+  "Maserati", "Mazda", "Mercedes-Benz", "MINI", "Mitsubishi",
+  "Nissan",
+  "Porsche",
+  "Ram", "Rivian", "Rolls-Royce",
+  "Subaru",
+  "Tesla", "Toyota",
+  "Volkswagen", "Volvo",
+];
+
+// ── Standard vehicle colors ───────────────────────────────────────────────────
+const COLORS = [
+  "White", "Pearl White", "Off White",
+  "Black", "Gloss Black", "Matte Black",
+  "Silver", "Gray", "Dark Gray", "Charcoal",
+  "Red", "Dark Red", "Burgundy", "Maroon",
+  "Blue", "Dark Blue", "Navy", "Sky Blue",
+  "Green", "Dark Green", "Forest Green", "Olive",
+  "Yellow", "Gold", "Champagne", "Cream",
+  "Orange", "Brown", "Tan", "Beige",
+  "Purple", "Bronze", "Copper", "Pink",
+];
+
+// ── Model years (next year → 1980) ────────────────────────────────────────────
+const THIS_YEAR = new Date().getFullYear();
+const YEARS = Array.from({ length: THIS_YEAR - 1979 }, (_, i) =>
+  String(THIS_YEAR + 1 - i)
+);
+
+// ── Fetch models from free NHTSA API (no key required) ────────────────────────
+async function fetchNhtsaModels(make) {
+  try {
+    const res = await fetch(
+      `https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMake/${encodeURIComponent(make)}?format=json`
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    return [
+      ...new Set(
+        (data.Results || []).map((r) => r.Model_Name).filter(Boolean)
+      ),
+    ].sort();
+  } catch {
+    return [];
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 const StepDetailingVehicleInfo = ({
   visible,
   onBack,
   onNext,
 
-  year,
-  setYear,
-  make,
-  setMake,
-  model,
-  setModel,
-  color,
-  setColor,
-  seatMaterial,
-  setSeatMaterial,
+  year,        setYear,
+  make,        setMake,
+  model,       setModel,
+  color,       setColor,
+  seatMaterial, setSeatMaterial,
 
   renderProgress,
   progressStepIndex = 2,
   totalSteps = 11,
 }) => {
+  // ── Models autocomplete state (fetched from NHTSA per make) ─────────────────
+  const [models, setModels]               = useState([]);
+  const [modelsLoading, setModelsLoading] = useState(false);
+
+  const makeVal = make ?? "";
+
+  useEffect(() => {
+    if (!makeVal.trim()) {
+      setModels([]);
+      return;
+    }
+    let cancelled = false;
+    // Debounce: wait 400 ms after user stops typing before fetching
+    const timer = setTimeout(async () => {
+      setModelsLoading(true);
+      const result = await fetchNhtsaModels(makeVal);
+      if (!cancelled) {
+        setModels(result);
+        setModelsLoading(false);
+      }
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [makeVal]);
+
+  // ── Early return after hooks ─────────────────────────────────────────────────
   if (!visible) return null;
 
-  const yearVal = year ?? "";
-  const makeVal = make ?? "";
+  const yearVal  = year  ?? "";
   const modelVal = model ?? "";
   const colorVal = color ?? "";
-  const seatVal = seatMaterial ?? "";
+  const seatVal  = seatMaterial ?? "";
 
-  // ✅ color тепер теж обовʼязковий
   const canContinue =
     yearVal.trim() &&
     makeVal.trim() &&
@@ -45,12 +128,13 @@ const StepDetailingVehicleInfo = ({
     colorVal.trim() &&
     seatVal.trim();
 
-  const inputBase =
+  const inputCls =
     "w-full h-[48px] sm:h-[56px] rounded-[16px] bg-[#F4F4F5] px-4 sm:px-5 text-[14px] sm:text-[15px] outline-none";
 
   return (
     <div className="w-full max-w-full min-w-0 text-left">
       <div className="bg-white/90 backdrop-blur rounded-[24px] p-4 sm:p-6 lg:p-8 shadow space-y-6">
+
         {/* HEADER */}
         <div className="flex items-center gap-3">
           {onBack && (
@@ -80,53 +164,61 @@ const StepDetailingVehicleInfo = ({
 
         {/* INPUTS */}
         <section className="space-y-4">
+
           {/* Year */}
           <div className="space-y-1">
             <div className="text-sm text-[#6B7280] font-medium">Year</div>
-            <input
+            <AutocompleteInput
               value={yearVal}
-              onChange={(e) => setYear?.(e.target.value)}
-              className={inputBase}
+              onChange={(v) => setYear?.(v)}
+              options={YEARS}
               placeholder="2025"
+              inputClassName={inputCls}
             />
           </div>
 
           {/* Make */}
           <div className="space-y-1">
             <div className="text-sm text-[#6B7280] font-medium">Make</div>
-            <input
+            <AutocompleteInput
               value={makeVal}
-              onChange={(e) => setMake?.(e.target.value)}
-              className={inputBase}
-              placeholder="Mercedes"
+              onChange={(v) => {
+                setMake?.(v);
+                setModel?.(""); // reset model when make changes
+              }}
+              options={MAKES}
+              placeholder="Toyota, BMW, Mercedes-Benz…"
+              inputClassName={inputCls}
             />
           </div>
 
-          {/* Model */}
+          {/* Model — loaded from NHTSA based on make */}
           <div className="space-y-1">
             <div className="text-sm text-[#6B7280] font-medium">Model</div>
-            <input
+            <AutocompleteInput
               value={modelVal}
-              onChange={(e) => setModel?.(e.target.value)}
-              className={inputBase}
-              placeholder="AMG"
+              onChange={(v) => setModel?.(v)}
+              options={models}
+              loading={modelsLoading}
+              disabled={!makeVal.trim()}
+              placeholder={makeVal.trim() ? "Start typing…" : "Select make first"}
+              inputClassName={`${inputCls} ${!makeVal.trim() ? "opacity-50 cursor-not-allowed" : ""}`}
             />
           </div>
 
           {/* Color */}
           <div className="space-y-1">
-            <div className="text-sm text-[#6B7280] font-medium">
-              Vehicle color
-            </div>
-            <input
+            <div className="text-sm text-[#6B7280] font-medium">Vehicle color</div>
+            <AutocompleteInput
               value={colorVal}
-              onChange={(e) => setColor?.(e.target.value)}
-              className={inputBase}
-              placeholder="Blue"
+              onChange={(v) => setColor?.(v)}
+              options={COLORS}
+              placeholder="White, Black, Blue…"
+              inputClassName={inputCls}
             />
           </div>
 
-          {/* Car Photo Preview — auto-appears when make + year are filled */}
+          {/* Car Photo Preview */}
           {makeVal.trim() && yearVal.trim() && (
             <div className="space-y-1">
               <div className="text-sm text-[#6B7280] font-medium">Vehicle preview</div>
@@ -145,11 +237,9 @@ const StepDetailingVehicleInfo = ({
             <div className="text-sm text-[#6B7280] font-medium">
               Seat material (required)
             </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {SEAT_OPTIONS.map((opt) => {
                 const active = seatVal === opt;
-
                 return (
                   <button
                     key={opt}
@@ -157,11 +247,9 @@ const StepDetailingVehicleInfo = ({
                     onClick={() => setSeatMaterial?.(opt)}
                     className={`
                       h-[44px] sm:h-[48px] rounded-[16px] border text-[14px] font-medium
-                      ${
-                        active
-                          ? "border-transparent text-black"
-                          : "border-[#E5E7EB] text-[#4B5563] bg-white"
-                      }
+                      ${active
+                        ? "border-transparent text-black"
+                        : "border-[#E5E7EB] text-[#4B5563] bg-white"}
                     `}
                     style={{ background: active ? GOLD_GRADIENT : undefined }}
                   >
@@ -171,15 +259,17 @@ const StepDetailingVehicleInfo = ({
               })}
             </div>
           </div>
+
         </section>
 
-        {/* CONTINUE BUTTON */}
+        {/* CONTINUE */}
         <button
           type="button"
           onClick={onNext}
           disabled={!canContinue}
           className={`
-            w-full h-[52px] sm:h-[56px] rounded-[88px] font-semibold text-black shadow inline-flex items-center justify-between px-6
+            w-full h-[52px] sm:h-[56px] rounded-[88px] font-semibold text-black shadow
+            inline-flex items-center justify-between px-6
             ${!canContinue ? "opacity-60 cursor-not-allowed" : ""}
           `}
           style={{ background: GOLD_GRADIENT }}
@@ -187,6 +277,7 @@ const StepDetailingVehicleInfo = ({
           <span>Continue</span>
           <span className="text-lg">›</span>
         </button>
+
       </div>
     </div>
   );
