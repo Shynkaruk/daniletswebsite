@@ -105,7 +105,10 @@ export async function sendAdminNewRequestNotification({
     return;
   }
 
-  const from = process.env.RESEND_FROM || "Danilets Website <onboarding@resend.dev>";
+  const fromRaw = process.env.RESEND_FROM_EMAIL || process.env.RESEND_FROM || "onboarding@resend.dev";
+  const from = fromRaw.includes("@resend.dev") || fromRaw.includes("<")
+    ? fromRaw
+    : `Danilets Website <${fromRaw}>`;
 
   try {
     await resend.emails.send({
@@ -157,9 +160,10 @@ export async function sendOtpEmail({ to, code, purpose = "signup" }) {
     return;
   }
 
-  const from =
-    process.env.RESEND_FROM ||
-    "Danilets Website <onboarding@resend.dev>"; // можна змінити на свій домен, якщо верифікований
+  const otpFromRaw = process.env.RESEND_FROM_EMAIL || process.env.RESEND_FROM || "onboarding@resend.dev";
+  const from = otpFromRaw.includes("@resend.dev") || otpFromRaw.includes("<")
+    ? otpFromRaw
+    : `Danilets Website <${otpFromRaw}>`;
 
   try {
     const result = await resend.emails.send({
