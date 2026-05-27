@@ -1,132 +1,129 @@
 // src/Components/CarPhoto.jsx
-// Auto-fetches a car stock photo via imagin.studio CDN
-// Works for major makes (Toyota, Ford, BMW, Mercedes-Benz, Honda, etc.)
-import React, { useState, useEffect } from "react";
+// Fetches a representative car photo from Wikipedia (free, no API key, CORS-enabled).
+// Falls back to a 🚗 placeholder if nothing is found.
+import React, { useState, useEffect, useRef } from "react";
 
-/** Normalize user-typed make names → imagin.studio slugs */
-const MAKE_MAP = {
-  mercedes: "mercedes-benz",
-  "mercedes benz": "mercedes-benz",
-  "mercedes-benz": "mercedes-benz",
-  chevy: "chevrolet",
-  chevrolet: "chevrolet",
-  vw: "volkswagen",
-  volkswagen: "volkswagen",
-  "land rover": "land-rover",
-  landrover: "land-rover",
-  "land-rover": "land-rover",
-  ford: "ford",
-  toyota: "toyota",
-  honda: "honda",
-  bmw: "bmw",
-  audi: "audi",
-  nissan: "nissan",
-  hyundai: "hyundai",
-  kia: "kia",
-  lexus: "lexus",
-  acura: "acura",
-  infiniti: "infiniti",
-  subaru: "subaru",
-  mazda: "mazda",
-  jeep: "jeep",
-  dodge: "dodge",
-  chrysler: "chrysler",
-  ram: "ram",
-  gmc: "gmc",
-  cadillac: "cadillac",
-  buick: "buick",
-  lincoln: "lincoln",
-  volvo: "volvo",
-  porsche: "porsche",
-  jaguar: "jaguar",
-  tesla: "tesla",
-  mitsubishi: "mitsubishi",
-  maserati: "maserati",
-  ferrari: "ferrari",
-  lamborghini: "lamborghini",
-  bentley: "bentley",
-  rollsroyce: "rolls-royce",
-  "rolls royce": "rolls-royce",
-  "rolls-royce": "rolls-royce",
-  genesis: "genesis",
-  alfa: "alfa-romeo",
-  "alfa romeo": "alfa-romeo",
-  mini: "mini",
-  fiat: "fiat",
-  peugeot: "peugeot",
-  renault: "renault",
-};
+/**
+ * Search Wikipedia for a car article and return its thumbnail URL.
+ * We fetch up to 5 search results and return the first one that has a thumbnail,
+ * preferring articles whose title contains the make name.
+ */
+async function fetchWikiCarPhoto(make, model) {
+  const query = [make, model].filter(Boolean).join(" ").trim();
+  if (!query) return null;
+  try {
+    const params = new URLSearchParams({
+      action:      "query",
+      generator:   "search",
+      gsrsearch:   query,
+      gsrlimit:    "5",
+      prop:        "pageimages",
+      pithumbsize: "800",
+      format:      "json",
+      origin:      "*", // allows browser CORS requests
+    });
+    const res = await fetch(
+      `https://en.wikipedia.org/w/api.php?${params.toString()}`
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const pages = Object.values(data?.query?.pages || {});
+    if (!pages.length) return null;
 
-function normalizeMake(make) {
-  if (!make) return "";
-  const lower = make.toLowerCase().trim();
-  return MAKE_MAP[lower] || lower.replace(/\s+/g, "-");
-}
+    // Prefer pages whose title includes the make (e.g. "BMW 1 Series" over "Formula 1")
+    const makeWords = make.toLowerCase().split(/\s+/);
+    const sorted = [...pages].sort((a, b) => {
+      const aTitle = (a.title || "").toLowerCase();
+      const bTitle = (b.title || "").toLowerCase();
+      const aMatch = makeWords.some((w) => aTitle.includes(w));
+      const bMatch = makeWords.some((w) => bTitle.includes(w));
+      return aMatch === bMatch ? 0 : aMatch ? -1 : 1;
+    });
 
-function buildUrl({ make, year }) {
-  const slug = normalizeMake(make);
-  if (!slug || !year) return null;
-  const p = new URLSearchParams({
-    customer: "img",
-    make: slug,
-    modelYear: String(year),
-    zoomType: "fullscreen",
-    angle: "22",
-  });
-  return `https://cdn.imagin.studio/getimage?${p.toString()}`;
+    for (const page of sorted) {
+      if (page?.thumbnail?.source) return page.thumbnail.source;
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 /**
- * CarPhoto — shows a car stock photo from imagin.studio CDN.
+ * CarPhoto — shows a car photo fetched from Wikipedia.
  *
  * Props:
- *   make    {string}  — car brand (e.g. "Toyota", "Mercedes")
- *   model   {string}  — car model (e.g. "Camry") — used for alt text only
- *   year    {string|number} — model year (e.g. "2022")
- *   color   {string}  — color name — used for alt text only
- *   className {string} — extra Tailwind classes (controls size)
+ *   make    {string}
+ *   model   {string}
+ *   year    {string|number}
+ *   color   {string}        — used for alt text only
+ *   className {string}      — controls container size via Tailwind
  */
 export default function CarPhoto({ make, model, year, color, className = "" }) {
-  const [state, setState] = useState("loading"); // loading | ok | error
-  const url = buildUrl({ make, year });
+  const [imgSrc,  setImgSrc]  = useState(null);
+  const [uiState, setUiState] = useState("idle"); // idle | loading | ok | error
+  const timerRef = useRef(null);
 
   useEffect(() => {
-    setState(url ? "loading" : "error");
-  }, [url]);
+    if (!make?.trim() || !year?.toString().trim()) {
+      setUiState("idle");
+      setImgSrc(null);
+      return;
+    }
 
-  if (!make || !year) return null;
+    // Debounce: wait 600 ms after last change before firing the API call
+    clearTimeout(timerRef.current);
+    setUiState("loading");
+    setImgSrc(null);
+
+    timerRef.current = setTimeout(() => {
+      fetchWikiCarPhoto(make, model).then((url) => {
+        if (url) {
+          setImgSrc(url);
+          // uiState → "ok" fires via img onLoad below
+        } else {
+          setUiState("error");
+        }
+      });
+    }, 600);
+
+    return () => clearTimeout(timerRef.current);
+  }, [make, model, year]);
+
+  // Nothing to show yet
+  if (!make?.trim() || !year?.toString().trim()) return null;
 
   const alt = [year, make, model, color].filter(Boolean).join(" ");
 
   return (
     <div
-      className={`relative rounded-2xl overflow-hidden bg-[#F4F4F5] flex items-center justify-center ${className}`}
+      className={`relative rounded-2xl overflow-hidden bg-[#F4F4F5] flex items-center justify-center min-h-[80px] ${className}`}
     >
-      {/* Skeleton / Placeholder */}
-      {state === "loading" && (
+      {/* Loading pulse */}
+      {uiState === "loading" && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#F4F4F5]">
           <span className="text-4xl opacity-30 animate-pulse select-none">🚗</span>
         </div>
       )}
 
-      {/* Error fallback */}
-      {state === "error" && (
+      {/* Not found */}
+      {uiState === "error" && (
         <div className="flex flex-col items-center justify-center gap-1 py-6 text-[#9CA3AF]">
           <span className="text-5xl select-none">🚗</span>
           <span className="text-xs">No photo found</span>
         </div>
       )}
 
-      {/* Actual image */}
-      {url && (
+      {/* Photo — hidden until fully loaded, then fades in */}
+      {imgSrc && (
         <img
-          key={url}
-          src={url}
+          key={imgSrc}
+          src={imgSrc}
           alt={alt}
-          onLoad={() => setState("ok")}
-          onError={() => setState("error")}
-          className={`w-full h-full object-contain transition-opacity duration-500 ${
-            state === "ok" ? "opacity-100" : "opacity-0 absolute inset-0"
+          onLoad={() => setUiState("ok")}
+          onError={() => { setImgSrc(null); setUiState("error"); }}
+          className={`w-full h-full object-cover transition-opacity duration-500 ${
+            uiState === "ok" ? "opacity-100" : "opacity-0 absolute inset-0"
           }`}
         />
       )}
