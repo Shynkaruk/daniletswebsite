@@ -1,9 +1,9 @@
 // components/AboutUsTeam.jsx
 import React from "react";
 import ArrowRight from "../../assets/icons/arrows/arrow_right_black.svg";
-import NatalyPhoto from "../../assets/photo/team/1team.png";
-import Elijah from "../../assets/photo/team/2team.png";
-import Timothy from "../../assets/photo/team/3team.png";
+import NatalyPhoto from "../../assets/photo/team/1team.webp";
+import Elijah from "../../assets/photo/team/2team.webp";
+import Timothy from "../../assets/photo/team/3team.webp";
 
 const people = [
   {
@@ -67,6 +67,7 @@ const AboutUsTeam = () => {
                 <div className="flex items-start gap-4 mb-4">
                   <div className="shrink-0 w-20 h-20 md:w-28 md:h-28 rounded-full overflow-hidden">
                     <img
+                    loading="lazy"
                       src={
                         p.photo || "data:image/gif;base64,R0lGODlhAQABAAAAACw="
                       }
@@ -102,6 +103,7 @@ const AboutUsTeam = () => {
                 >
                   <span>Instagram</span>
                   <img
+                    loading="lazy"
                     src={ArrowRight}
                     alt=""
                     className="w-5 h-5 md:w-6 md:h-6"

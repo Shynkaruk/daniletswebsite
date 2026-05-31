@@ -9,11 +9,11 @@ const mediaByServiceId = {
   1: { images: [], videos: [] },
   2: {
     images: [
-      "/Services we provide/Fleets/IMG_0529.JPG",
-      "/Services we provide/Fleets/IMG_0530.JPG",
-      "/Services we provide/Fleets/IMG_0639.jpg",
-      "/Services we provide/Fleets/IMG_8378.JPG",
-      "/Services we provide/Fleets/IMG_8380.JPG",
+      "/Services we provide/Fleets/IMG_0529.webp",
+      "/Services we provide/Fleets/IMG_0530.webp",
+      "/Services we provide/Fleets/IMG_0639.webp",
+      "/Services we provide/Fleets/IMG_8378.webp",
+      "/Services we provide/Fleets/IMG_8380.webp",
     ],
     videos: [
       "/Services we provide/Fleets/IMG_0674.webm",
@@ -22,19 +22,19 @@ const mediaByServiceId = {
   },
   3: {
     images: [
-      "/Services we provide/Interior and Exterior Detailing/ELI02869.JPG",
-      "/Services we provide/Interior and Exterior Detailing/ELI02878.JPG",
-      "/Services we provide/Interior and Exterior Detailing/ELI02886.JPG",
-      "/Services we provide/Interior and Exterior Detailing/TIM06143 copy.JPG",
-      "/Services we provide/Interior and Exterior Detailing/TIM06149 copy.JPG",
+      "/Services we provide/Interior and Exterior Detailing/ELI02869.webp",
+      "/Services we provide/Interior and Exterior Detailing/ELI02878.webp",
+      "/Services we provide/Interior and Exterior Detailing/ELI02886.webp",
+      "/Services we provide/Interior and Exterior Detailing/TIM06143 copy.webp",
+      "/Services we provide/Interior and Exterior Detailing/TIM06149 copy.webp",
     ],
     videos: [],
   },
   4: {
     images: [
-      "/Services we provide/Ceramic/Copy of A7R04034 copy.JPG",
-      "/Services we provide/Ceramic/Copy of A7R04116 copy.JPG",
-      "/Services we provide/Ceramic/Copy of A7R04173 copy.JPG",
+      "/Services we provide/Ceramic/Copy of A7R04034 copy.webp",
+      "/Services we provide/Ceramic/Copy of A7R04116 copy.webp",
+      "/Services we provide/Ceramic/Copy of A7R04173 copy.webp",
     ],
     videos: [],
   },
@@ -224,7 +224,8 @@ const ServicesProvide = () => {
             className="flex flex-col bg-[#F5F5F5] rounded-[24px] p-5 md:p-6 min-h-[220px] hover:shadow-lg transition-transform duration-200 hover:scale-[1.01]"
           >
             <div className="flex flex-col items-start mb-4">
-              <img src={carRed} alt="" className="w-12 h-12 md:w-14 md:h-14 object-contain" />
+              <img
+                    loading="lazy" src={carRed} alt="" className="w-12 h-12 md:w-14 md:h-14 object-contain" />
 
               <h3
                 className="text-[24px] md:text-[36px] font-bold mt-3 text-black"
@@ -254,11 +255,13 @@ const ServicesProvide = () => {
               <span>Learn More</span>
 
               <span className="inline md:hidden">
-                <img src={arrowRightIcon} alt="arrow" className="w-[18px] h-[18px] object-contain" />
+                <img
+                    loading="lazy" src={arrowRightIcon} alt="arrow" className="w-[18px] h-[18px] object-contain" />
               </span>
 
               <span className="hidden md:inline">
-                <img src={arrowRightIcon} alt="arrow" className="w-[20px] h-[20px] object-contain" />
+                <img
+                    loading="lazy" src={arrowRightIcon} alt="arrow" className="w-[20px] h-[20px] object-contain" />
               </span>
             </button>
           </div>

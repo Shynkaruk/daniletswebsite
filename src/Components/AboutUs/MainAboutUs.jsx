@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Head from "./../Head.jsx";
-import familyPhoto from "../../assets/photo/family-photo5.png";
-import familyMobile from "../../assets/photo/bg_family_mobile.jpg";
+import familyPhoto from "../../assets/photo/family-photo5.webp";
+import familyMobile from "../../assets/photo/bg_family_mobile.webp";
 import diamondicon from "../../assets/icons/diamond-icon.svg";
 
 const MainAboutUs = () => {
@@ -28,6 +28,7 @@ const MainAboutUs = () => {
         {/* BACKGROUND (Desktop через img для ідеального контролю) */}
         <div className="absolute inset-0 z-0 md:block">
           <img
+                    loading="lazy"
             src={familyPhoto}
             alt=""
             className="w-full h-full object-cover"
@@ -73,6 +74,7 @@ const MainAboutUs = () => {
         {/* LABEL */}
         <div className="absolute z-[4] bottom-25 right-6 md:bottom-30 md:right-20 bg-[rgba(235,176,108,0.15)] rounded-full px-4 py-3 flex items-center gap-3">
           <img
+                    loading="lazy"
             src={diamondicon}
             alt="Diamond Icon"
             className="w-6 h-6 lg:w-8 lg:h-8"

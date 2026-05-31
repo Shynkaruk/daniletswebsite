@@ -15,9 +15,24 @@ export default defineConfig({
     },
   },
   plugins: [react(), tailwindcss()],
-  base: '/',                    // правильно для DO
+  base: "/",
   build: {
-    outDir: 'dist',             // явно вказуємо (за замовчуванням і так)
-    sourcemap: false,           // можна вимкнути в продакшені
+    outDir: "dist",
+    sourcemap: false,
+    chunkSizeWarningLimit: 500,
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/")) return "vendor-react";
+          if (id.includes("node_modules/react-router")) return "vendor-router";
+          if (id.includes("node_modules/swiper")) return "vendor-swiper";
+          if (id.includes("node_modules/@stripe")) return "vendor-stripe";
+          if (id.includes("node_modules/react-icons")) return "vendor-icons";
+          if (id.includes("node_modules/@react-oauth")) return "vendor-google-auth";
+          if (id.includes("node_modules/@whop")) return "vendor-whop";
+          if (id.includes("node_modules/axios")) return "vendor-axios";
+        },
+      },
+    },
   },
 });

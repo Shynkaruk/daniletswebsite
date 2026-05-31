@@ -5,43 +5,43 @@ import arrowRightIcon from "../../../assets/icons/arrows/arrow_right_black.svg";
 // ==== МЕДІА ДЛЯ КОЖНОГО СЕРВІСУ (BOX 1–4 з Portfolio_Cleaning) ====
 const mediaByServiceId = {
   1: [
-    "/Portfolio_Cleaning/Box 1/IMG_1300.jpg",
-    "/Portfolio_Cleaning/Box 1/IMG_1302.jpg",
-    "/Portfolio_Cleaning/Box 1/IMG_1310.jpg",
-    "/Portfolio_Cleaning/Box 1/IMG_1319.jpg",
-    "/Portfolio_Cleaning/Box 1/IMG_1323.jpg",
-    "/Portfolio_Cleaning/Box 1/IMG_1340.jpg",
-    "/Portfolio_Cleaning/Box 1/IMG_1345.jpg",
-    "/Portfolio_Cleaning/Box 1/IMG_1351.jpg",
+    "/Portfolio_Cleaning/Box 1/IMG_1300.webp",
+    "/Portfolio_Cleaning/Box 1/IMG_1302.webp",
+    "/Portfolio_Cleaning/Box 1/IMG_1310.webp",
+    "/Portfolio_Cleaning/Box 1/IMG_1319.webp",
+    "/Portfolio_Cleaning/Box 1/IMG_1323.webp",
+    "/Portfolio_Cleaning/Box 1/IMG_1340.webp",
+    "/Portfolio_Cleaning/Box 1/IMG_1345.webp",
+    "/Portfolio_Cleaning/Box 1/IMG_1351.webp",
   ],
   2: [
-    "/Portfolio_Cleaning/Box 2/IMG_0946.jpg",
-    "/Portfolio_Cleaning/Box 2/IMG_0947.jpg",
-    "/Portfolio_Cleaning/Box 2/IMG_0952.jpg",
-    "/Portfolio_Cleaning/Box 2/IMG_0957.jpg",
-    "/Portfolio_Cleaning/Box 2/IMG_0960.jpg",
-    "/Portfolio_Cleaning/Box 2/IMG_0961.jpg",
-    "/Portfolio_Cleaning/Box 2/IMG_0962.jpg",
-    "/Portfolio_Cleaning/Box 2/IMG_0965.jpg",
+    "/Portfolio_Cleaning/Box 2/IMG_0946.webp",
+    "/Portfolio_Cleaning/Box 2/IMG_0947.webp",
+    "/Portfolio_Cleaning/Box 2/IMG_0952.webp",
+    "/Portfolio_Cleaning/Box 2/IMG_0957.webp",
+    "/Portfolio_Cleaning/Box 2/IMG_0960.webp",
+    "/Portfolio_Cleaning/Box 2/IMG_0961.webp",
+    "/Portfolio_Cleaning/Box 2/IMG_0962.webp",
+    "/Portfolio_Cleaning/Box 2/IMG_0965.webp",
   ],
   3: [
-    "/Portfolio_Cleaning/Box 3/IMG_8537.jpg",
-    "/Portfolio_Cleaning/Box 3/IMG_8538.jpg",
-    "/Portfolio_Cleaning/Box 3/IMG_8540.jpg",
-    "/Portfolio_Cleaning/Box 3/IMG_8546.jpg",
-    "/Portfolio_Cleaning/Box 3/IMG_8551.jpg",
-    "/Portfolio_Cleaning/Box 3/IMG_8553.jpg",
+    "/Portfolio_Cleaning/Box 3/IMG_8537.webp",
+    "/Portfolio_Cleaning/Box 3/IMG_8538.webp",
+    "/Portfolio_Cleaning/Box 3/IMG_8540.webp",
+    "/Portfolio_Cleaning/Box 3/IMG_8546.webp",
+    "/Portfolio_Cleaning/Box 3/IMG_8551.webp",
+    "/Portfolio_Cleaning/Box 3/IMG_8553.webp",
   ],
   4: [
-    "/Portfolio_Cleaning/Box 4/IMG_4397.JPG",
-    "/Portfolio_Cleaning/Box 4/IMG_4502.jpg",
-    "/Portfolio_Cleaning/Box 4/IMG_4508.jpg",
-    "/Portfolio_Cleaning/Box 4/IMG_4517.jpg",
-    "/Portfolio_Cleaning/Box 4/IMG_4534.jpg",
-    "/Portfolio_Cleaning/Box 4/IMG_4540.jpg",
-    "/Portfolio_Cleaning/Box 4/IMG_5876.JPG",
-    "/Portfolio_Cleaning/Box 4/IMG_5879.JPG",
-    "/Portfolio_Cleaning/Box 4/IMG_5881.JPG",
+    "/Portfolio_Cleaning/Box 4/IMG_4397.webp",
+    "/Portfolio_Cleaning/Box 4/IMG_4502.webp",
+    "/Portfolio_Cleaning/Box 4/IMG_4508.webp",
+    "/Portfolio_Cleaning/Box 4/IMG_4517.webp",
+    "/Portfolio_Cleaning/Box 4/IMG_4534.webp",
+    "/Portfolio_Cleaning/Box 4/IMG_4540.webp",
+    "/Portfolio_Cleaning/Box 4/IMG_5876.webp",
+    "/Portfolio_Cleaning/Box 4/IMG_5879.webp",
+    "/Portfolio_Cleaning/Box 4/IMG_5881.webp",
   ],
 };
 
@@ -195,6 +195,7 @@ const ServicesProvideCleaning = () => {
                   <span>Learn More</span>
                   <span className="inline md:hidden">
                     <img
+                    loading="lazy"
                       src={arrowRightIcon}
                       alt="arrow"
                       className="w-[18px] h-[18px] object-contain"
@@ -202,6 +203,7 @@ const ServicesProvideCleaning = () => {
                   </span>
                   <span className="hidden md:inline">
                     <img
+                    loading="lazy"
                       src={arrowRightIcon}
                       alt="arrow"
                       className="w-[20px] h-[20px] object-contain"

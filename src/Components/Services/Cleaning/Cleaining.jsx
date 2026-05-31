@@ -1,7 +1,7 @@
 import React from "react";
 import Head from "../../Head";
-import bgImageMobile from "../../../assets/photo/bg_cleaning.png";
-import bgImagePC from "../../../assets/photo/cleaningn_bg.png";
+import bgImageMobile from "../../../assets/photo/bg_cleaning.webp";
+import bgImagePC from "../../../assets/photo/cleaningn_bg.webp";
 import iconBuble from "../../../assets/icons/cleaning_bage.svg";
 import LogoRed from "../../../assets/icons/cleaning_logo.svg";
 import { useNavigate } from "react-router-dom";

@@ -19,37 +19,37 @@ import LayoutContainer from "./LayoutContainer.jsx";
 const SLIDES = [
   {
     id: "top1",
-    image: "/Top_of_Page/1.jpg",
+    image: "/Top_of_Page/1.webp",
     alt: "Danilets slide 1",
     link: "/about-us",
   },
   {
     id: "top2",
-    image: "/Top_of_Page/2.jpg",
+    image: "/Top_of_Page/2.webp",
     alt: "Danilets slide 2",
     link: "/detailing",
   },
   {
     id: "top3",
-    image: "/Top_of_Page/3.jpg",
+    image: "/Top_of_Page/3.webp",
     alt: "Danilets slide 3",
     link: "/cleaning",
   },
   {
     id: "top4",
-    image: "/Top_of_Page/4.jpg",
+    image: "/Top_of_Page/4.webp",
     alt: "Danilets slide 4",
     link: "/detailing",
   },
   {
     id: "top5",
-    image: "/Top_of_Page/5.jpg",
+    image: "/Top_of_Page/5.webp",
     alt: "Danilets slide 5",
     link: "/cleaning",
   },
   {
     id: "top6",
-    image: "/Top_of_Page/6.jpg",
+    image: "/Top_of_Page/6.webp",
     alt: "Danilets slide 6",
     link: "/about-us",
   },
@@ -109,6 +109,8 @@ const MainMobile = () => {
               key={slide.id}
               src={slide.image}
               alt={slide.alt}
+              loading={index === 0 ? "eager" : "lazy"}
+              fetchPriority={index === 0 ? "high" : "low"}
               className={`
         absolute inset-0
         w-full h-full

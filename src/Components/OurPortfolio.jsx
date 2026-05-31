@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import mokPhoto from "../assets/photo/mok-photo.png";
+import mokPhoto from "../assets/photo/mok-photo.webp";
 import RightArrowIcon from "../assets/icons/arrows/arrow_right_black.svg";
 import LeftArrowIcon from "../assets/icons/arrows/arrow-left-black.svg";
 
@@ -95,6 +95,7 @@ const OurPortfolio = () => {
                   <img
                     src={item.image}
                     alt=""
+                    loading="lazy"
                     className="w-full h-full object-cover"
                   />
                 </div>

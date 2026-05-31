@@ -1,63 +1,71 @@
 // src/Components/Booking.jsx
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import Header from "./Head";
 import Footer from "./Footer";
-import fon_booking from "../assets/photo/fon_booking.png";
+import fon_booking from "../assets/photo/fon_booking.webp";
 import { auth, meApi, reqApi } from "../lib/api";
 import { useNavigationGuard } from "../contexts/NavigationGuard";
+import ProgressBar from "./NewBooking/ProgressBar";
 
-// Спільний крок
+// Спільний перший крок — завантажується одразу (юзер бачить його першим)
 import Step1Search from "../Components/NewBooking/ChooseServiceQute";
 
-// Cleaning – RESIDENTIAL (існуючі кроки — пропси НЕ міняю)
-import StepCleaningPropertyType from "../Components/NewBooking/Cleaning/StepCleaningPropertyType";
-import StepCleaningProjectType from "../Components/NewBooking/Cleaning/StepCleaningProjectType";
-import StepCleaningAreas from "../Components/NewBooking/Cleaning/StepCleaningAreas";
-import StepCleaningGeneralTasks from "../Components/NewBooking/Cleaning/StepCleaningGeneralTasks";
-import StepCleaningKitchenTasks from "../Components/NewBooking/Cleaning/StepCleaningKitchenTasks";
-import StepCleaningBudget from "../Components/NewBooking/Cleaning/StepCleaningBudget";
-import StepCleaningContactDetails from "../Components/NewBooking/Cleaning/StepCleaningContactDetails";
-import StepCleaningReview from "../Components/NewBooking/Cleaning/StepCleaningReview";
-import StepCleaningPropertyDetails from "../Components/NewBooking/Cleaning/StepCleaningPropertyDetails";
+// Всі наступні кроки — lazy (завантажуються тільки при переході)
 
-// Cleaning – COMMERCIAL (новий 9-step flow, пропси НЕ міняю)
-import StepCleaningCommercialContactInfo from "../Components/NewBooking/Cleaning/Commercial/StepCleaningCommercialContactInfo";
-import StepCleaningCommercialCompanyInfo from "../Components/NewBooking/Cleaning/Commercial/StepCleaningCommercialCompanyInfo";
-import StepCleaningCommercialProjectInformation from "../Components/NewBooking/Cleaning/Commercial/StepCleaningCommercialProjectInformation";
-import StepCleaningCommercialAdditionalInfo from "../Components/NewBooking/Cleaning/Commercial/StepCleaningCommercialAdditional";
-import StepCleaningCommercialSupplies from "../Components/NewBooking/Cleaning/Commercial/StepCleaningCommercialSupplies";
-import StepCleaningCommercialAccess from "../Components/NewBooking/Cleaning/Commercial/StepCleaningCommercialAccess";
-import StepCleaningCommercialReview from "../Components/NewBooking/Cleaning/Commercial/StepCleaningCommercialReview";
+// Cleaning – RESIDENTIAL
+const StepCleaningPropertyType        = lazy(() => import("../Components/NewBooking/Cleaning/StepCleaningPropertyType"));
+const StepCleaningProjectType         = lazy(() => import("../Components/NewBooking/Cleaning/StepCleaningProjectType"));
+const StepCleaningAreas               = lazy(() => import("../Components/NewBooking/Cleaning/StepCleaningAreas"));
+const StepCleaningGeneralTasks        = lazy(() => import("../Components/NewBooking/Cleaning/StepCleaningGeneralTasks"));
+const StepCleaningKitchenTasks        = lazy(() => import("../Components/NewBooking/Cleaning/StepCleaningKitchenTasks"));
+const StepCleaningBudget              = lazy(() => import("../Components/NewBooking/Cleaning/StepCleaningBudget"));
+const StepCleaningContactDetails      = lazy(() => import("../Components/NewBooking/Cleaning/StepCleaningContactDetails"));
+const StepCleaningReview              = lazy(() => import("../Components/NewBooking/Cleaning/StepCleaningReview"));
+const StepCleaningPropertyDetails     = lazy(() => import("../Components/NewBooking/Cleaning/StepCleaningPropertyDetails"));
 
-// Detailing
-import StepDetailingGetQuoteType from "../Components/NewBooking/Detailing/StepDetailingGetQuoteType";
+// Cleaning – COMMERCIAL
+const StepCleaningCommercialContactInfo      = lazy(() => import("../Components/NewBooking/Cleaning/Commercial/StepCleaningCommercialContactInfo"));
+const StepCleaningCommercialCompanyInfo      = lazy(() => import("../Components/NewBooking/Cleaning/Commercial/StepCleaningCommercialCompanyInfo"));
+const StepCleaningCommercialProjectInformation = lazy(() => import("../Components/NewBooking/Cleaning/Commercial/StepCleaningCommercialProjectInformation"));
+const StepCleaningCommercialAdditionalInfo   = lazy(() => import("../Components/NewBooking/Cleaning/Commercial/StepCleaningCommercialAdditional"));
+const StepCleaningCommercialSupplies         = lazy(() => import("../Components/NewBooking/Cleaning/Commercial/StepCleaningCommercialSupplies"));
+const StepCleaningCommercialAccess           = lazy(() => import("../Components/NewBooking/Cleaning/Commercial/StepCleaningCommercialAccess"));
+const StepCleaningCommercialReview           = lazy(() => import("../Components/NewBooking/Cleaning/Commercial/StepCleaningCommercialReview"));
 
-// PERSONAL Detailing steps
-import StepDetailingVehicleInfo from "../Components/NewBooking/Detailing/Personal/StepDetailingVehicleInfo";
-import StepDetailingVehicleHistory from "../Components/NewBooking/Detailing/Personal/StepDetailingVehicleHistory";
-import StepDetailingVehicleCondition from "../Components/NewBooking/Detailing/Personal/StepDetailingVehicleCondition";
-import StepDetailingServices from "../Components/NewBooking/Detailing/Personal/StepDetailingServices";
-import StepDetailingMultipleVehicles from "../Components/NewBooking/Detailing/Personal/StepDetailingMultipleVehicles";
-import StepDetailingLocationTimeline from "../Components/NewBooking/Detailing/Personal/StepDetailingLocationTimeline";
-import StepDetailingTimeline from "../Components/NewBooking/Detailing/Personal/StepDetailingTimeline";
-import StepDetailingContactInfo from "../Components/NewBooking/Detailing/Personal/StepDetailingContactInfo";
-import StepDetailingAdditionalInfo from "../Components/NewBooking/Detailing/Personal/StepDetailingAdditionalInfo";
-import StepReview from "../Components/NewBooking/Detailing/Personal/StepReview";
+// Detailing – спільний
+const StepDetailingGetQuoteType = lazy(() => import("../Components/NewBooking/Detailing/StepDetailingGetQuoteType"));
 
-// BUSINESS Detailing steps
-import StepDetailingBusinessContactInfo from "../Components/NewBooking/Detailing/Business/StepDetailingBusinessContactInfo";
-import StepDetailingBusinessDetails from "../Components/NewBooking/Detailing/Business/StepDetailingBusinessDetails";
-import StepDetailingBusinessServiceFrequency from "../Components/NewBooking/Detailing/Business/StepDetailingBusinessServiceFrequency";
-import StepDetailingBusinessVehicleTypes from "../Components/NewBooking/Detailing/Business/StepDetailingBusinessVehicleTypes";
-import StepDetailingBusinessServiceLocation from "../Components/NewBooking/Detailing/Business/StepDetailingBusinessServiceLocation";
-import StepDetailingBusinessServices from "../Components/NewBooking/Detailing/Business/StepDetailingBusinessServices";
-import StepDetailingBusinessTimeline from "../Components/NewBooking/Detailing/Business/StepDetailingBusinessTimeline";
-import StepDetailingBusinessAdditionalInfo from "../Components/NewBooking/Detailing/Business/StepDetailingBusinessAdditionalInfo";
-import StepDetailingBusinessReview from "../Components/NewBooking/Detailing/Business/StepDetailingBusinessReview";
+// Detailing – PERSONAL
+const StepDetailingVehicleInfo        = lazy(() => import("../Components/NewBooking/Detailing/Personal/StepDetailingVehicleInfo"));
+const StepDetailingVehicleHistory     = lazy(() => import("../Components/NewBooking/Detailing/Personal/StepDetailingVehicleHistory"));
+const StepDetailingVehicleCondition   = lazy(() => import("../Components/NewBooking/Detailing/Personal/StepDetailingVehicleCondition"));
+const StepDetailingServices           = lazy(() => import("../Components/NewBooking/Detailing/Personal/StepDetailingServices"));
+const StepDetailingMultipleVehicles   = lazy(() => import("../Components/NewBooking/Detailing/Personal/StepDetailingMultipleVehicles"));
+const StepDetailingLocationTimeline   = lazy(() => import("../Components/NewBooking/Detailing/Personal/StepDetailingLocationTimeline"));
+const StepDetailingTimeline           = lazy(() => import("../Components/NewBooking/Detailing/Personal/StepDetailingTimeline"));
+const StepDetailingContactInfo        = lazy(() => import("../Components/NewBooking/Detailing/Personal/StepDetailingContactInfo"));
+const StepDetailingAdditionalInfo     = lazy(() => import("../Components/NewBooking/Detailing/Personal/StepDetailingAdditionalInfo"));
+const StepReview                      = lazy(() => import("../Components/NewBooking/Detailing/Personal/StepReview"));
 
-import ProgressBar from "./NewBooking/ProgressBar";
+// Detailing – BUSINESS
+const StepDetailingBusinessContactInfo      = lazy(() => import("../Components/NewBooking/Detailing/Business/StepDetailingBusinessContactInfo"));
+const StepDetailingBusinessDetails          = lazy(() => import("../Components/NewBooking/Detailing/Business/StepDetailingBusinessDetails"));
+const StepDetailingBusinessServiceFrequency = lazy(() => import("../Components/NewBooking/Detailing/Business/StepDetailingBusinessServiceFrequency"));
+const StepDetailingBusinessVehicleTypes     = lazy(() => import("../Components/NewBooking/Detailing/Business/StepDetailingBusinessVehicleTypes"));
+const StepDetailingBusinessServiceLocation  = lazy(() => import("../Components/NewBooking/Detailing/Business/StepDetailingBusinessServiceLocation"));
+const StepDetailingBusinessServices         = lazy(() => import("../Components/NewBooking/Detailing/Business/StepDetailingBusinessServices"));
+const StepDetailingBusinessTimeline         = lazy(() => import("../Components/NewBooking/Detailing/Business/StepDetailingBusinessTimeline"));
+const StepDetailingBusinessAdditionalInfo   = lazy(() => import("../Components/NewBooking/Detailing/Business/StepDetailingBusinessAdditionalInfo"));
+const StepDetailingBusinessReview           = lazy(() => import("../Components/NewBooking/Detailing/Business/StepDetailingBusinessReview"));
+
+// Мінімальний spinner між кроками
+const StepFallback = () => (
+  <div className="flex items-center justify-center py-20">
+    <div className="w-8 h-8 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
+  </div>
+);
 
 /** ======= Google Places loader (no external libs) ======= */
 function useGooglePlaces({
@@ -1322,6 +1330,8 @@ useEffect(() => {
           </h1>
 
           {/* STEP 1: Address search (спільний) */}
+          {/* Suspense обгортає всі lazy кроки форми */}
+          <Suspense fallback={<StepFallback />}>
           <Step1Search
             visible={step === 1}
             query={query}
@@ -2175,6 +2185,7 @@ useEffect(() => {
               )}
             </>
           )}
+          </Suspense>
         </div>
       </main>
 
