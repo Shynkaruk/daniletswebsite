@@ -1,6 +1,7 @@
 // server/routes/contact.js
 import express from "express";
 import { Resend } from "resend";
+import { sendAdminPushNotification } from "../email.js";
 
 const router = express.Router();
 
@@ -45,6 +46,13 @@ router.post("/", async (req, res) => {
       to: [TO_EMAIL],
       subject,
       html,
+    });
+
+    // Push notification — fire-and-forget
+    sendAdminPushNotification({
+      title: "🔔 New Contact Request",
+      body: `From: ${fullName}`,
+      url: "/admin",
     });
 
     return res.json({ ok: true });

@@ -1,5 +1,7 @@
 // email.js
 import { Resend } from "resend";
+import webpush from "web-push";
+import { PushSubscription } from "./db.js";
 
 const SERVICE_LABELS = {
   detailing_quote_personal: "Detailing – Personal",
@@ -178,5 +180,46 @@ export async function sendOtpEmail({ to, code, purpose = "signup" }) {
     console.error("[email] Failed to send OTP email:", err);
     // пробросимо далі, щоб /api/auth/otp/send повернув 500
     throw err;
+  }
+}
+
+const PUSH_SVC_LABELS = {
+  detailing_quote_personal:   "Detailing — Personal",
+  detailing_quote_business:   "Detailing — Business",
+  cleaning_quote_residential: "Cleaning — Residential",
+  cleaning_quote_commercial:  "Cleaning — Commercial",
+  forms_clients:              "Contact Form",
+};
+
+export function pushSvcLabel(serviceType) {
+  return PUSH_SVC_LABELS[serviceType] || (serviceType || "New request").replace(/_/g, " ");
+}
+
+/**
+ * Надіслати push-повідомлення всім адмін-підписникам.
+ * Fire-and-forget — ніколи не кидає.
+ */
+export async function sendAdminPushNotification({ title, body, url = "/admin" }) {
+  if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) return;
+  try {
+    webpush.setVapidDetails(
+      process.env.VAPID_EMAIL || "mailto:admin@danilets.com",
+      process.env.VAPID_PUBLIC_KEY,
+      process.env.VAPID_PRIVATE_KEY
+    );
+    const subs = await PushSubscription.find({}).lean();
+    if (!subs.length) return;
+    const payload = JSON.stringify({ title, body, url });
+    await Promise.allSettled(
+      subs.map((s) =>
+        webpush.sendNotification(s.subscription, payload).catch((err) => {
+          if (err.statusCode === 410) {
+            PushSubscription.deleteOne({ _id: s._id }).catch(() => {});
+          }
+        })
+      )
+    );
+  } catch (e) {
+    console.error("[push] sendAdminPushNotification error:", e);
   }
 }

@@ -27,7 +27,7 @@ import {
 } from "./db.js";
 import googleCodeRouter from "./routes/authGoogle.js";
 import googleReviewsRouter from "./routes/googleReviews.js";
-import { sendOtpEmail, sendAdminNewRequestNotification } from "./email.js";
+import { sendOtpEmail, sendAdminNewRequestNotification, sendAdminPushNotification, pushSvcLabel } from "./email.js";
 import contactRouter from "./routes/contact.js";
 import contactsFormRouter from "./routes/contactsform.js";
 import checkoutRouter from "./routes/checkout.js";
@@ -56,39 +56,7 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   console.warn("[push] VAPID keys not set — push notifications disabled");
 }
 
-// Human-readable service labels for push notifications
-const PUSH_SVC_LABELS = {
-  detailing_quote_personal:   "Detailing — Personal",
-  detailing_quote_business:   "Detailing — Business",
-  cleaning_quote_residential: "Cleaning — Residential",
-  cleaning_quote_commercial:  "Cleaning — Commercial",
-  forms_clients:              "Contact Form",
-};
-
-function pushSvcLabel(serviceType) {
-  return PUSH_SVC_LABELS[serviceType] || (serviceType || "New request").replace(/_/g, " ");
-}
-
-async function sendAdminPushNotification({ title, body, url = "/admin" }) {
-  if (!process.env.VAPID_PUBLIC_KEY) return;
-  try {
-    const subs = await PushSubscription.find({}).lean();
-    if (!subs.length) return;
-    const payload = JSON.stringify({ title, body, url });
-    await Promise.allSettled(
-      subs.map((s) =>
-        webpush.sendNotification(s.subscription, payload).catch((err) => {
-          // 410 Gone = subscription expired/unsubscribed — clean up
-          if (err.statusCode === 410) {
-            PushSubscription.deleteOne({ _id: s._id }).catch(() => {});
-          }
-        })
-      )
-    );
-  } catch (e) {
-    console.error("[push] sendAdminPushNotification error:", e);
-  }
-}
+// sendAdminPushNotification and pushSvcLabel are imported from ./email.js
 
 // 🆕 ID воронок у Bitrix (ставиш свої значення з CRM)
 const BITRIX_CATEGORY_DETAILING = Number(

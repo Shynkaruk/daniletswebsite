@@ -1,6 +1,7 @@
 // routes/contactsform.js
 import express from "express";
 import { RequestModel, User } from "../db.js";
+import { sendAdminNewRequestNotification, sendAdminPushNotification } from "../email.js";
 
 const router = express.Router();
 
@@ -73,6 +74,22 @@ router.post("/", async (req, res) => {
     const row = doc.toObject();
     row.id = row._id.toString();
     delete row._id;
+
+    // Notify admin — fire-and-forget
+    const customerName = `${firstName} ${lastName}`.trim();
+    sendAdminNewRequestNotification({
+      serviceType: "forms_clients",
+      requestId: row.id,
+      customerName,
+      customerEmail: email,
+      customerPhone: phone,
+      notes: description,
+    });
+    sendAdminPushNotification({
+      title: "🔔 New Contact Form",
+      body: customerName ? `From: ${customerName}` : "A new contact form has been submitted",
+      url: "/admin",
+    });
 
     return res.json({ ok: true, request: row });
   } catch (e) {

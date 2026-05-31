@@ -293,7 +293,6 @@ export default function StepCleaningCommercialProjectInformation({
     { key: "house", label: "House" },
     { key: "condo", label: "Condo" },
     { key: "townhouse", label: "Townhouse" },
-    { key: "other", label: "Other (please specify)" },
   ];
 
   const AIRBNB_TURNOVER = [
@@ -320,7 +319,6 @@ export default function StepCleaningCommercialProjectInformation({
     { key: "balcony", label: "Balcony/Patio" },
     { key: "laundry", label: "Laundry Room" },
     { key: "all", label: "All Areas" },
-    { key: "other", label: "Other (please specify)" },
   ];
 
   const AIRBNB_KITCHEN_TASKS = [
@@ -333,7 +331,6 @@ export default function StepCleaningCommercialProjectInformation({
     { key: "inside_fridge", label: "Inside Refrigerator" },
     { key: "inside_microwave", label: "Inside Microwave" },
     { key: "inside_dishwasher", label: "Inside Dishwasher" },
-    { key: "other", label: "Other (please specify)" },
   ];
 
   const PC_CONSTRUCTION_TYPE = [
@@ -362,7 +359,6 @@ export default function StepCleaningCommercialProjectInformation({
     { key: "bathrooms", label: "Bathrooms" },
     { key: "kitchen", label: "Kitchen" },
     { key: "hvac", label: "HVAC Vents/Ducts" },
-    { key: "other", label: "Other (please specify)" },
   ];
 
   const PC_FREQUENCY = [
@@ -413,7 +409,6 @@ export default function StepCleaningCommercialProjectInformation({
     { key: "floors", label: "Floors (Carpet, Tile, Hardwood, etc.)" },
     { key: "storage", label: "Storage Areas" },
     { key: "exterior", label: "Exterior (Entrance, Walkways, etc.)" },
-    { key: "other", label: "Other (please specify)" },
   ];
 
   const OTHER_FREQUENCY = [
@@ -924,7 +919,7 @@ export default function StepCleaningCommercialProjectInformation({
 
                   <div>
                     <label className="text-sm font-semibold text-[#111827]">
-                      Average square footage per unit? (optional)
+                      Average square footage per unit?
                     </label>
                     <input
                       value={airbnbAvgSqft}
@@ -936,7 +931,7 @@ export default function StepCleaningCommercialProjectInformation({
 
                   <div>
                     <label className="text-sm font-semibold text-[#111827]">
-                      Average number of bedrooms per unit? (optional)
+                      Average number of bedrooms per unit?
                     </label>
                     <input
                       value={airbnbAvgBedrooms}
@@ -948,7 +943,7 @@ export default function StepCleaningCommercialProjectInformation({
 
                   <div>
                     <label className="text-sm font-semibold text-[#111827]">
-                      Average number of bathrooms per unit? (optional)
+                      Average number of bathrooms per unit?
                     </label>
                     <input
                       value={airbnbAvgBathrooms}
@@ -1111,7 +1106,7 @@ export default function StepCleaningCommercialProjectInformation({
 
                   <div>
                     <label className="text-sm font-semibold text-[#111827]">
-                      How many floors/levels? (optional)
+                      How many floors/levels?
                     </label>
                     <input
                       value={pcFloors}
@@ -1219,7 +1214,7 @@ export default function StepCleaningCommercialProjectInformation({
 
                   <div>
                     <label className="text-sm font-semibold text-[#111827]">
-                      How many floors/levels? (optional)
+                      How many floors/levels?
                     </label>
                     <input
                       value={otherFloors}
@@ -1231,7 +1226,7 @@ export default function StepCleaningCommercialProjectInformation({
 
                   <div>
                     <label className="text-sm font-semibold text-[#111827]">
-                      How many restrooms? (optional)
+                      How many restrooms?
                     </label>
                     <input
                       value={otherRestrooms}
