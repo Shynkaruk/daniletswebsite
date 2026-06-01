@@ -659,4 +659,4 @@ function DetailModal({ row, onClose, onSave, onDelete }) {
       </div>
     </div>
   );
-}2
+}
