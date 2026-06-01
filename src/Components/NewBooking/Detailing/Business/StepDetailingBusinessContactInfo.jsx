@@ -97,67 +97,54 @@ export default function StepDetailingBusinessContactInfo({
   const heard = heardAbout ?? "";
   const heardO = heardOther ?? "";
 
-  const validateField = useCallback((field) => {
-    setErrors(prevErrors => {
-      const newErrors = { ...prevErrors };
-
+  const computeErrors = useCallback((fields) => {
+    const phoneRegex = /^(\+1\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const newErrors = {};
+    for (const field of fields) {
       switch (field) {
-        case "firstName": {
+        case "firstName":
           if (!first.trim()) newErrors.firstName = "First name is required";
-          else delete newErrors.firstName;
           break;
-        }
-        case "lastName": {
+        case "lastName":
           if (!last.trim()) newErrors.lastName = "Last name is required";
-          else delete newErrors.lastName;
           break;
-        }
-        case "companyName": {
+        case "companyName":
           if (!comp.trim()) newErrors.companyName = "Company name is required";
-          else delete newErrors.companyName;
           break;
-        }
-        case "companyAddress": {
+        case "companyAddress":
           if (!addr.trim()) newErrors.companyAddress = "Company address is required";
-          else delete newErrors.companyAddress;
           break;
-        }
-        case "phone": {
-          // === СТРОГА ВАЛІДАЦІЯ АМЕРИКАНСЬКОГО НОМЕРА ===
-          const phoneRegex = /^(\+1\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/;
-          if (!ph.trim()) {
-            newErrors.phone = "Phone number is required";
-          } else if (!phoneRegex.test(ph)) {
-            newErrors.phone = "Please enter a valid US phone number (e.g. (123) 456-7890)";
-          } else {
-            delete newErrors.phone;
-          }
+        case "phone":
+          if (!ph.trim()) newErrors.phone = "Phone number is required";
+          else if (!phoneRegex.test(ph)) newErrors.phone = "Please enter a valid US phone number (e.g. (123) 456-7890)";
           break;
-        }
-        case "email": {
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        case "email":
           if (!em) newErrors.email = "Email is required";
           else if (!emailRegex.test(em)) newErrors.email = "Please enter a valid email address";
-          else delete newErrors.email;
           break;
-        }
-        case "heardAbout": {
+        case "heardAbout":
           if (!heard) newErrors.heardAbout = "Please tell us how you heard about us";
-          else delete newErrors.heardAbout;
           break;
-        }
-        case "heardOther": {
+        case "heardOther":
           if (heard === "Other" && !heardO.trim()) newErrors.heardOther = "Please specify how you heard about us";
-          else delete newErrors.heardOther;
           break;
-        }
         default:
           break;
       }
-
-      return newErrors;
-    });
+    }
+    return newErrors;
   }, [first, last, comp, addr, ph, em, heard, heardO]);
+
+  const validateField = useCallback((field) => {
+    setErrors(prev => {
+      const fieldErrors = computeErrors([field]);
+      const next = { ...prev };
+      if (fieldErrors[field]) next[field] = fieldErrors[field];
+      else delete next[field];
+      return next;
+    });
+  }, [computeErrors]);
 
   const handleBlur = (field) => {
     setTouched(prev => ({ ...prev, [field]: true }));
@@ -165,18 +152,20 @@ export default function StepDetailingBusinessContactInfo({
   };
 
   const handleContinue = () => {
-    const isAccountMode = isLoggedIn && mode === "account";
-    const allFields = isAccountMode
+    const isAccountModeNow = isLoggedIn && mode === "account";
+    const allFields = isAccountModeNow
       ? ["companyName", "companyAddress", "heardAbout"]
       : ["firstName", "lastName", "companyName", "companyAddress", "phone", "email", "heardAbout"];
     if (heard === "Other") allFields.push("heardOther");
 
-    allFields.forEach(field => {
-      setTouched(prev => ({ ...prev, [field]: true }));
-      validateField(field);
-    });
+    const newTouched = {};
+    allFields.forEach(f => { newTouched[f] = true; });
+    setTouched(prev => ({ ...prev, ...newTouched }));
 
-    if (Object.keys(errors).length === 0) {
+    const currentErrors = computeErrors(allFields);
+    setErrors(currentErrors);
+
+    if (Object.keys(currentErrors).length === 0) {
       onNext?.();
     }
   };
@@ -428,10 +417,9 @@ export default function StepDetailingBusinessContactInfo({
           className={`
             w-full h-[52px] sm:h-[56px] rounded-[88px] font-semibold text-black shadow
             inline-flex items-center justify-between px-6
-            ${Object.keys(errors).length > 0 ? "opacity-60 cursor-not-allowed" : ""}
           `}
           style={{ background: GOLD_GRADIENT }}
-          disabled={Object.keys(errors).length > 0}
+          disabled={false}
         >
           <span>Continue</span>
           <span className="text-lg">›</span>

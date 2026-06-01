@@ -103,41 +103,45 @@ export default function StepCleaningContactDetails({
     });
   };
 
-  const validateField = useCallback((field) => {
-    setErrors(prevErrors => {
-      const newErrors = { ...prevErrors };
-
+  const computeErrors = useCallback((fields) => {
+    const phoneRegex = /^(\+1\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const newErrors = {};
+    for (const field of fields) {
       switch (field) {
         case "firstName":
           if (!firstVal.trim()) newErrors.firstName = "First name is required";
-          else delete newErrors.firstName;
           break;
         case "lastName":
           if (!lastVal.trim()) newErrors.lastName = "Last name is required";
-          else delete newErrors.lastName;
           break;
         case "phone":
-          const phoneRegex = /^(\+1\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/;
           if (!phoneVal.trim()) newErrors.phone = "Phone number is required";
           else if (!phoneRegex.test(phoneVal)) newErrors.phone = "Please enter a valid US phone number";
-          else delete newErrors.phone;
           break;
         case "email":
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           if (!emailVal) newErrors.email = "Email is required";
           else if (!emailRegex.test(emailVal)) newErrors.email = "Please enter a valid email address";
-          else delete newErrors.email;
           break;
         case "address":
           if (!addressVal.trim()) newErrors.address = "Address is required";
-          else delete newErrors.address;
           break;
         default:
           break;
       }
-      return newErrors;
-    });
+    }
+    return newErrors;
   }, [firstVal, lastVal, phoneVal, emailVal, addressVal]);
+
+  const validateField = useCallback((field) => {
+    setErrors(prev => {
+      const fieldErrors = computeErrors([field]);
+      const next = { ...prev };
+      if (fieldErrors[field]) next[field] = fieldErrors[field];
+      else delete next[field];
+      return next;
+    });
+  }, [computeErrors]);
 
   const handleBlur = (field) => {
     setTouched(prev => ({ ...prev, [field]: true }));
@@ -147,12 +151,14 @@ export default function StepCleaningContactDetails({
   const handleContinue = () => {
     const allFields = ["firstName", "lastName", "phone", "email", "address"];
 
-    allFields.forEach(field => {
-      setTouched(prev => ({ ...prev, [field]: true }));
-      validateField(field);
-    });
+    const newTouched = {};
+    allFields.forEach(f => { newTouched[f] = true; });
+    setTouched(prev => ({ ...prev, ...newTouched }));
 
-    if (Object.keys(errors).length === 0) {
+    const currentErrors = computeErrors(allFields);
+    setErrors(currentErrors);
+
+    if (Object.keys(currentErrors).length === 0) {
       onNext?.();
     }
   };
@@ -312,9 +318,9 @@ export default function StepCleaningContactDetails({
           type="button"
           onClick={handleContinue}
           className={`w-full h-[52px] rounded-[88px] font-semibold text-black shadow inline-flex items-center justify-center gap-2
-            ${Object.keys(errors).length > 0 ? "opacity-60 cursor-not-allowed" : ""}`}
+`}
           style={{ background: GOLD_GRADIENT }}
-          disabled={Object.keys(errors).length > 0}
+          disabled={false}
         >
           Continue <span className="text-lg">›</span>
         </button>
