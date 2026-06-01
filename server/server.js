@@ -127,12 +127,20 @@ app.get("/health", (_req, res) => res.status(200).send("ok"));
 // В продакшені dist/ будується і сервер роздає його як статику
 const DIST_DIR = path.join(__dirname, "..", "dist");
 if (fs.existsSync(DIST_DIR)) {
-  app.use(express.static(DIST_DIR));
-  app.get("/", (_req, res) => res.sendFile(path.join(DIST_DIR, "index.html")));
-  // SPA fallback: всі не-API маршрути повертають index.html
+  // Hashed assets (JS/CSS/images) — кешуємо надовго
+  app.use("/assets", express.static(path.join(DIST_DIR, "assets"), {
+    maxAge: "1y",
+    immutable: true,
+  }));
+  // Решта статики (favicon, manifest, тощо) — без кешу
+  app.use(express.static(DIST_DIR, { maxAge: 0 }));
+
+  // SPA fallback: всі не-API маршрути повертають index.html без кешу
   app.get("*", (req, res, next) => {
     if (req.path.startsWith("/api/")) return next();
-    res.sendFile(path.join(DIST_DIR, "index.html"));
+    res
+      .set("Cache-Control", "no-cache, no-store, must-revalidate")
+      .sendFile(path.join(DIST_DIR, "index.html"));
   });
 }
 
