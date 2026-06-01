@@ -23,10 +23,13 @@ router.get("/profile", auth, async (req, res) => {
   res.json({ ...u, id: u._id.toString(), _id: undefined });
 });
 
-// ---- Оновити профіль (ім'я, прізвище, телефон) ----
+// ---- Оновити профіль (ім'я, прізвище, телефон, адреси) ----
 router.put("/profile", auth, async (req, res) => {
-  const { first_name, last_name, phone } = req.body || {};
-  await User.findByIdAndUpdate(req.user.uid, { $set: { first_name, last_name, phone } });
+  const { first_name, last_name, phone, personal_address, commercial_address } = req.body || {};
+  const update = { first_name, last_name, phone };
+  if (personal_address   !== undefined) update.personal_address   = personal_address;
+  if (commercial_address !== undefined) update.commercial_address = commercial_address;
+  await User.findByIdAndUpdate(req.user.uid, { $set: update });
   const userDoc = await User.findById(req.user.uid).lean();
   if (!userDoc) return res.status(404).json({ error: "not found" });
   const { password, ...u } = userDoc;
@@ -43,8 +46,12 @@ router.get("/vehicles", auth, async (req, res) => {
 
 // ---- Додати новий автомобіль ----
 router.post("/vehicles", auth, async (req, res) => {
-  const { make, model, year, color, plate, vin, notes } = req.body || {};
-  const doc = await Vehicle.create({ user_id: req.user.uid, make, model, year, color, plate, vin, notes });
+  const { make, model, year, color, plate, vin, notes, category, photo_url } = req.body || {};
+  const doc = await Vehicle.create({
+    user_id: req.user.uid, make, model, year, color, plate, vin, notes,
+    category: category || "personal",
+    photo_url: photo_url || "",
+  });
   const v = doc.toObject();
   res.json({ ...v, id: v._id.toString(), _id: undefined });
 });
@@ -54,8 +61,11 @@ router.put("/vehicles/:id", auth, async (req, res) => {
   const owner = await Vehicle.findOne({ _id: req.params.id, user_id: req.user.uid });
   if (!owner) return res.status(404).json({ error: "not found" });
 
-  const { make, model, year, color, plate, vin, notes } = req.body || {};
-  const doc = await Vehicle.findByIdAndUpdate(req.params.id, { $set: { make, model, year, color, plate, vin, notes } }, { new: true }).lean();
+  const { make, model, year, color, plate, vin, notes, category, photo_url } = req.body || {};
+  const patch = { make, model, year, color, plate, vin, notes };
+  if (category  !== undefined) patch.category  = category;
+  if (photo_url !== undefined) patch.photo_url = photo_url;
+  const doc = await Vehicle.findByIdAndUpdate(req.params.id, { $set: patch }, { new: true }).lean();
   res.json({ ...doc, id: doc._id.toString(), _id: undefined });
 });
 

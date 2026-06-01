@@ -1,7 +1,7 @@
 // src/Accounts/AdminRequests.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { adminReqApi } from "../lib/api";
+import { adminReqApi, cardsApi } from "../lib/api";
 import PushNotificationToggle from "../Components/PushNotificationToggle";
 import CarPhoto from "../Components/CarPhoto";
 import SEO from "../Components/SEO.jsx";
@@ -18,12 +18,13 @@ function safeJsonParse(text, fallback = {}) {
 const gradient = "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
 
 const MENU_ITEMS = [
-  { key: "detailing_quote_personal", label: "Detailing — Personal" },
-  { key: "detailing_quote_business", label: "Detailing — Business" },
+  { key: "detailing_quote_personal",   label: "Detailing — Personal" },
+  { key: "detailing_quote_business",   label: "Detailing — Business" },
   { key: "cleaning_quote_residential", label: "Cleaning — Residential" },
-  { key: "cleaning_quote_commercial", label: "Cleaning — Commercial" },
-  { key: "forms_clients", label: "Forms Clients" },
-  { key: "users", label: "Users" },
+  { key: "cleaning_quote_commercial",  label: "Cleaning — Commercial" },
+  { key: "forms_clients",              label: "Forms Clients" },
+  { key: "users",                      label: "Users" },
+  { key: "special_offers",             label: "🏷 Special Offers" },
 ];
 
 const STATUS_META = {
@@ -186,72 +187,80 @@ export default function AdminRequests() {
         </div>
       </aside>
 
-      {/* Main Table */}
+      {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="p-6 border-b bg-white flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-extrabold text-[#111827]">
-              {MENU_ITEMS.find(m => m.key === activeMenu)?.label}
-            </h1>
-            <p className="text-gray-500">Total requests: <span className="font-semibold">{rows.length}</span></p>
-          </div>
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name, email..."
-              className="flex-1 sm:w-80 h-11 px-5 rounded-2xl border focus:border-[#A8834E] outline-none"
-            />
-            <PushNotificationToggle />
-          </div>
-        </div>
 
-        <div className="flex-1 p-6 overflow-auto">
-          {loading ? (
-            <p className="text-center py-12 text-gray-500">Loading requests...</p>
-          ) : (
-            <div className="bg-white rounded-3xl overflow-hidden shadow-sm">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b bg-gray-50 text-xs uppercase tracking-widest text-gray-500">
-                    <th className="text-left pl-8 py-5">Date</th>
-                    <th className="text-left">Client</th>
-                    <th className="text-left">Contact</th>
-                    <th className="text-left">Status</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredRows.map((row) => {
-                    const itemsData = safeJsonParse(row.items_json, {});
-                    const contact = itemsData.contact || itemsData.guest || {};
-                    const fullName = row.user_full_name || 
-                      `${contact.firstName || ""} ${contact.lastName || ""}`.trim() || "Guest";
-                    const phone = contact.phone || row.user_phone || "—";
-
-                    return (
-                      <tr
-                        key={row.id || row._id}
-                        onClick={() => setSelectedRow(row)}
-                        className="border-b hover:bg-[#FFF7E6] cursor-pointer transition"
-                      >
-                        <td className="pl-8 py-5 text-sm font-medium">{formatDate(row.created_at || row.createdAt)}</td>
-                        <td className="text-sm font-semibold">{fullName}</td>
-                        <td className="text-sm text-gray-600">{phone}</td>
-                        <td>
-                          <span className={`inline-flex items-center px-4 h-7 rounded-full text-xs font-semibold border ${STATUS_META[row.status]?.cls || "bg-gray-100"}`}>
-                            {STATUS_META[row.status]?.label || row.status || "New"}
-                          </span>
-                        </td>
-                        <td className="pr-6 text-right text-gray-400">⋯</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+        {/* Special Offers panel */}
+        {activeMenu === "special_offers" ? (
+          <SpecialOffersPanel />
+        ) : (
+          <>
+            <div className="p-6 border-b bg-white flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-extrabold text-[#111827]">
+                  {MENU_ITEMS.find(m => m.key === activeMenu)?.label}
+                </h1>
+                <p className="text-gray-500">Total requests: <span className="font-semibold">{rows.length}</span></p>
+              </div>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by name, email..."
+                  className="flex-1 sm:w-80 h-11 px-5 rounded-2xl border focus:border-[#A8834E] outline-none"
+                />
+                <PushNotificationToggle />
+              </div>
             </div>
-          )}
-        </div>
+
+            <div className="flex-1 p-6 overflow-auto">
+              {loading ? (
+                <p className="text-center py-12 text-gray-500">Loading requests...</p>
+              ) : (
+                <div className="bg-white rounded-3xl overflow-hidden shadow-sm">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b bg-gray-50 text-xs uppercase tracking-widest text-gray-500">
+                        <th className="text-left pl-8 py-5">Date</th>
+                        <th className="text-left">Client</th>
+                        <th className="text-left">Contact</th>
+                        <th className="text-left">Status</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredRows.map((row) => {
+                        const itemsData = safeJsonParse(row.items_json, {});
+                        const contact = itemsData.contact || itemsData.guest || {};
+                        const fullName = row.user_full_name ||
+                          `${contact.firstName || ""} ${contact.lastName || ""}`.trim() || "Guest";
+                        const phone = contact.phone || row.user_phone || "—";
+
+                        return (
+                          <tr
+                            key={row.id || row._id}
+                            onClick={() => setSelectedRow(row)}
+                            className="border-b hover:bg-[#FFF7E6] cursor-pointer transition"
+                          >
+                            <td className="pl-8 py-5 text-sm font-medium">{formatDate(row.created_at || row.createdAt)}</td>
+                            <td className="text-sm font-semibold">{fullName}</td>
+                            <td className="text-sm text-gray-600">{phone}</td>
+                            <td>
+                              <span className={`inline-flex items-center px-4 h-7 rounded-full text-xs font-semibold border ${STATUS_META[row.status]?.cls || "bg-gray-100"}`}>
+                                {STATUS_META[row.status]?.label || row.status || "New"}
+                              </span>
+                            </td>
+                            <td className="pr-6 text-right text-gray-400">⋯</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {selectedRow && (
@@ -264,6 +273,296 @@ export default function AdminRequests() {
       )}
     </div>
     </>
+  );
+}
+
+// ================== SPECIAL OFFERS PANEL ==================
+const EMPTY_OFFER = { title: "", body: "", price: "", subtitle: "", image_url: "", published: true };
+
+function SpecialOffersPanel() {
+  const [offers, setOffers]       = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [editing, setEditing]     = useState(null); // null | EMPTY_OFFER | existing offer
+  const [saving, setSaving]       = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError]         = useState(null);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const rows = await cardsApi.list({ type: "special_offer" });
+      setOffers(rows || []);
+    } catch (e) {
+      setError("Failed to load offers.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleSave = async () => {
+    if (!editing?.title?.trim()) { setError("Title is required."); return; }
+    setSaving(true);
+    setError(null);
+    try {
+      await cardsApi.save({
+        ...editing,
+        type: "special_offer",
+        price: Number(editing.price) || 0,
+      });
+      await load();
+      setEditing(null);
+    } catch (e) {
+      setError(e?.error || "Failed to save offer.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this offer permanently?")) return;
+    try {
+      await cardsApi.remove(id);
+      await load();
+      if (editing?.id === id) setEditing(null);
+    } catch (e) {
+      setError("Failed to delete offer.");
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const result = await cardsApi.upload(file);
+      setEditing((prev) => ({ ...prev, image_url: result?.url || "" }));
+    } catch {
+      setError("Failed to upload image.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="p-6 border-b bg-white flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-extrabold text-[#111827]">Special Offers</h1>
+          <p className="text-gray-500 text-sm mt-0.5">Manage promotional offers displayed on the website.</p>
+        </div>
+        <button
+          onClick={() => { setEditing({ ...EMPTY_OFFER }); setError(null); }}
+          className="h-11 px-6 rounded-2xl text-sm font-semibold text-black"
+          style={{ background: gradient }}
+        >
+          + Add Offer
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-auto p-6">
+        {error && (
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
+            {error}
+          </div>
+        )}
+
+        {loading ? (
+          <p className="text-center py-12 text-gray-500">Loading offers...</p>
+        ) : offers.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="text-5xl mb-4">🏷️</div>
+            <p className="text-[#6B7280] text-lg font-semibold">No special offers yet</p>
+            <p className="text-[#9CA3AF] text-sm mt-1">Click "Add Offer" to create your first promotion.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            {offers.map((offer) => {
+              const expiry = offer.subtitle ? new Date(offer.subtitle) : null;
+              const expired = expiry && expiry < new Date();
+              return (
+                <div
+                  key={offer.id}
+                  className={`bg-white rounded-2xl border p-5 shadow-sm flex flex-col gap-3 ${expired ? "opacity-60" : ""}`}
+                >
+                  {offer.image_url && (
+                    <img src={offer.image_url} alt="" className="w-full h-36 object-cover rounded-xl" />
+                  )}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-extrabold text-[#111827] text-base leading-tight truncate">
+                        {offer.title}
+                      </div>
+                      {offer.body && (
+                        <p className="text-sm text-[#6B7280] mt-1 line-clamp-2">{offer.body}</p>
+                      )}
+                    </div>
+                    <span
+                      className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full border ${
+                        offer.published ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-gray-100 text-gray-500 border-gray-200"
+                      }`}
+                    >
+                      {offer.published ? "Live" : "Draft"}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {offer.price > 0 && (
+                      <span className="text-xs font-bold px-3 py-1 rounded-full text-[#3E260C]" style={{ background: gradient }}>
+                        {offer.price}% OFF
+                      </span>
+                    )}
+                    {expiry && (
+                      <span className={`text-xs px-3 py-1 rounded-full border ${expired ? "bg-red-50 text-red-600 border-red-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>
+                        {expired ? "Expired" : "Expires"} {expiry.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-2 mt-auto pt-2 border-t border-[#F3F4F6]">
+                    <button
+                      onClick={() => { setEditing({ ...offer }); setError(null); }}
+                      className="flex-1 h-9 rounded-xl text-sm font-semibold bg-[#F3F4F6] text-[#111827] hover:bg-[#E5E7EB] transition"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(offer.id)}
+                      className="h-9 px-4 rounded-xl text-sm font-semibold bg-red-50 text-red-600 hover:bg-red-100 transition"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Edit / Create Modal */}
+      {editing && (
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/60 backdrop-blur p-4">
+          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden">
+            <div className="px-6 py-5 border-b flex justify-between items-center">
+              <h2 className="text-xl font-extrabold text-[#111827]">
+                {editing.id ? "Edit Offer" : "New Special Offer"}
+              </h2>
+              <button onClick={() => setEditing(null)} className="text-2xl text-gray-400 hover:text-black">✕</button>
+            </div>
+
+            <div className="p-6 space-y-4 overflow-y-auto max-h-[70vh]">
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
+                  {error}
+                </div>
+              )}
+
+              {/* Title */}
+              <div>
+                <label className="block text-sm font-semibold text-[#111827] mb-1">Title <span className="text-red-500">*</span></label>
+                <input
+                  value={editing.title}
+                  onChange={(e) => setEditing((p) => ({ ...p, title: e.target.value }))}
+                  placeholder="Summer Detailing Deal"
+                  className="w-full h-11 px-4 rounded-xl border border-[#E5E7EB] text-sm focus:outline-none focus:border-[#A8834E]"
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-semibold text-[#111827] mb-1">Description</label>
+                <textarea
+                  value={editing.body}
+                  onChange={(e) => setEditing((p) => ({ ...p, body: e.target.value }))}
+                  placeholder="Get 20% off any full detail service this summer…"
+                  rows={3}
+                  className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] text-sm focus:outline-none focus:border-[#A8834E] resize-none"
+                />
+              </div>
+
+              {/* Discount + Expiry */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-[#111827] mb-1">Discount (%)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={editing.price}
+                    onChange={(e) => setEditing((p) => ({ ...p, price: e.target.value }))}
+                    placeholder="20"
+                    className="w-full h-11 px-4 rounded-xl border border-[#E5E7EB] text-sm focus:outline-none focus:border-[#A8834E]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-[#111827] mb-1">Expiry Date</label>
+                  <input
+                    type="date"
+                    value={editing.subtitle ? editing.subtitle.slice(0, 10) : ""}
+                    onChange={(e) => setEditing((p) => ({ ...p, subtitle: e.target.value }))}
+                    className="w-full h-11 px-4 rounded-xl border border-[#E5E7EB] text-sm focus:outline-none focus:border-[#A8834E]"
+                  />
+                </div>
+              </div>
+
+              {/* Image upload */}
+              <div>
+                <label className="block text-sm font-semibold text-[#111827] mb-1">Image (optional)</label>
+                {editing.image_url && (
+                  <div className="relative mb-2">
+                    <img src={editing.image_url} alt="" className="w-full h-32 object-cover rounded-xl" />
+                    <button
+                      onClick={() => setEditing((p) => ({ ...p, image_url: "" }))}
+                      className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 text-white text-xs flex items-center justify-center"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+                <label className="flex items-center gap-3 h-11 px-4 rounded-xl border border-dashed border-[#D1D5DB] cursor-pointer hover:border-[#A8834E] transition">
+                  <span className="text-sm text-[#6B7280]">
+                    {uploading ? "Uploading…" : "Click to upload image"}
+                  </span>
+                  <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
+                </label>
+              </div>
+
+              {/* Published toggle */}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEditing((p) => ({ ...p, published: !p.published }))}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${editing.published ? "bg-emerald-500" : "bg-gray-300"}`}
+                >
+                  <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${editing.published ? "translate-x-7" : "translate-x-1"}`} />
+                </button>
+                <span className="text-sm font-medium text-[#374151]">
+                  {editing.published ? "Published (visible on site)" : "Draft (hidden from site)"}
+                </span>
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t flex gap-3 bg-white">
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="flex-1 h-12 rounded-2xl text-sm font-semibold text-black disabled:opacity-50"
+                style={{ background: gradient }}
+              >
+                {saving ? "Saving…" : editing.id ? "Save Changes" : "Create Offer"}
+              </button>
+              <button
+                onClick={() => setEditing(null)}
+                className="flex-1 h-12 rounded-2xl border text-sm font-semibold text-[#374151]"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

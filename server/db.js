@@ -21,8 +21,10 @@ const userSchema = new mongoose.Schema({
   google_id:      { type: String, default: null },
   apple_id:       { type: String, default: null },
   avatar:         { type: String, default: null },
-  email_verified: { type: Boolean, default: false },
-  created_at:     { type: Date, default: Date.now },
+  email_verified:       { type: Boolean, default: false },
+  personal_address:     { type: String, default: "" },
+  commercial_address:   { type: String, default: "" },
+  created_at:           { type: Date, default: Date.now },
 });
 
 const contentBlockSchema = new mongoose.Schema({
@@ -71,6 +73,8 @@ const vehicleSchema = new mongoose.Schema({
   plate:      String,
   vin:        String,
   notes:      String,
+  category:   { type: String, enum: ['personal', 'commercial'], default: 'personal' },
+  photo_url:  { type: String, default: '' },
   created_at: { type: Date, default: Date.now },
 });
 

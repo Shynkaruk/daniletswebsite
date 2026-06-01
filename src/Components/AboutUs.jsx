@@ -7,6 +7,7 @@ import OurReviewsStrip from './AboutUs/OurReviewsStrip'
 import ContactSection from './ContactSection'
 import FAQ from './FAQ'
 import Footer from './Footer'
+import LayoutContainer from './LayoutContainer'
 import { useEffect } from 'react'
 import SEO from './SEO.jsx'
 
@@ -31,12 +32,18 @@ const AboutUs = () => {
       </div>
       <PickleballWhySection></PickleballWhySection>
       <AboutUsTeam></AboutUsTeam>
-      <div className='mt-10 md:mx-3'>
-        <OurCoreValues></OurCoreValues>
-      </div>
+      <LayoutContainer>
+        <div className='mt-10'>
+          <OurCoreValues></OurCoreValues>
+        </div>
+      </LayoutContainer>
+      <LayoutContainer>
         <ContactSection></ContactSection>
+      </LayoutContainer>
+      <LayoutContainer>
         <FAQ></FAQ>
-        <Footer></Footer>
+      </LayoutContainer>
+      <Footer></Footer>
     </div>
   )
 }

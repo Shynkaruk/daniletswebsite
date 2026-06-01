@@ -8,6 +8,7 @@ import ContactSection from '../../ContactSection';
 import OurReviews from '../../OurReviews';
 import FAQ from '../../FAQ'
 import Footer from '../../Footer'
+import LayoutContainer from '../../LayoutContainer'
 import SEO from '../../SEO.jsx'
 import { DetailingStructuredData } from '../../StructuredData.jsx'
 
@@ -29,8 +30,12 @@ const DetailingPage = () => {
       <WhyDanilets></WhyDanilets>
       <Portfolio></Portfolio>
       <ContactSection></ContactSection>
-      <OurReviews></OurReviews>
-      <FAQ></FAQ>
+      <LayoutContainer>
+        <OurReviews></OurReviews>
+      </LayoutContainer>
+      <LayoutContainer>
+        <FAQ></FAQ>
+      </LayoutContainer>
       <Footer></Footer>
     </div>
   );

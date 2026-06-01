@@ -320,6 +320,16 @@ export const meApi = {
     });
     return parseJsonSafe(r);
   },
+  async uploadVehiclePhoto(file) {
+    const form = new FormData();
+    form.append("file", file);
+    const r = await fetch(`${API}/api/upload`, {
+      method: "POST",
+      headers: { ...authHeaders() },
+      body: form,
+    });
+    return parseJsonSafe(r); // { url }
+  },
 
   // payment methods
   async myPaymentMethods() {

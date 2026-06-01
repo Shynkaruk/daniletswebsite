@@ -110,14 +110,18 @@ export default function Account() {
 }
 
 /* ======================= Personal Information ======================= */
+const ADDRESS_MODES = ["Personal", "Commercial", "Both"];
+
 function ProfileCard({ openModal }) {
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
     phone: "",
-    birthday: "",
     email: "",
+    personal_address: "",
+    commercial_address: "",
   });
+  const [addressMode, setAddressMode] = useState("Personal");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -125,13 +129,20 @@ function ProfileCard({ openModal }) {
       try {
         const u = await meApi.profile();
         if (u) {
-          setForm((f) => ({
-            ...f,
-            first_name: u.first_name || "",
-            last_name:  u.last_name  || "",
-            phone:      u.phone      || "",
-            email:      u.email      || "",
-          }));
+          setForm({
+            first_name:          u.first_name          || "",
+            last_name:           u.last_name           || "",
+            phone:               u.phone               || "",
+            email:               u.email               || "",
+            personal_address:    u.personal_address    || "",
+            commercial_address:  u.commercial_address  || "",
+          });
+          // Auto-select mode based on saved data
+          const hasPers = !!(u.personal_address);
+          const hasCom  = !!(u.commercial_address);
+          if (hasPers && hasCom)  setAddressMode("Both");
+          else if (hasCom)        setAddressMode("Commercial");
+          else                    setAddressMode("Personal");
         }
       } catch {}
     })();
@@ -141,9 +152,11 @@ function ProfileCard({ openModal }) {
     setSaving(true);
     try {
       await meApi.updateProfile({
-        first_name: form.first_name,
-        last_name:  form.last_name,
-        phone:      form.phone,
+        first_name:         form.first_name,
+        last_name:          form.last_name,
+        phone:              form.phone,
+        personal_address:   addressMode === "Commercial" ? "" : form.personal_address,
+        commercial_address: addressMode === "Personal"   ? "" : form.commercial_address,
       });
       openModal?.("success", "Saved", "Your profile has been saved.");
     } catch (e) {
@@ -152,6 +165,9 @@ function ProfileCard({ openModal }) {
       setSaving(false);
     }
   };
+
+  const showPersonal   = addressMode === "Personal"   || addressMode === "Both";
+  const showCommercial = addressMode === "Commercial" || addressMode === "Both";
 
   return (
     <Section title="Personal Information">
@@ -179,6 +195,49 @@ function ProfileCard({ openModal }) {
         />
       </div>
 
+      {/* Address section */}
+      <div className="mt-5">
+        <div className="text-[13px] font-semibold text-[#6B7280] mb-3 uppercase tracking-wide">
+          Address
+        </div>
+
+        {/* Mode toggle */}
+        <div className="inline-flex bg-[#F4F4F5] rounded-[14px] p-1 gap-1 mb-4">
+          {ADDRESS_MODES.map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setAddressMode(mode)}
+              className={[
+                "h-9 px-4 rounded-[10px] text-[13px] font-semibold transition whitespace-nowrap",
+                addressMode === mode
+                  ? "bg-white shadow text-[#18181B]"
+                  : "text-[#6B7280] hover:text-[#18181B]",
+              ].join(" ")}
+            >
+              {mode}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-3">
+          {showPersonal && (
+            <Input
+              placeholder="Personal Address (e.g. 123 Main St, Columbus, OH)"
+              value={form.personal_address}
+              onChange={(v) => setForm({ ...form, personal_address: v })}
+            />
+          )}
+          {showCommercial && (
+            <Input
+              placeholder="Commercial / Business Address"
+              value={form.commercial_address}
+              onChange={(v) => setForm({ ...form, commercial_address: v })}
+            />
+          )}
+        </div>
+      </div>
+
       <Actions
         onChange={() => window.location.reload()}
         onSave={onSave}
@@ -189,40 +248,207 @@ function ProfileCard({ openModal }) {
 }
 
 /* ======================= Vehicle Information ======================= */
+const VEHICLE_CATEGORIES = ["personal", "commercial"];
+
+const EMPTY_VEHICLE = { make: "", model: "", year: "", color: "", plate: "", notes: "", category: "personal", photo_url: "" };
+
 function CarCard({ openModal }) {
-  const [year,  setYear]  = useState("");
-  const [make,  setMake]  = useState("");
-  const [model, setModel] = useState("");
+  const [vehicles,    setVehicles]    = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [activeTab,   setActiveTab]   = useState("personal");
+  const [editing,     setEditing]     = useState(null); // null | vehicle obj
+  const [saving,      setSaving]      = useState(false);
+  const [uploading,   setUploading]   = useState(false);
 
-  const canSave = (year.trim() || make.trim() || model.trim())?.length > 0;
-
-  const onSave = async () => {
+  const load = async () => {
+    setLoading(true);
     try {
-      await meApi.saveVehicle({ year, make, model });
-      openModal?.("success", "Saved", "Vehicle information saved.");
+      const rows = await meApi.myVehicles();
+      setVehicles(Array.isArray(rows) ? rows : []);
+    } catch {}
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const visibleVehicles = vehicles.filter((v) => (v.category || "personal") === activeTab);
+
+  const handleSave = async () => {
+    if (!editing) return;
+    if (!editing.make?.trim() && !editing.model?.trim()) {
+      openModal?.("error", "Incomplete", "Please enter at least Make and Model.");
+      return;
+    }
+    setSaving(true);
+    try {
+      await meApi.saveVehicle({ ...editing, category: activeTab });
+      await load();
+      setEditing(null);
+      openModal?.("success", "Saved", "Vehicle saved successfully.");
     } catch (e) {
       openModal?.("error", "Save failed", e?.message || "Failed to save vehicle.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Remove this vehicle from your account?")) return;
+    try {
+      await meApi.deleteVehicle(id);
+      await load();
+      if (editing?.id === id) setEditing(null);
+    } catch (e) {
+      openModal?.("error", "Error", e?.message || "Failed to delete vehicle.");
+    }
+  };
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !editing) return;
+    setUploading(true);
+    try {
+      const result = await meApi.uploadVehiclePhoto(file);
+      const url = result?.url || "";
+      setEditing((v) => ({ ...v, photo_url: url }));
+      if (editing.id) await meApi.saveVehicle({ ...editing, photo_url: url });
+    } catch {
+      openModal?.("error", "Upload failed", "Could not upload photo.");
+    } finally {
+      setUploading(false);
     }
   };
 
   return (
     <Section title="Vehicle Information">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-        <Input placeholder="Year"  value={year}  onChange={setYear} />
-        <Input placeholder="Make"  value={make}  onChange={setMake} />
-        <Input
-          className="md:col-span-2"
-          placeholder="Model"
-          value={model}
-          onChange={setModel}
-        />
+      {/* Category tabs */}
+      <div className="inline-flex bg-[#F4F4F5] rounded-[14px] p-1 gap-1 mb-5">
+        {VEHICLE_CATEGORIES.map((cat) => (
+          <button
+            key={cat}
+            type="button"
+            onClick={() => { setActiveTab(cat); setEditing(null); }}
+            className={[
+              "h-9 px-5 rounded-[10px] text-[13px] font-semibold capitalize transition",
+              activeTab === cat ? "bg-white shadow text-[#18181B]" : "text-[#6B7280] hover:text-[#18181B]",
+            ].join(" ")}
+          >
+            {cat === "personal" ? "🚗 Personal" : "🏢 Commercial"}
+          </button>
+        ))}
       </div>
 
-      <Actions
-        onChange={() => { setYear(""); setMake(""); setModel(""); }}
-        onSave={onSave}
-        saveDisabled={!canSave}
-      />
+      {loading ? (
+        <div className="text-[#6B7280] py-4">Loading vehicles…</div>
+      ) : (
+        <>
+          {/* Vehicle list */}
+          {visibleVehicles.length > 0 && (
+            <div className="space-y-3 mb-4">
+              {visibleVehicles.map((v) => (
+                <div
+                  key={v.id}
+                  className="flex items-center gap-3 rounded-[16px] bg-[#F9F9FB] border border-[#EAEAEA] px-4 py-3"
+                >
+                  {v.photo_url ? (
+                    <img src={v.photo_url} alt="" className="w-14 h-14 rounded-xl object-cover shrink-0" />
+                  ) : (
+                    <div className="w-14 h-14 rounded-xl bg-[#F0F0F2] flex items-center justify-center text-2xl shrink-0">
+                      {activeTab === "commercial" ? "🏢" : "🚗"}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-[#18181B] text-[14px] truncate">
+                      {[v.year, v.make, v.model].filter(Boolean).join(" ") || "Unnamed vehicle"}
+                    </div>
+                    {v.color && (
+                      <div className="text-[12px] text-[#9CA3AF]">{v.color}</div>
+                    )}
+                    {v.plate && (
+                      <div className="text-[12px] text-[#9CA3AF]">Plate: {v.plate}</div>
+                    )}
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <GrayButton onClick={() => setEditing({ ...v })}>Edit</GrayButton>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(v.id)}
+                      className="h-9 px-3 rounded-[12px] text-red-600 text-sm font-semibold bg-red-50 hover:bg-red-100 transition"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add new button */}
+          {!editing && (
+            <button
+              type="button"
+              onClick={() => setEditing({ ...EMPTY_VEHICLE, category: activeTab })}
+              className="flex items-center gap-2 h-11 px-5 rounded-[14px] border-2 border-dashed border-[#D1D5DB] text-[#6B7280] text-sm font-semibold hover:border-[#A8834E] hover:text-[#A8834E] transition w-full justify-center"
+            >
+              + Add {activeTab === "commercial" ? "Commercial" : "Personal"} Vehicle
+            </button>
+          )}
+
+          {/* Edit / Add form */}
+          {editing && (
+            <div className="rounded-[20px] border border-[#E5E7EB] p-4 sm:p-5 bg-[#FAFAFA] mt-4 space-y-4">
+              <div className="font-semibold text-[14px] text-[#18181B]">
+                {editing.id ? "Edit Vehicle" : `Add ${activeTab === "commercial" ? "Commercial" : "Personal"} Vehicle`}
+              </div>
+
+              {/* Photo */}
+              <div>
+                <div className="text-[12px] font-semibold text-[#6B7280] mb-2 uppercase tracking-wide">Vehicle Photo</div>
+                <div className="flex items-center gap-3">
+                  {editing.photo_url ? (
+                    <div className="relative">
+                      <img src={editing.photo_url} alt="" className="w-20 h-20 rounded-xl object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setEditing((p) => ({ ...p, photo_url: "" }))}
+                        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[#111] text-white text-[10px] flex items-center justify-center"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 rounded-xl bg-[#F0F0F2] flex items-center justify-center text-3xl">
+                      {activeTab === "commercial" ? "🏢" : "🚗"}
+                    </div>
+                  )}
+                  <label className="flex-1 flex items-center gap-2 h-10 px-4 rounded-[12px] border border-dashed border-[#D1D5DB] cursor-pointer hover:border-[#A8834E] transition">
+                    <span className="text-[13px] text-[#6B7280]">
+                      {uploading ? "Uploading…" : "Upload photo"}
+                    </span>
+                    <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploading} />
+                  </label>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Input placeholder="Year"  value={editing.year  || ""} onChange={(v) => setEditing((p) => ({ ...p, year: v }))} />
+                <Input placeholder="Make"  value={editing.make  || ""} onChange={(v) => setEditing((p) => ({ ...p, make: v }))} />
+                <Input className="col-span-2" placeholder="Model" value={editing.model || ""} onChange={(v) => setEditing((p) => ({ ...p, model: v }))} />
+                <Input placeholder="Color" value={editing.color || ""} onChange={(v) => setEditing((p) => ({ ...p, color: v }))} />
+                <Input placeholder="Plate" value={editing.plate || ""} onChange={(v) => setEditing((p) => ({ ...p, plate: v }))} />
+                <Input className="col-span-2" placeholder="Notes (optional)" value={editing.notes || ""} onChange={(v) => setEditing((p) => ({ ...p, notes: v }))} />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <GoldButton onClick={handleSave} disabled={saving}>
+                  {saving ? "Saving…" : editing.id ? "Save Changes" : "Add Vehicle"}
+                </GoldButton>
+                <GrayButton onClick={() => setEditing(null)}>Cancel</GrayButton>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </Section>
   );
 }
@@ -605,13 +831,14 @@ function buildOrderSections(order) {
     const multi   = it?.multipleVehicles || {};
 
     const name = [contact.firstName, contact.lastName].filter(Boolean).join(" ");
+    const heardAboutRaw = Array.isArray(contact.heardAbout)
+      ? contact.heardAbout
+      : contact.heardAbout ? [contact.heardAbout] : [];
     sections.push({ title: "Contact", icon: "👤", rows: compact([
       row("Name",  name),
       row("Phone", contact.phone),
       row("Email", contact.email),
-      list("Heard about us", Array.isArray(contact.heardAbout)
-        ? contact.heardAbout
-        : contact.heardAbout ? [contact.heardAbout] : []),
+      list("Heard about us", heardAboutRaw.map(heardAboutLabel)),
     ])});
 
     const carLabel = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(" ");
@@ -624,19 +851,20 @@ function buildOrderSections(order) {
     }
 
     if (history.lastDetailed || history.conditionRating || history.conditionFlags?.length) {
+      const flagsRaw = Array.isArray(history.conditionFlags) ? history.conditionFlags : [];
       sections.push({ title: "Condition", icon: "🔍", rows: compact([
-        row("Last detailed",    history.lastDetailed),
-        row("Condition rating", history.conditionRating),
-        list("Condition flags", history.conditionFlags),
-        row("Details",          history.other),
+        row("Last professionally detailed", lastDetailedLabel(history.lastDetailed)),
+        row("Condition rating (1–10)",       history.conditionRating),
+        list("Condition issues",             flagsRaw.map(conditionFlagLabel)),
+        row("Additional details",            history.other),
       ])});
     }
 
     const selectedSvc = Array.isArray(svc.selected) ? svc.selected : [];
     if (selectedSvc.length) {
       sections.push({ title: "Services", icon: "✨", rows: compact([
-        list("Requested",      selectedSvc),
-        row("Other services",  svc.other),
+        list("Requested services", selectedSvc.map(detailingServiceLabel)),
+        row("Other services",      svc.other),
       ])});
     }
 
@@ -655,7 +883,7 @@ function buildOrderSections(order) {
     ])});
 
     const notes = [it?.additionalInfo, contact.extraInfo].filter(Boolean).join("\n");
-    if (notes) sections.push({ title: "Additional notes", icon: "📝", rows: [{ label: "", value: notes }] });
+    if (notes) sections.push({ title: "Additional Notes", icon: "📝", rows: [{ label: "", value: notes }] });
   }
 
   /* ====== DETAILING BUSINESS ====== */
@@ -676,23 +904,32 @@ function buildOrderSections(order) {
       row("Company address", contact.companyAddress),
     ])});
 
-    sections.push({ title: "Business", icon: "🏢", rows: compact([
-      row("Business type",     biz.businessType === "Other" && biz.businessTypeOther
-        ? ("Other - " + biz.businessTypeOther) : biz.businessType),
-      row("Number of vehicles",biz.vehiclesCount),
-      row("Service frequency", biz.serviceFrequency === "Other" && biz.serviceFrequencyOther
-        ? ("Other - " + biz.serviceFrequencyOther) : biz.serviceFrequency),
+    const bizTypeRaw = biz.businessType;
+    const bizTypeVal = bizTypeRaw === "Other" && biz.businessTypeOther
+      ? `Other — ${biz.businessTypeOther}`
+      : businessTypeLabel(bizTypeRaw);
+    const freqRaw = biz.serviceFrequency;
+    const freqVal = freqRaw === "Other" && biz.serviceFrequencyOther
+      ? `Other — ${biz.serviceFrequencyOther}`
+      : serviceFrequencyLabel(freqRaw);
+    sections.push({ title: "Business Details", icon: "🏢", rows: compact([
+      row("Business type",      bizTypeVal),
+      row("Number of vehicles", biz.vehiclesCount),
+      row("Service frequency",  freqVal),
     ])});
 
     const vt = fleet.vehicleTypes || {};
     const vtRows = Object.entries(vt)
       .filter(([, v]) => Number(v) > 0)
-      .map(([k, v]) => (vehicleTypeLabel(k) + ": " + v));
-    if (vtRows.length || fleet.services?.length) {
+      .map(([k, v]) => `${vehicleTypeLabel(k)}: ${v}`);
+    const fleetSvcs = Array.isArray(fleet.services)
+      ? fleet.services.map(detailingServiceLabel)
+      : [];
+    if (vtRows.length || fleetSvcs.length) {
       sections.push({ title: "Fleet & Services", icon: "🚛", rows: compact([
         list("Vehicle types",    vtRows),
         row("Service location",  serviceLocationLabel(fleet.serviceLocation)),
-        list("Services",         fleet.services),
+        list("Services",         fleetSvcs),
         row("Other services",    fleet.servicesOther),
       ])});
     }
@@ -704,10 +941,10 @@ function buildOrderSections(order) {
     ])});
 
     if (prefs.preferredContactMethod || prefs.contactTimePreference) {
-      sections.push({ title: "Contact preferences", icon: "📞", rows: compact([
-        row("Preferred method", prefs.preferredContactMethod),
-        row("Best time",        prefs.contactTimePreference),
-        row("Notes",            prefs.notes),
+      sections.push({ title: "Contact Preferences", icon: "📞", rows: compact([
+        row("Preferred contact method", humanizeCode(prefs.preferredContactMethod)),
+        row("Best time to reach",       humanizeCode(prefs.contactTimePreference)),
+        row("Notes",                    prefs.notes),
       ])});
     }
   }
@@ -725,28 +962,31 @@ function buildOrderSections(order) {
       row("Address", o.service_address || loc.baseAddress),
     ])});
 
+    const ptRaw = it?.projectType;
+    const ptVal = ptRaw === "other" && it?.projectTypeOther
+      ? `Other — ${it.projectTypeOther}`
+      : projectTypeLabel(ptRaw);
     sections.push({ title: "Property", icon: "🏠", rows: compact([
-      row("Property type", capitalize(it?.propertyType)),
-      row("Project type",  it?.projectType === "other" && it?.projectTypeOther
-        ? ("Other - " + it.projectTypeOther) : capitalize(it?.projectType)),
-      row("Bedrooms",  it?.bedrooms),
-      row("Bathrooms", it?.bathrooms),
+      row("Property type", "Residential"),
+      row("Project type",  ptVal),
+      row("Bedrooms",      it?.bedrooms),
+      row("Bathrooms",     it?.bathrooms),
     ])});
 
     if (it?.areas?.length || it?.generalTasks?.length || it?.kitchenTasks?.length) {
-      sections.push({ title: "Cleaning scope", icon: "🧹", rows: compact([
-        list("Areas",         it?.areas),
-        row("Other areas",    it?.areasOther),
-        list("General tasks", it?.generalTasks),
-        row("Other tasks",    it?.generalTasksOther),
-        list("Kitchen tasks", it?.kitchenTasks),
-        row("Other kitchen",  it?.kitchenTasksOther),
+      sections.push({ title: "Cleaning Scope", icon: "🧹", rows: compact([
+        list("Areas to clean",  it?.areas?.map(humanizeCode) || []),
+        row("Other areas",      it?.areasOther),
+        list("General tasks",   it?.generalTasks?.map(humanizeCode) || []),
+        row("Other tasks",      it?.generalTasksOther),
+        list("Kitchen tasks",   it?.kitchenTasks?.map(humanizeCode) || []),
+        row("Other kitchen",    it?.kitchenTasksOther),
       ])});
     }
 
     if (it?.resBudget || it?.extraDetails) {
       sections.push({ title: "Budget & Notes", icon: "💰", rows: compact([
-        row("Budget",     it?.resBudget),
+        row("Budget",     budgetLabel(it?.resBudget)),
         row("Extra info", it?.extraDetails),
       ])});
     }
@@ -765,18 +1005,22 @@ function buildOrderSections(order) {
       row("Email", contact.email),
     ])});
 
+    const bizType = c.businessType === "other" && c.businessTypeOther
+      ? `Other — ${c.businessTypeOther}`
+      : businessTypeLabel(c.businessType);
     sections.push({ title: "Company", icon: "🏗️", rows: compact([
       row("Company name",    c.companyName),
       row("Company address", c.companyAddress),
-      row("Business type",   c.businessType === "other" && c.businessTypeOther
-        ? ("Other - " + c.businessTypeOther) : c.businessType),
+      row("Business type",   bizType),
     ])});
 
-    sections.push({ title: "Project", icon: "📋", rows: compact([
-      row("Project type",    it?.projectType),
-      row("Project summary", c.projectSummary),
-      row("Supplies",        c.supplies),
-      list("Preferred times", Array.isArray(c.preferredDaysTimes) ? c.preferredDaysTimes : []),
+    const prefTimes = (Array.isArray(c.preferredDaysTimes) ? c.preferredDaysTimes : [])
+      .map(preferredTimesLabel);
+    sections.push({ title: "Project Details", icon: "📋", rows: compact([
+      row("Project type",    projectTypeLabel(it?.projectType)),
+      row("Project summary", projectSummaryHuman(c.projectSummary)),
+      row("Supplies provided by us", c.supplies === "yes" ? "Yes — we bring supplies" : c.supplies === "no" ? "No — client provides supplies" : c.supplies),
+      list("Preferred schedule", prefTimes),
     ])});
 
     const addr = o.service_address || loc.baseAddress || "";
@@ -800,27 +1044,28 @@ function buildOrderSections(order) {
   return sections.filter((s) => s.rows.filter(Boolean).length > 0);
 }
 
-/* small label helpers */
+/* ======================= Human-readable label helpers ======================= */
+
 function locLabel(t) {
   const m = {
     shop:   "Drop-off at shop",
     mobile: "Mobile (at your location)",
     pickup: "Pickup & delivery",
   };
-  return m[t] || t || "";
+  return m[t] || humanizeCode(t);
 }
 
 function vehicleTypeLabel(k) {
   const m = {
     sedans:        "Sedans",
     suvs:          "SUVs",
-    pickups:       "Pick-Ups",
+    pickups:       "Pick-Up Trucks",
     minivans:      "Mini-Vans / 3-Row SUVs",
     transit_vans:  "Transit Vans",
     semi_trucks:   "Semi-Trucks",
     other:         "Other",
   };
-  return m[k] || k;
+  return m[k] || humanizeCode(k);
 }
 
 function serviceLocationLabel(k) {
@@ -829,7 +1074,164 @@ function serviceLocationLabel(k) {
     customer_dropoff: "Drop-off at shop",
     pickup_dropoff:   "Pickup & delivery",
   };
-  return m[k] || k || "";
+  return m[k] || humanizeCode(k);
+}
+
+function humanizeCode(s) {
+  if (!s) return "";
+  return String(s)
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function projectTypeLabel(t) {
+  const m = {
+    deep_clean:         "Deep Clean",
+    recurring:          "Recurring / Maintenance",
+    move_in_out:        "Move-In / Move-Out",
+    post_construction:  "Post-Construction Clean",
+    airbnb:             "Airbnb / Short-Term Rental",
+    standard:           "Standard Cleaning",
+    other:              "Other",
+  };
+  return m[t] || humanizeCode(t);
+}
+
+function businessTypeLabel(t) {
+  const m = {
+    property_mgmt:    "Property Management",
+    dealership:       "Auto Dealership",
+    office:           "Office / Corporate",
+    restaurant:       "Restaurant / Food Service",
+    retail:           "Retail Store",
+    warehouse:        "Warehouse / Industrial",
+    medical:          "Medical / Healthcare",
+    school:           "School / Educational",
+    hotel:            "Hotel / Hospitality",
+    construction:     "Construction Company",
+    other:            "Other",
+  };
+  return m[t] || humanizeCode(t);
+}
+
+function serviceFrequencyLabel(f) {
+  const m = {
+    weekly:      "Weekly",
+    biweekly:    "Bi-Weekly (Every 2 Weeks)",
+    monthly:     "Monthly",
+    quarterly:   "Quarterly",
+    one_time:    "One-Time",
+    as_needed:   "As Needed",
+    other:       "Other",
+  };
+  return m[f] || humanizeCode(f);
+}
+
+function budgetLabel(b) {
+  const m = {
+    "1000_2500_month": "$1,000 – $2,500 per month",
+    "2500_5000_month": "$2,500 – $5,000 per month",
+    "5000_plus_month": "$5,000+ per month",
+    "200_350":         "$200 – $350 per unit",
+    "500_1000":        "$500 – $1,000",
+    "1000_2000":       "$1,000 – $2,000",
+    "2000_3000":       "$2,000 – $3,000",
+    "3000_5000":       "$3,000 – $5,000",
+    "5000_10000":      "$5,000 – $10,000",
+    "under_500":       "Under $500",
+    "over_10000":      "Over $10,000",
+  };
+  return m[b] || humanizeCode(b);
+}
+
+function detailingServiceLabel(s) {
+  const m = {
+    exterior_wash:          "Exterior Hand Wash",
+    interior_vacuum:        "Interior Vacuum",
+    full_detail:            "Full Detail (Interior + Exterior)",
+    ceramic_coating:        "Ceramic Coating",
+    paint_correction:       "Paint Correction",
+    paint_protection_film:  "Paint Protection Film (PPF)",
+    window_tinting:         "Window Tinting",
+    headlight_restoration:  "Headlight Restoration",
+    odor_elimination:       "Odor Elimination",
+    engine_bay:             "Engine Bay Cleaning",
+    leather_conditioning:   "Leather Conditioning",
+    trim_restoration:       "Exterior Trim Restoration",
+    other:                  "Other",
+  };
+  return m[s] || humanizeCode(s);
+}
+
+function conditionFlagLabel(f) {
+  const m = {
+    pet_hair:       "Pet Hair",
+    heavy_stains:   "Heavy Stains",
+    mold:           "Mold / Mildew",
+    smoke_smell:    "Smoke Odor",
+    mud_dirt:       "Mud / Heavy Dirt",
+    scratches:      "Paint Scratches",
+    swirl_marks:    "Swirl Marks",
+    water_spots:    "Water Spots",
+    oxidation:      "Paint Oxidation",
+  };
+  return m[f] || humanizeCode(f);
+}
+
+function lastDetailedLabel(v) {
+  const m = {
+    never:          "Never professionally detailed",
+    less_3mo:       "Less than 3 months ago",
+    "3_6mo":        "3 – 6 months ago",
+    "6_12mo":       "6 – 12 months ago",
+    over_1yr:       "Over a year ago",
+  };
+  return m[v] || humanizeCode(v);
+}
+
+function heardAboutLabel(v) {
+  const m = {
+    google:         "Google Search",
+    instagram:      "Instagram",
+    facebook:       "Facebook",
+    tiktok:         "TikTok",
+    youtube:        "YouTube",
+    referral:       "Friend / Family Referral",
+    yelp:           "Yelp",
+    nextdoor:       "Nextdoor",
+    other:          "Other",
+  };
+  return m[v] || humanizeCode(v);
+}
+
+function preferredTimesLabel(v) {
+  const m = {
+    weekdays:       "Weekdays",
+    weekends:       "Weekends",
+    mornings:       "Mornings",
+    afternoons:     "Afternoons",
+    evenings:       "Evenings",
+    flexible:       "Flexible / Anytime",
+  };
+  return m[v] || humanizeCode(v);
+}
+
+function projectSummaryHuman(summary) {
+  if (!summary) return "";
+  // Parse auto-generated summary strings like:
+  // "Post-construction • 2 sqft • one_time_final • budget: 3000_5000"
+  return summary
+    .split("•")
+    .map((part) => {
+      const trimmed = part.trim();
+      if (/^budget:/i.test(trimmed)) {
+        const code = trimmed.replace(/^budget:\s*/i, "").trim();
+        return `Budget: ${budgetLabel(code)}`;
+      }
+      if (/^\d+\s*sqft$/i.test(trimmed)) return `${trimmed.toUpperCase()}`;
+      return humanizeCode(trimmed);
+    })
+    .join(" · ");
 }
 
 function capitalize(s) {

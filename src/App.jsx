@@ -80,8 +80,8 @@ const AppContent = () => {
           <Route path="/contact" element={<ContactForm />} />
           <Route path="/newsletter" element={<Newsletter />} />
           <Route path="/legal/*" element={<PrivacyPolicy />} />
-          <Route path="/cleaning" element={getHomeElement()} />
-          <Route path="/detailing" element={getHomeElement()} />
+          <Route path="/cleaning" element={<Cleaning />} />
+          <Route path="/detailing" element={<DetailingPage />} />
           <Route path="/book-online" element={<Booking />} />
           <Route path="/admin" element={<AdminRequests />} />
           <Route path="/admin/settings" element={<AdminSettings />} />

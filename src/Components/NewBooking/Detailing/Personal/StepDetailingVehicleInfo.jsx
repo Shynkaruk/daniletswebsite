@@ -1,9 +1,10 @@
 // src/Components/Booking/Detailing/Personal/StepDetailingVehicleInfo.jsx
 import React, { useState, useEffect } from "react";
-import { FiChevronLeft } from "react-icons/fi";
+import { FiChevronLeft, FiChevronDown } from "react-icons/fi";
 import ProgressBar from "../../ProgressBar";
 import CarPhoto from "../../../CarPhoto";
 import AutocompleteInput from "../../../AutocompleteInput";
+import { meApi } from "../../../../lib/api";
 
 const GOLD_GRADIENT =
   "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
@@ -86,6 +87,24 @@ const StepDetailingVehicleInfo = ({
   progressStepIndex = 2,
   totalSteps = 11,
 }) => {
+  // ── Saved vehicles from account ─────────────────────────────────────────────
+  const [savedVehicles, setSavedVehicles] = useState([]);
+  const [showSavedDropdown, setShowSavedDropdown] = useState(false);
+
+  useEffect(() => {
+    meApi.myVehicles()
+      .then((rows) => setSavedVehicles(Array.isArray(rows) ? rows : []))
+      .catch(() => {});
+  }, []);
+
+  const applySavedVehicle = (v) => {
+    setYear?.(String(v.year || ""));
+    setMake?.(v.make || "");
+    setModel?.(v.model || "");
+    setColor?.(v.color || "");
+    setShowSavedDropdown(false);
+  };
+
   // ── Models autocomplete state (fetched from NHTSA per make) ─────────────────
   const [models, setModels]               = useState([]);
   const [modelsLoading, setModelsLoading] = useState(false);
@@ -160,6 +179,47 @@ const StepDetailingVehicleInfo = ({
           renderProgress(progressStepIndex)
         ) : (
           <ProgressBar activeCount={progressStepIndex} total={totalSteps} />
+        )}
+
+        {/* USE SAVED VEHICLE */}
+        {savedVehicles.length > 0 && (
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowSavedDropdown((v) => !v)}
+              className="w-full h-[48px] sm:h-[52px] rounded-[16px] border border-[#E5E7EB] bg-white px-4 flex items-center justify-between text-[14px] text-[#4B5563] font-medium hover:border-[#A8834E] transition"
+            >
+              <span>Use a saved vehicle</span>
+              <FiChevronDown className={`transition-transform ${showSavedDropdown ? "rotate-180" : ""}`} />
+            </button>
+
+            {showSavedDropdown && (
+              <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-white rounded-[16px] border border-[#E5E7EB] shadow-lg overflow-hidden">
+                {savedVehicles.map((v) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() => applySavedVehicle(v)}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#FFF7E6] transition text-left border-b border-[#F3F4F6] last:border-0"
+                  >
+                    {v.photo_url ? (
+                      <img src={v.photo_url} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-[#F0F0F2] flex items-center justify-center text-lg shrink-0">
+                        {v.category === "commercial" ? "🏢" : "🚗"}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <div className="text-[14px] font-semibold text-[#18181B] truncate">
+                        {[v.year, v.make, v.model].filter(Boolean).join(" ") || "Unnamed vehicle"}
+                      </div>
+                      {v.color && <div className="text-[12px] text-[#9CA3AF]">{v.color}</div>}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         {/* INPUTS */}
