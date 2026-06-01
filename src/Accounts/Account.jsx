@@ -4,6 +4,7 @@ import Head from "../Components/Head";
 import Footer from "../Components/Footer";
 import { meApi, reqApi } from "../lib/api";
 import fon from "../assets/photo/fon-account.webp";
+import SEO from "../Components/SEO.jsx";
 
 const GRADIENT =
   "linear-gradient(107.27deg,#8B6134 -27.97%,#A8834E -12.13%,#F2D892 22.69%,#FFE79E 45.99%,#E1C07B 77.51%)";
@@ -35,6 +36,7 @@ export default function Account() {
 
   return (
     <>
+      <SEO title="My Account" description="Manage your Danilets account — profile, vehicles, orders and payment methods." noIndex={true} />
       <Head />
 
       <div

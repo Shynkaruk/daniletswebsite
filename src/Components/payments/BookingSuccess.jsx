@@ -1,6 +1,7 @@
 // src/pages/BookingSuccess.jsx
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import SEO from "../SEO.jsx";
 
 const BookingSuccess = () => {
   const navigate = useNavigate();
@@ -65,6 +66,8 @@ const BookingSuccess = () => {
   }
 
   return (
+    <>
+    <SEO title="Booking Confirmed" description="Your booking with Danilets is confirmed. Our team will contact you shortly to finalize the details." noIndex={true} />
     <div className="w-full min-h-[70vh] flex flex-col items-center justify-center text-center px-4">
       <h2 className="text-3xl font-bold text-green-600">Payment successful!</h2>
 
@@ -94,6 +97,7 @@ const BookingSuccess = () => {
         Go to Home
       </button>
     </div>
+    </>
   );
 };
 

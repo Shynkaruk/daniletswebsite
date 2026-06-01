@@ -2,10 +2,37 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/Symbol_D_filled with white.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Danilets Family</title>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Базові SEO теги (перезаписуються через react-helmet-async на кожній сторінці) -->
+    <title>Danilets | Premium Auto Detailing & Cleaning — Columbus, OH</title>
+    <meta name="description" content="Columbus' trusted family-owned provider of premium auto detailing and commercial cleaning services. Serving Central Ohio since 2013." />
+
+    <!-- Preconnect до Google Fonts для швидшого завантаження шрифтів -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/Symbol_D_filled with white.svg" />
+
+    <!-- Open Graph fallback (перезаписується Helmet на кожній сторінці) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Danilets" />
+    <meta property="og:title" content="Danilets | Premium Auto Detailing & Cleaning — Columbus, OH" />
+    <meta property="og:description" content="Columbus' trusted family-owned provider of premium auto detailing and commercial cleaning services. Serving Central Ohio since 2013." />
+    <meta property="og:image" content="/Top_of_Page/1.webp" />
+
+    <!-- Twitter Card fallback -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Danilets | Premium Auto Detailing & Cleaning" />
+    <meta name="twitter:description" content="Columbus' trusted family-owned provider of premium auto detailing and commercial cleaning services." />
+
+    <!-- Geo теги для локального SEO -->
+    <meta name="geo.region" content="US-OH" />
+    <meta name="geo.placename" content="Columbus, Ohio" />
+    <meta name="geo.position" content="39.9612;-82.9988" />
+    <meta name="ICBM" content="39.9612, -82.9988" />
   </head>
   <body>
     <div id="root"></div>

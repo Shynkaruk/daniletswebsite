@@ -1,8 +1,10 @@
 // src/Accounts/AdminRequests.jsx
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { adminReqApi } from "../lib/api";
 import PushNotificationToggle from "../Components/PushNotificationToggle";
 import CarPhoto from "../Components/CarPhoto";
+import SEO from "../Components/SEO.jsx";
 
 function safeJsonParse(text, fallback = {}) {
   try {
@@ -87,6 +89,7 @@ const Chips = ({ label, items }) => {
 
 // ================== MAIN COMPONENT ==================
 export default function AdminRequests() {
+  const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState("detailing_quote_personal");
   const [rows, setRows] = useState([]);
   const [selectedRow, setSelectedRow] = useState(null);
@@ -144,6 +147,8 @@ export default function AdminRequests() {
   };
 
   return (
+    <>
+    <SEO title="Admin — CRM Panel" description="Danilets internal CRM panel." noIndex={true} />
     <div className="flex h-screen bg-[#F4F4F5] overflow-hidden pt-20">
       {/* Sidebar */}
       <aside className="w-72 hidden md:flex flex-col border-r border-[#E5E7EB] bg-white overflow-y-auto">
@@ -165,6 +170,16 @@ export default function AdminRequests() {
             </button>
           ))}
         </nav>
+
+        {/* Кнопка переходу на сторінку налаштувань бізнесу */}
+        <div className="px-4 pb-6 pt-2 border-t border-[#F3F4F6]">
+          <button
+            onClick={() => navigate("/admin/settings")}
+            className="w-full text-left px-5 py-3 rounded-2xl text-sm font-semibold text-[#6B7280] hover:bg-gray-100 hover:text-[#111827] transition-all flex items-center gap-2"
+          >
+            ⚙ Business Settings
+          </button>
+        </div>
       </aside>
 
       {/* Main Table */}

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { apiSend } from "../lib/api";
 import { useLocation } from "react-router-dom";
+import SEO from "./SEO.jsx";
 
 const ContactForm = ({ open, onClose, initialService = "Danilets Detailing" }) => {
   const [form, setForm] = useState({
@@ -88,9 +89,15 @@ const submit = async (e) => {
 };
 
 
-  if (!open) return null;
+  // Якщо компонент відкрито як окрему сторінку (/contact) — показуємо SEO теги
+  const isPage = !open && open !== false;
 
   return (
+    <>
+      <SEO
+        title="Contact Us"
+        description="Get in touch with Danilets — Columbus, Ohio's trusted auto detailing and cleaning service. Request a quote, ask questions, or schedule your service today."
+      />
     <div className="fixed inset-0 z-[999999999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <div
         ref={dialogRef}
@@ -202,6 +209,7 @@ const submit = async (e) => {
         </form>
       </div>
     </div>
+    </>
   );
 };
 

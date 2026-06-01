@@ -8,6 +8,7 @@ import fon_booking from "../assets/photo/fon_booking.webp";
 import { auth, meApi, reqApi } from "../lib/api";
 import { useNavigationGuard } from "../contexts/NavigationGuard";
 import ProgressBar from "./NewBooking/ProgressBar";
+import SEO from "./SEO.jsx";
 
 // Спільний перший крок — завантажується одразу (юзер бачить його першим)
 import Step1Search from "../Components/NewBooking/ChooseServiceQute";
@@ -1299,6 +1300,12 @@ useEffect(() => {
   const isResidential = isCleaning && propertyType === "residential";
 
   return (
+    <>
+    <SEO
+      title="Book Online — Auto Detailing & Cleaning"
+      description="Request a quote for auto detailing or cleaning services in Columbus, Ohio. Choose your service, describe your needs, and our team will contact you with pricing and availability."
+      noIndex={false}
+    />
     <div
       className="
         min-h-screen w-full
@@ -2238,6 +2245,7 @@ useEffect(() => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

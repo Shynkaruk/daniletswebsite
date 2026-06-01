@@ -12,6 +12,8 @@ import FAQ from "./FAQ.jsx";
 import Footer from "./Footer.jsx";
 import StatsBlock from "./StatsBlock.jsx";
 import LayoutContainer from "./LayoutContainer.jsx";
+import SEO from "./SEO.jsx";
+import { MainStructuredData } from "./StructuredData.jsx";
 
 // 📌 СЛАЙДИ ДЛЯ МОБІЛЬНОЇ ВЕРСІЇ — ПІДКЛЮЧЕНО З public/Top_of_Page
 // ❗ Шляхи відносно public, тому без import
@@ -99,6 +101,12 @@ const MainMobile = () => {
 
   return (
     <div className="bg-[rgba(235,235,235,1)] min-h-screen pb-8 overflow-x-hidden">
+      <SEO
+        title="Premium Auto Detailing & Commercial Cleaning"
+        description="Columbus' trusted family-owned provider of premium auto detailing and commercial cleaning services. Mobile detailing, ceramic coating, fleet services. Serving Central Ohio since 2013."
+        image="/Top_of_Page/1.webp"
+      />
+      <MainStructuredData />
 
       {/* HERO */}
       <main className="relative min-h-[100dvh] overflow-hidden">

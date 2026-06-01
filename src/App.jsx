@@ -18,6 +18,7 @@ const Cleaning       = lazy(() => import("./Components/Services/Cleaning/Cleanin
 const DetailingPage  = lazy(() => import("./Components/Services/Detailing/DetailingPage.jsx"));
 const Booking        = lazy(() => import("./Components/Booking.jsx"));
 const AdminRequests  = lazy(() => import("./Accounts/AdminRequests.jsx"));
+const AdminSettings  = lazy(() => import("./Accounts/AdminSettings.jsx"));
 const Account        = lazy(() => import("./Accounts/Account.jsx"));
 const BookingSuccess = lazy(() => import("./Components/payments/BookingSuccess.jsx"));
 const AuthCallback   = lazy(() => import("./Components/AuthCallback.jsx"));
@@ -83,6 +84,7 @@ const AppContent = () => {
           <Route path="/detailing" element={getHomeElement()} />
           <Route path="/book-online" element={<Booking />} />
           <Route path="/admin" element={<AdminRequests />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/account" element={<Account />} />
           <Route path="/booking/success" element={<BookingSuccess />} />
           <Route path="/auth/callback" element={<AuthCallback />} />

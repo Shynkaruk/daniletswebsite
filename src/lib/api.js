@@ -218,44 +218,44 @@ export const otpApi = {
 /** ================= CONTENT ================= **/
 
 export const contentApi = {
+  // Отримати один блок по унікальному ключу
   async getByKey(key, lang = "en") {
-    return getJson(
-      `${API}/api/content/by-key/${encodeURIComponent(key)}?lang=${lang}`
-    );
+    return getJson(`${API}/api/content/by-key/${encodeURIComponent(key)}?lang=${lang}`);
   },
-async list(params = {}) {
-  const q = new URLSearchParams(params).toString();
-  const data = await getJson(`${API}/api/admin/requests?${q}`);
 
-  return Array.isArray(data)
-    ? data.map((r) => ({ ...r, id: r.id || r._id }))
-    : data;
-},
+  // Список всіх блоків (з фільтром по сторінці або мові)
+  async list(params = {}) {
+    const q = new URLSearchParams(params).toString();
+    return getJson(`${API}/api/content${q ? `?${q}` : ""}`);
+  },
 
+  // Створити або оновити блок
+  async save(row) {
+    const id = row?.id || row?._id;
+    const isUpdate = Boolean(id);
+    const url = isUpdate ? `${API}/api/content/${id}` : `${API}/api/content`;
+    const method = isUpdate ? "PUT" : "POST";
+    const payload = { ...row };
+    delete payload._id;
+    return sendJson(url, method, payload);
+  },
 
-async save(row) {
-  const id = row?.id || row?._id;        // ✅ беремо id або _id
-  const isUpdate = Boolean(id);
-
-  const url = isUpdate
-    ? `${API}/api/admin/requests/${id}`  // ✅ PUT update
-    : `${API}/api/admin/requests`;       // ✅ POST create
-
-  const method = isUpdate ? "PUT" : "POST";
-
-  // ✅ щоб не відправляти _id назад (інколи Mongoose бурчить)
-  const payload = { ...row, id };
-  delete payload._id;
-
-  return sendJson(url, method, payload);
-},
-
+  // Видалити блок
   async remove(id) {
     const r = await fetch(`${API}/api/content/${id}`, {
       method: "DELETE",
       headers: { ...authHeaders() },
     });
     return parseJsonSafe(r);
+  },
+
+  // Зручний helper: знайти блок по ключу або створити новий
+  async upsertByKey(key, value, extra = {}) {
+    const existing = await contentApi.getByKey(key);
+    if (existing) {
+      return contentApi.save({ ...existing, value });
+    }
+    return contentApi.save({ key, value, page: "settings", lang: "en", published: true, ...extra });
   },
 };
 

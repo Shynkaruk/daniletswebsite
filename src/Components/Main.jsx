@@ -4,6 +4,8 @@ import Services from "./Services.jsx";
 import { Link } from "react-router-dom";
 
 import diamondicon from "../assets/icons/diamond-icon.svg";
+import SEO from "./SEO.jsx";
+import { MainStructuredData } from "./StructuredData.jsx";
 import OurPortfolio from "./OurPortfolio.jsx";
 import OurCoreValues from "./OurCoreValues.jsx";
 import OurReviews from "./OurReviews.jsx";
@@ -99,6 +101,12 @@ const Main = () => {
 
   return (
     <div className="bg-[rgba(235,235,235,1)] min-h-screen pb-8 overflow-x-clip">
+      <SEO
+        title="Premium Auto Detailing & Commercial Cleaning"
+        description="Columbus' trusted family-owned provider of premium auto detailing and commercial cleaning services. Mobile detailing, ceramic coating, fleet services. Serving Central Ohio since 2013."
+        image="/Top_of_Page/1.webp"
+      />
+      <MainStructuredData />
       <Head />
 
       {/* Головний блок hero */}

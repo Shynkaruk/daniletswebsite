@@ -3,6 +3,7 @@ import { useLocation, Link } from "react-router-dom";
 import Head from "./Head";
 import Footer from "../Components/Footer";
 import FAQ from "./FAQ";
+import SEO from "./SEO.jsx";
 
 const PrivacyPolicy = () => {
   const [selectedService, setSelectedService] = useState("Terms & Conditions");
@@ -48,6 +49,11 @@ const PrivacyPolicy = () => {
 
   return (
     <div className="bg-[#F5F5F5] min-h-screen">
+      <SEO
+        title="Legal — Privacy Policy & Terms"
+        description="Privacy policy, terms of service, and legal information for Danilets auto detailing and cleaning services in Columbus, Ohio."
+        noIndex={true}
+      />
       {isMobile ? <Head title={selectedService} /> : <Head />}
 
       {/* ✅ Компенсація fixed Header: опускаємо весь контент нижче */}
