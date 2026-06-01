@@ -1,9 +1,20 @@
 import React, { useEffect, useRef, useState } from "react";
 import { apiSend } from "../lib/api";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import SEO from "./SEO.jsx";
 
 const ContactForm = ({ open, onClose, initialService = "Danilets Detailing" }) => {
+  const navigate = useNavigate();
+
+  // When used as a modal: "open" is a boolean controlled by the parent.
+  // Never render when explicitly closed — avoids the always-visible overlay bug.
+  if (open === false) return null;
+
+  // When used as a standalone page (/contact), open is undefined.
+  // In that case "close" means navigate back (or home if there's no history).
+  const isPageMode = open === undefined;
+  const handleClose = onClose ?? (() => navigate(-1));
+
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -30,23 +41,24 @@ useEffect(() => {
 }, [location.pathname]);
 
 
-  // ESC
+  // ESC — active both in modal mode and page mode
   useEffect(() => {
-    const onEsc = (e) => e.key === "Escape" && onClose?.();
-    if (open) document.addEventListener("keydown", onEsc);
+    const onEsc = (e) => e.key === "Escape" && handleClose();
+    document.addEventListener("keydown", onEsc);
     return () => document.removeEventListener("keydown", onEsc);
-  }, [open, onClose]);
+  }, []);
 
-  // Click outside
+  // Click outside — only in modal mode (page mode has no backdrop to click)
   useEffect(() => {
+    if (isPageMode) return;
     const onClick = (e) => {
       if (dialogRef.current && !dialogRef.current.contains(e.target)) {
-        onClose?.();
+        handleClose();
       }
     };
-    if (open) document.addEventListener("mousedown", onClick);
+    document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
-  }, [open, onClose]);
+  }, []);
 
   const services = ["Danilets Detailing", "Danilets Cleaning"];
 
@@ -79,7 +91,7 @@ const submit = async (e) => {
       description: "",
     });
 
-    setTimeout(() => onClose?.(), 1500);
+    setTimeout(() => handleClose(), 1500);
   } catch (err) {
     console.error(err);
     setError(err?.error || "Something went wrong. Please try again.");
@@ -89,16 +101,16 @@ const submit = async (e) => {
 };
 
 
-  // Якщо компонент відкрито як окрему сторінку (/contact) — показуємо SEO теги
-  const isPage = !open && open !== false;
-
   return (
     <>
       <SEO
         title="Contact Us"
         description="Get in touch with Danilets — Columbus, Ohio's trusted auto detailing and cleaning service. Request a quote, ask questions, or schedule your service today."
       />
-    <div className="fixed inset-0 z-[999999999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className={isPageMode
+      ? "min-h-screen flex items-center justify-center bg-[#F4F4F5] px-4 py-16"
+      : "fixed inset-0 z-[999999999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+    }>
       <div
         ref={dialogRef}
         className="relative w-[92%] max-w-[560px] rounded-2xl bg-white p-5 sm:p-6 shadow-2xl"
@@ -106,7 +118,7 @@ const submit = async (e) => {
         {/* Close */}
         <button
           aria-label="Close"
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-black/5 text-black/70"
         >
           ✕
