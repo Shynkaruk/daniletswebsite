@@ -576,7 +576,7 @@ function OrderDetailModal({ order, onClose }) {
   const raw = order.raw || {};
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/40 flex items-end sm:items-center justify-center px-0 sm:px-4">
+    <div className="fixed inset-0 z-[300000] bg-black/40 flex items-end sm:items-center justify-center px-0 sm:px-4">
       <div className="bg-white rounded-t-[28px] sm:rounded-[24px] shadow-xl w-full sm:max-w-[560px] max-h-[90dvh] flex flex-col">
         {/* Header */}
         <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-3 border-b border-[#F3F4F6]">
@@ -731,7 +731,7 @@ function Modal({ title, message, type = "info", onClose, children }) {
     : "border-[#E5E7EB]";
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-[300000] bg-black/40 flex items-center justify-center px-4">
       <div
         className={[
           "bg-white rounded-2xl shadow-lg max-w-[560px] w-full p-5 sm:p-6 border",
