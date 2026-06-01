@@ -12,10 +12,18 @@
 // Після збереження кеш useBusinessInfo очищається автоматично.
 // ============================================================
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { auth, contentApi } from "../lib/api";
+import { auth, contentApi, pushApi } from "../lib/api";
 import { invalidateBusinessInfoCache } from "../hooks/useBusinessInfo.js";
+
+// ---- Хелпер: конвертує base64url VAPID ключ у Uint8Array ----
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+}
 
 // Ключі полів у ContentBlock
 const FIELDS = [
@@ -51,6 +59,72 @@ export default function AdminSettings() {
   );
 
   const [globalError, setGlobalError] = useState(null);
+
+  // ---- Push notification state ----
+  const [push, setPush] = useState({
+    supported: "serviceWorker" in navigator && "PushManager" in window,
+    permission: typeof Notification !== "undefined" ? Notification.permission : "default",
+    subscribed: false,
+    loading: true,
+    busy: false,
+    error: null,
+  });
+
+  // Перевіряємо чи вже є підписка в цьому браузері
+  useEffect(() => {
+    if (!push.supported) { setPush((p) => ({ ...p, loading: false })); return; }
+    navigator.serviceWorker.ready.then(async (reg) => {
+      try {
+        const sub = await reg.pushManager.getSubscription();
+        setPush((p) => ({ ...p, subscribed: !!sub, loading: false }));
+      } catch {
+        setPush((p) => ({ ...p, loading: false }));
+      }
+    });
+  }, [push.supported]);
+
+  const handleSubscribe = useCallback(async () => {
+    setPush((p) => ({ ...p, busy: true, error: null }));
+    try {
+      // 1. Отримуємо публічний VAPID ключ з сервера
+      const { publicKey } = await pushApi.getVapidKey();
+
+      // 2. Запитуємо дозвіл у браузера
+      const permission = await Notification.requestPermission();
+      setPush((p) => ({ ...p, permission }));
+      if (permission !== "granted") {
+        setPush((p) => ({ ...p, busy: false, error: "Permission denied. Allow notifications in browser settings." }));
+        return;
+      }
+
+      // 3. Підписуємось через Service Worker
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
+      });
+
+      // 4. Зберігаємо підписку на сервері
+      await pushApi.subscribe(sub.toJSON());
+      setPush((p) => ({ ...p, subscribed: true, busy: false }));
+    } catch (e) {
+      console.error("[push] subscribe error:", e);
+      setPush((p) => ({ ...p, busy: false, error: e?.error || e?.message || "Failed to subscribe" }));
+    }
+  }, []);
+
+  const handleUnsubscribe = useCallback(async () => {
+    setPush((p) => ({ ...p, busy: true, error: null }));
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) await sub.unsubscribe();
+      await pushApi.unsubscribe();
+      setPush((p) => ({ ...p, subscribed: false, busy: false }));
+    } catch (e) {
+      setPush((p) => ({ ...p, busy: false, error: e?.error || e?.message || "Failed to unsubscribe" }));
+    }
+  }, []);
 
   // ---- Перевірка прав ----
   useEffect(() => {
@@ -189,6 +263,63 @@ export default function AdminSettings() {
             </div>
           );
         })}
+      </div>
+
+      {/* Push Notifications */}
+      <div className="max-w-2xl mx-auto mt-5">
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5 shadow-sm">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-lg">🔔</span>
+            <label className="text-sm font-semibold text-[#111827]">Browser Push Notifications</label>
+          </div>
+          <p className="text-xs text-[#9CA3AF] mb-4">
+            Enable push notifications in this browser so you get an instant alert when a client submits a new request — even when the tab is in the background.
+          </p>
+
+          {!push.supported && (
+            <p className="text-xs text-amber-600">
+              Push notifications are not supported in this browser. Try Chrome or Edge on desktop.
+            </p>
+          )}
+
+          {push.supported && (
+            <div className="flex items-center gap-3 flex-wrap">
+              {push.loading ? (
+                <span className="text-xs text-[#9CA3AF]">Checking status…</span>
+              ) : push.subscribed ? (
+                <>
+                  <span className="text-xs text-green-600 font-medium flex items-center gap-1">
+                    ✓ Notifications enabled on this device
+                  </span>
+                  <button
+                    onClick={handleUnsubscribe}
+                    disabled={push.busy}
+                    className="h-9 px-4 rounded-xl border border-[#E5E7EB] text-xs font-semibold text-[#6B7280] hover:border-red-400 hover:text-red-500 transition disabled:opacity-40"
+                  >
+                    {push.busy ? "Disabling…" : "Disable"}
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={handleSubscribe}
+                  disabled={push.busy || push.permission === "denied"}
+                  className="h-9 px-5 rounded-xl bg-[#111827] text-white text-sm font-semibold hover:brightness-110 transition disabled:opacity-40"
+                >
+                  {push.busy ? "Enabling…" : "Enable Notifications"}
+                </button>
+              )}
+
+              {push.permission === "denied" && (
+                <p className="w-full text-xs text-red-500 mt-1">
+                  Notifications are blocked in your browser. Open browser settings → Site permissions → Notifications → Allow for this site.
+                </p>
+              )}
+              {push.error && (
+                <p className="w-full text-xs text-red-500 mt-1">{push.error}</p>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Info box */}
