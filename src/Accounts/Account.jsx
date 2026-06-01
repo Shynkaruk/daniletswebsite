@@ -233,43 +233,48 @@ function OrdersCard() {
   const [loading,  setLoading]  = useState(true);
   const [selected, setSelected] = useState(null);
 
+  const fetchOrders = async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const raw = await reqApi.listMine();
+      const orders =
+        Array.isArray(raw)          ? raw
+        : Array.isArray(raw?.data)    ? raw.data
+        : Array.isArray(raw?.results) ? raw.results
+        : Array.isArray(raw?.items)   ? raw.items
+        : [];
+
+      const normalized = orders.map((o) => {
+        const items = safeParseJSON(o.items_json);
+        return {
+          raw:        o,
+          id:         o.id ?? o._id ?? null,
+          title:      humanServiceTitle(o, items),
+          created_at: o.created_at || o.createdAt || null,
+          updated_at: o.updated_at || o.updatedAt || null,
+          status:     o.status || "processing",
+          items,
+        };
+      });
+
+      normalized.sort((a, b) =>
+        new Date(b.updated_at || b.created_at || 0) -
+        new Date(a.updated_at || a.created_at || 0)
+      );
+      setList(normalized);
+    } catch (e) {
+      console.error(e);
+      if (!silent) setList([]);
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const raw = await reqApi.listMine();
-        const orders =
-          Array.isArray(raw)          ? raw
-          : Array.isArray(raw?.data)    ? raw.data
-          : Array.isArray(raw?.results) ? raw.results
-          : Array.isArray(raw?.items)   ? raw.items
-          : [];
-
-        const normalized = orders.map((o) => {
-          const items = safeParseJSON(o.items_json);
-          return {
-            raw:        o,
-            id:         o.id ?? o._id ?? null,
-            title:      humanServiceTitle(o, items),
-            created_at: o.created_at || o.createdAt || null,
-            updated_at: o.updated_at || o.updatedAt || null,
-            status:     o.status || "new",
-            items,
-          };
-        });
-
-        normalized.sort((a, b) =>
-          new Date(b.updated_at || b.created_at || 0) -
-          new Date(a.updated_at || a.created_at || 0)
-        );
-        setList(normalized);
-      } catch (e) {
-        console.error(e);
-        setList([]);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    fetchOrders();
+    // Poll every 30 s to pick up status changes made in the admin panel
+    const timer = setInterval(() => fetchOrders(true), 30_000);
+    return () => clearInterval(timer);
   }, []);
 
   return (
@@ -321,14 +326,17 @@ function OrdersCard() {
 /* ── Status badge ── */
 function StatusBadge({ status }) {
   const map = {
-    new:         { label: "New",         bg: "bg-blue-50",   text: "text-blue-600"   },
-    pending:     { label: "Pending",     bg: "bg-yellow-50", text: "text-yellow-700" },
-    in_progress: { label: "In progress", bg: "bg-orange-50", text: "text-orange-600" },
-    done:        { label: "Done",        bg: "bg-green-50",  text: "text-green-700"  },
-    completed:   { label: "Completed",   bg: "bg-green-50",  text: "text-green-700"  },
-    cancelled:   { label: "Cancelled",   bg: "bg-red-50",    text: "text-red-600"    },
+    processing:  { label: "Processing", bg: "bg-blue-50",    text: "text-blue-700"   },
+    confirmed:   { label: "Confirmed",  bg: "bg-amber-50",   text: "text-amber-700"  },
+    rejected:    { label: "Rejected",   bg: "bg-red-50",     text: "text-red-600"    },
+    completed:   { label: "Completed",  bg: "bg-emerald-50", text: "text-emerald-700"},
+    // legacy
+    new:         { label: "Processing", bg: "bg-blue-50",    text: "text-blue-700"   },
+    in_progress: { label: "Confirmed",  bg: "bg-amber-50",   text: "text-amber-700"  },
+    done:        { label: "Completed",  bg: "bg-emerald-50", text: "text-emerald-700"},
+    cancelled:   { label: "Rejected",   bg: "bg-red-50",     text: "text-red-600"    },
   };
-  const s = map[status] || map.new;
+  const s = map[status] || map.processing;
   return (
     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${s.bg} ${s.text}`}>
       {s.label}

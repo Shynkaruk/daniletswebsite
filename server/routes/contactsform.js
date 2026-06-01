@@ -53,7 +53,7 @@ router.post("/", async (req, res) => {
       user_id,                 // може бути null
       vehicle_id: null,
       service_type: "forms_clients",   // ✅ ключ для AdminRequests
-      status: "new",
+      status: "processing",
       location_type: null,
       service_date: null,
       time_window: null,

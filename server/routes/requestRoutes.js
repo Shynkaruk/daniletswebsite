@@ -47,7 +47,7 @@ router.get("/:id", auth, async (req, res) => {
 router.post("/public", optionalAuth, async (req, res) => {
   try {
     const {
-      vehicle_id, status = "new", location_type = "shop",
+      vehicle_id, location_type = "shop",
       service_date, time_window, service_type, service_address,
       pickup_address, dropoff_address, items_json, currency = "USD",
       subtotal = 0, tax = 0, total = 0, notes_customer,
@@ -55,6 +55,8 @@ router.post("/public", optionalAuth, async (req, res) => {
     } = req.body || {};
 
     if (!service_type) return res.status(400).json({ error: "service_type required" });
+
+    const status = "processing";
 
     const userId = req.user?.uid || null;
 
@@ -98,11 +100,13 @@ router.post("/public", optionalAuth, async (req, res) => {
 router.post("/", optionalAuth, async (req, res) => {
   try {
     const {
-      vehicle_id, status = "new", location_type = "shop",
+      vehicle_id, location_type = "shop",
       service_date, time_window, service_type, service_address,
       pickup_address, dropoff_address, items_json, currency = "USD",
       subtotal = 0, tax = 0, total = 0, notes_customer,
     } = req.body || {};
+
+    const status = "processing";
 
     if (!service_type) return res.status(400).json({ error: "service_type required" });
 

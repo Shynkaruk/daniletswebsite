@@ -27,10 +27,14 @@ const MENU_ITEMS = [
 ];
 
 const STATUS_META = {
-  new: { label: "New", cls: "bg-blue-50 text-blue-700 border-blue-200" },
-  in_progress: { label: "In Progress", cls: "bg-amber-50 text-amber-700 border-amber-200" },
-  completed: { label: "Completed", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  rejected: { label: "Rejected", cls: "bg-red-50 text-red-700 border-red-200" },
+  processing: { label: "Processing",  cls: "bg-blue-50 text-blue-700 border-blue-200"     },
+  confirmed:  { label: "Confirmed",   cls: "bg-amber-50 text-amber-700 border-amber-200"  },
+  rejected:   { label: "Rejected",    cls: "bg-red-50 text-red-700 border-red-200"        },
+  completed:  { label: "Completed",   cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  // legacy values kept for backward compat display
+  new:        { label: "Processing",  cls: "bg-blue-50 text-blue-700 border-blue-200"     },
+  in_progress:{ label: "Confirmed",   cls: "bg-amber-50 text-amber-700 border-amber-200"  },
+  done:       { label: "Completed",   cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
 };
 
 function formatDate(dateString) {
@@ -262,14 +266,112 @@ export default function AdminRequests() {
   );
 }
 
+// ================== STATUS ACTIONS ==================
+function StatusActions({ status, onChange }) {
+  const normalised = status === "new" ? "processing" : status === "in_progress" ? "confirmed" : status === "done" ? "completed" : status;
+
+  if (normalised === "processing") {
+    return (
+      <div className="space-y-3">
+        <div className={`inline-flex items-center px-4 h-8 rounded-full text-xs font-semibold border ${STATUS_META.processing.cls}`}>
+          Processing
+        </div>
+        <p className="text-xs text-gray-500">Choose an action for this request:</p>
+        <div className="flex gap-3">
+          <button
+            onClick={() => onChange("confirmed")}
+            className="flex-1 h-12 rounded-2xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 transition"
+          >
+            ✓ Confirm Request
+          </button>
+          <button
+            onClick={() => onChange("rejected")}
+            className="flex-1 h-12 rounded-2xl bg-red-600 text-white font-semibold text-sm hover:bg-red-700 transition"
+          >
+            ✕ Reject Request
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (normalised === "confirmed") {
+    return (
+      <div className="space-y-3">
+        <div className={`inline-flex items-center px-4 h-8 rounded-full text-xs font-semibold border ${STATUS_META.confirmed.cls}`}>
+          Confirmed
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => onChange("completed")}
+            className="flex-1 h-12 rounded-2xl bg-[#111827] text-white font-semibold text-sm hover:brightness-110 transition"
+          >
+            ✓ Mark as Completed
+          </button>
+          <button
+            onClick={() => onChange("rejected")}
+            className="h-12 px-5 rounded-2xl border border-red-300 text-red-600 font-semibold text-sm hover:bg-red-50 transition"
+          >
+            Reject
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (normalised === "rejected") {
+    return (
+      <div className="space-y-3">
+        <div className={`inline-flex items-center px-4 h-8 rounded-full text-xs font-semibold border ${STATUS_META.rejected.cls}`}>
+          Rejected
+        </div>
+        <button
+          onClick={() => onChange("processing")}
+          className="h-10 px-5 rounded-2xl border text-sm font-semibold text-gray-600 hover:bg-gray-100 transition"
+        >
+          ↩ Reopen as Processing
+        </button>
+      </div>
+    );
+  }
+
+  if (normalised === "completed") {
+    return (
+      <div className="space-y-3">
+        <div className={`inline-flex items-center px-4 h-8 rounded-full text-xs font-semibold border ${STATUS_META.completed.cls}`}>
+          Completed
+        </div>
+        <button
+          onClick={() => onChange("processing")}
+          className="h-10 px-5 rounded-2xl border text-sm font-semibold text-gray-600 hover:bg-gray-100 transition"
+        >
+          ↩ Reopen as Processing
+        </button>
+      </div>
+    );
+  }
+
+  // Fallback: plain select for unknown statuses
+  return (
+    <select value={status} onChange={e => onChange(e.target.value)}
+      className="w-full h-12 rounded-2xl border px-5 font-medium focus:border-[#A8834E]">
+      <option value="processing">Processing</option>
+      <option value="confirmed">Confirmed</option>
+      <option value="rejected">Rejected</option>
+      <option value="completed">Completed</option>
+    </select>
+  );
+}
+
 // ================== DETAIL MODAL ==================
 function DetailModal({ row, onClose, onSave, onDelete }) {
-  const [editStatus, setEditStatus] = useState(row.status || "new");
+  const [editStatus, setEditStatus] = useState(row.status || "processing");
   const [editAdminNote, setEditAdminNote] = useState(row.notes_admin || "");
   const items = safeJsonParse(row.items_json, {});
 
-  const handleSave = () => onSave(row, editStatus, editAdminNote);
+  const handleSave = (statusOverride) => onSave(row, statusOverride ?? editStatus, editAdminNote);
   const handleDelete = () => onDelete?.(row);
+  const handleStatusAction = (newStatus) => { setEditStatus(newStatus); onSave(row, newStatus, editAdminNote); };
 
   const contact = items.contact || items.guest || {};
   const vehicle = items.vehicle || {};
@@ -312,16 +414,9 @@ function DetailModal({ row, onClose, onSave, onDelete }) {
 
         <div className="flex-1 overflow-auto p-6 space-y-8">
           {/* Status */}
-          <div>
-            <div className="text-xs font-extrabold uppercase mb-2 text-[#6B7280]">Status</div>
-            <select value={editStatus} onChange={e => setEditStatus(e.target.value)}
-              className="w-full h-12 rounded-2xl border px-5 font-medium focus:border-[#A8834E]">
-              <option value="new">New</option>
-              <option value="in_progress">In Progress</option>
-              <option value="completed">Completed</option>
-              <option value="rejected">Rejected</option>
-            </select>
-          </div>
+          <Section title="Request Status">
+            <StatusActions status={editStatus} onChange={handleStatusAction} />
+          </Section>
 
           {/* Client Information */}
           <Section title="Client Information">
@@ -549,8 +644,8 @@ function DetailModal({ row, onClose, onSave, onDelete }) {
         </div>
 
         <div className="p-6 border-t flex gap-3 bg-white">
-          <button onClick={handleSave} className="flex-1 h-14 rounded-3xl bg-[#111827] text-white font-semibold hover:brightness-110 transition">
-            Save Changes
+          <button onClick={() => handleSave()} className="flex-1 h-14 rounded-3xl bg-[#111827] text-white font-semibold hover:brightness-110 transition">
+            Save Notes
           </button>
           <button onClick={onClose} className="flex-1 h-14 rounded-3xl border font-semibold">Close</button>
           <button
