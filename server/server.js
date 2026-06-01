@@ -50,11 +50,19 @@ const PORT = process.env.PORT ? Number(process.env.PORT) : 8080;
 
 // ---- Web Push (VAPID) — налаштовуємо якщо є ключі ----
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-  webpush.setVapidDetails(
-    process.env.VAPID_EMAIL || "mailto:admin@danilets.com",
-    process.env.VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY
-  );
+  try {
+    // Очищаємо можливі пробіли та зайві = на кінці (помилка при копіюванні)
+    const pubKey  = process.env.VAPID_PUBLIC_KEY.trim().replace(/=+$/, "");
+    const privKey = process.env.VAPID_PRIVATE_KEY.trim().replace(/=+$/, "");
+    webpush.setVapidDetails(
+      process.env.VAPID_EMAIL || "mailto:admin@danilets.com",
+      pubKey,
+      privKey
+    );
+    console.log("[push] VAPID configured OK");
+  } catch (e) {
+    console.error("[push] Invalid VAPID keys — push disabled:", e.message);
+  }
 } else {
   console.warn("[push] VAPID keys not set — push notifications disabled");
 }
