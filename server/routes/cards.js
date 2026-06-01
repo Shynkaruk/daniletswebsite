@@ -1,9 +1,9 @@
 import express from 'express';
-import db from '../db.js';
+import { Card } from '../db.js';
 
 const router = express.Router();
 
-/* --------- прості гардси (очікують, що req.user виставляється загальним middleware) --------- */
+/* --------- Auth guards --------- */
 function requireAuth(req, res, next) {
   if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
   next();
@@ -14,86 +14,96 @@ function requireAdmin(req, res, next) {
 }
 
 /* LIST: /api/cards?type=service|addon&published=1&q=...&limit=&offset= */
-router.get('/', (req, res) => {
-  const { type, published, q, limit = 200, offset = 0 } = req.query;
+router.get('/', async (req, res) => {
+  try {
+    const { type, published, q, limit = 200, offset = 0 } = req.query;
 
-  const where = [];
-  const params = {};
-  if (type) { where.push(`type=@type`); params.type = String(type); }
-  if (published !== undefined) { where.push(`published=@published`); params.published = Number(published) ? 1 : 0; }
-  if (q) { where.push(`(title like @q or subtitle like @q or body like @q)`); params.q = `%${q}%`; }
+    const filter = {};
+    if (type) filter.type = type;
+    if (published !== undefined) filter.published = Boolean(Number(published));
+    if (q) filter.$or = [
+      { title:    { $regex: q, $options: 'i' } },
+      { subtitle: { $regex: q, $options: 'i' } },
+      { body:     { $regex: q, $options: 'i' } },
+    ];
 
-  const sql = `
-    select id, type, title, subtitle, body, image_url, price, slug, sort_order, published, created_at, updated_at
-    from cards
-    ${where.length ? 'where ' + where.join(' and ') : ''}
-    order by sort_order asc, id asc
-    limit @limit offset @offset
-  `;
-  const rows = db.prepare(sql).all({ ...params, limit: Number(limit), offset: Number(offset) });
-  res.json(rows);
+    const rows = await Card.find(filter)
+      .sort({ sort_order: 1, _id: 1 })
+      .skip(Number(offset))
+      .limit(Number(limit))
+      .lean();
+
+    res.json(rows.map(r => ({ ...r, id: r._id.toString(), _id: undefined })));
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'failed to list cards' });
+  }
 });
 
-router.get('/:id', (req, res) => {
-  const row = db.prepare(`select * from cards where id=?`).get(req.params.id);
-  if (!row) return res.status(404).json({ error: 'Not found' });
-  res.json(row);
+router.get('/:id', async (req, res) => {
+  try {
+    const row = await Card.findById(req.params.id).lean();
+    if (!row) return res.status(404).json({ error: 'Not found' });
+    res.json({ ...row, id: row._id.toString(), _id: undefined });
+  } catch (e) {
+    res.status(500).json({ error: 'failed to get card' });
+  }
 });
 
-router.post('/', requireAuth, requireAdmin, express.json(), (req, res) => {
-  const { type, title, subtitle=null, body=null, image_url=null, price=0, slug=null, sort_order=0, published=1 } = req.body || {};
-  if (!type || !title) return res.status(400).json({ error: 'type and title are required' });
+router.post('/', requireAuth, requireAdmin, express.json(), async (req, res) => {
+  try {
+    const { type, title, subtitle = null, body = null, image_url = null,
+            price = 0, slug = null, sort_order = 0, published = true } = req.body || {};
+    if (!type || !title) return res.status(400).json({ error: 'type and title are required' });
 
-  const info = db.prepare(`
-    insert into cards (type, title, subtitle, body, image_url, price, slug, sort_order, published, created_by)
-    values (@type, @title, @subtitle, @body, @image_url, @price, @slug, @sort_order, @published, @created_by)
-  `).run({
-    type: String(type),
-    title: String(title),
-    subtitle, body, image_url,
-    price: Number(price) || 0,
-    slug,
-    sort_order: Number(sort_order) || 0,
-    published: Number(published) ? 1 : 0,
-    created_by: req.user.id,
-  });
-
-  const row = db.prepare(`select * from cards where id=?`).get(info.lastInsertRowid);
-  res.json(row);
+    const doc = await Card.create({
+      type, title, subtitle, body, image_url,
+      price: Number(price) || 0,
+      slug,
+      sort_order: Number(sort_order) || 0,
+      published: Boolean(published),
+      created_by: req.user.uid || null,
+    });
+    const row = doc.toObject();
+    res.json({ ...row, id: row._id.toString(), _id: undefined });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'failed to create card' });
+  }
 });
 
-router.put('/:id', requireAuth, requireAdmin, express.json(), (req, res) => {
-  const id = Number(req.params.id);
-  const cur = db.prepare(`select * from cards where id=?`).get(id);
-  if (!cur) return res.status(404).json({ error: 'Not found' });
+router.put('/:id', requireAuth, requireAdmin, express.json(), async (req, res) => {
+  try {
+    const cur = await Card.findById(req.params.id);
+    if (!cur) return res.status(404).json({ error: 'Not found' });
 
-  const patch = {
-    type: req.body.type ?? cur.type,
-    title: req.body.title ?? cur.title,
-    subtitle: req.body.subtitle ?? cur.subtitle,
-    body: req.body.body ?? cur.body,
-    image_url: req.body.image_url ?? cur.image_url,
-    price: req.body.price !== undefined ? Number(req.body.price) || 0 : cur.price,
-    slug: req.body.slug ?? cur.slug,
-    sort_order: req.body.sort_order !== undefined ? Number(req.body.sort_order) || 0 : cur.sort_order,
-    published: req.body.published !== undefined ? (Number(req.body.published) ? 1 : 0) : cur.published,
-  };
+    const patch = {};
+    if (req.body.type      !== undefined) patch.type       = req.body.type;
+    if (req.body.title     !== undefined) patch.title      = req.body.title;
+    if (req.body.subtitle  !== undefined) patch.subtitle   = req.body.subtitle;
+    if (req.body.body      !== undefined) patch.body       = req.body.body;
+    if (req.body.image_url !== undefined) patch.image_url  = req.body.image_url;
+    if (req.body.price     !== undefined) patch.price      = Number(req.body.price) || 0;
+    if (req.body.slug      !== undefined) patch.slug       = req.body.slug;
+    if (req.body.sort_order!== undefined) patch.sort_order = Number(req.body.sort_order) || 0;
+    if (req.body.published !== undefined) patch.published  = Boolean(req.body.published);
+    patch.updated_at = new Date();
 
-  db.prepare(`
-    update cards set
-      type=@type, title=@title, subtitle=@subtitle, body=@body,
-      image_url=@image_url, price=@price, slug=@slug,
-      sort_order=@sort_order, published=@published, updated_at=datetime('now')
-    where id=@id
-  `).run({ ...patch, id });
-
-  const row = db.prepare(`select * from cards where id=?`).get(id);
-  res.json(row);
+    const doc = await Card.findByIdAndUpdate(req.params.id, { $set: patch }, { new: true }).lean();
+    res.json({ ...doc, id: doc._id.toString(), _id: undefined });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'failed to update card' });
+  }
 });
 
-router.delete('/:id', requireAuth, requireAdmin, (req, res) => {
-  const info = db.prepare(`delete from cards where id=?`).run(req.params.id);
-  res.json({ ok: true, deleted: info.changes });
+router.delete('/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    await Card.deleteOne({ _id: req.params.id });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: 'failed to delete card' });
+  }
 });
 
 export default router;
