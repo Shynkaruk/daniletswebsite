@@ -135,9 +135,12 @@ if (fs.existsSync(DIST_DIR)) {
   // Решта статики (favicon, manifest, тощо) — без кешу
   app.use(express.static(DIST_DIR, { maxAge: 0 }));
 
-  // SPA fallback: всі не-API маршрути повертають index.html без кешу
+  // SPA fallback: тільки маршрути без розширення файлу → index.html
+  // Запити до assets (.js, .css, etc.) що не знайдені — повертають 404,
+  // а не HTML, щоб уникнути MIME type error у браузері
   app.get("*", (req, res, next) => {
     if (req.path.startsWith("/api/")) return next();
+    if (path.extname(req.path)) return res.status(404).end();
     res
       .set("Cache-Control", "no-cache, no-store, must-revalidate")
       .sendFile(path.join(DIST_DIR, "index.html"));
