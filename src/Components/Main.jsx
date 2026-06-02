@@ -56,46 +56,43 @@ const SLIDES = [
 
 const Main = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  // новий стейт для автоплею
+  const [prevImageIndex, setPrevImageIndex]       = useState(null);
+  // useRef для поточного індексу — щоб interval не мав stale closure
+  const currIdxRef   = useRef(0);
+  const prevTimerRef = useRef(null);
+  const intervalRef  = useRef(null);
   const [autoPlay, setAutoPlay] = useState(true);
-  const intervalRef = useRef(null);
 
-  // авто-ротація кожні 5 секунд
+  // goTo(nextIdx: number) — виконує crossfade до потрібного слайду
+  const goTo = (nextIdx) => {
+    setPrevImageIndex(currIdxRef.current);
+    clearTimeout(prevTimerRef.current);
+    prevTimerRef.current = setTimeout(() => setPrevImageIndex(null), 700);
+    currIdxRef.current = nextIdx;
+    setCurrentImageIndex(nextIdx);
+  };
+
   useEffect(() => {
     if (!autoPlay) return;
-
     intervalRef.current = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % SLIDES.length);
+      goTo((currIdxRef.current + 1) % SLIDES.length);
     }, 5000);
+    return () => clearInterval(intervalRef.current);
+  }, [autoPlay]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, [autoPlay]);
+  useEffect(() => () => {
+    clearTimeout(prevTimerRef.current);
+    clearInterval(intervalRef.current);
+  }, []);
 
-  // зупиняємо автоплей при ручному кліку
   const stopAutoPlay = () => {
     if (!autoPlay) return;
     setAutoPlay(false);
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
+    clearInterval(intervalRef.current);
   };
 
-  const goNext = () => {
-    stopAutoPlay();
-    setCurrentImageIndex((prev) => (prev + 1) % SLIDES.length);
-  };
-
-  const goPrev = () => {
-    stopAutoPlay();
-    setCurrentImageIndex((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
-  };
+  const goNext = () => { stopAutoPlay(); goTo((currIdxRef.current + 1) % SLIDES.length); };
+  const goPrev = () => { stopAutoPlay(); goTo((currIdxRef.current - 1 + SLIDES.length) % SLIDES.length); };
 
   const currentSlide = SLIDES[currentImageIndex];
 
@@ -111,24 +108,26 @@ const Main = () => {
 
       {/* Головний блок hero */}
       <main className="relative min-h-[560px] sm:min-h-[640px] lg:min-h-screen overflow-x-clip">
-        {/* 🔥 Фонова карусель */}
+        {/* 🔥 Фонова карусель — рендеримо тільки поточний + попередній слайд */}
         <div className="absolute inset-0">
-          {SLIDES.map((slide, index) => (
+          {[
+            prevImageIndex !== null ? { ...SLIDES[prevImageIndex], role: "prev" } : null,
+            { ...SLIDES[currentImageIndex], role: "curr" },
+          ].filter(Boolean).map((slide) => (
             <img
-              key={slide.id}
+              key={slide.id + slide.role}
               src={slide.image}
               alt={slide.alt}
-              loading={index === 0 ? "eager" : "lazy"}
-              fetchPriority={index === 0 ? "high" : "low"}
-              className={`
-              w-full h-full
-              object-contain  /* Заміна object-cover */
-              scale-[1]     /* віддаляємо фото */
-              object-center
-              absolute inset-0
-              transition-all duration-700
-              ${index === currentImageIndex ? "opacity-100" : "opacity-0"}
-              `}
+              loading="eager"
+              fetchPriority={slide.role === "curr" && currentImageIndex === 0 ? "high" : "auto"}
+              decoding={slide.role === "curr" ? "sync" : "async"}
+              width={1920}
+              height={1080}
+              className={[
+                "w-full h-full object-contain scale-[1] object-center",
+                "absolute inset-0 transition-opacity duration-700",
+                slide.role === "curr" ? "opacity-100" : "opacity-0",
+              ].join(" ")}
             />
           ))}
 

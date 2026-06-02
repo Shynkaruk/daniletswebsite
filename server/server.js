@@ -14,6 +14,7 @@
 
 import "dotenv/config";
 import express from "express";
+import compression from "compression";
 import cors from "cors";
 import multer from "multer";
 import path from "path";
@@ -75,6 +76,8 @@ app.use("/.well-known", express.static(path.join(__dirname, ".well-known")));
 
 // ---- Базові налаштування Express ----
 app.set("trust proxy", true);
+// Gzip/brotli стиснення — зменшує розмір JS/CSS/JSON відповідей на ~70%
+app.use(compression({ level: 6, threshold: 1024 }));
 app.use(cors({ origin: "*", credentials: false }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));

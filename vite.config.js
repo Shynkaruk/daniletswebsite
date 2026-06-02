@@ -20,6 +20,9 @@ export default defineConfig({
     outDir: "dist",
     sourcemap: false,
     chunkSizeWarningLimit: 500,
+    // Видаляємо console.log/warn у продакшені
+    minify: "esbuild",
+    target: "es2020",
     rollupOptions: {
       output: {
         manualChunks: (id) => {
@@ -31,8 +34,14 @@ export default defineConfig({
           if (id.includes("node_modules/@react-oauth")) return "vendor-google-auth";
           if (id.includes("node_modules/@whop")) return "vendor-whop";
           if (id.includes("node_modules/axios")) return "vendor-axios";
+          // Великі admin-компоненти в окремий чанк
+          if (id.includes("node_modules/pdfkit")) return "vendor-pdfkit";
         },
       },
+    },
+    // Прибираємо console.* у продакшн-білді
+    esbuildOptions: {
+      drop: ["console", "debugger"],
     },
   },
 });

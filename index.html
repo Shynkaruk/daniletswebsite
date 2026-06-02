@@ -11,7 +11,17 @@
     <!-- Preconnect до Google Fonts для швидшого завантаження шрифтів -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <!-- Non-blocking font load: не блокує рендер сторінки -->
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+          media="print"
+          onload="this.media='all'" />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" />
+    </noscript>
+
+    <!-- Preload LCP hero image — браузер починає завантаження одразу -->
+    <link rel="preload" as="image" href="/Top_of_Page/1.webp" fetchpriority="high" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/Symbol_D_filled with white.svg" />

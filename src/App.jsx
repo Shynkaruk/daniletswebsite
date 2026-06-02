@@ -2,14 +2,14 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import { BrowserRouter as Router, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 
-// Eager
-import Main from "./Components/Main.jsx";
-import MainMobile from "./Components/MainMobile.jsx";
+// Eager — тільки мінімально необхідне для першого рендеру
 import Layout from "./Components/Layout.jsx";
 import ScrollToTop from "./ScrollToTop.jsx";
 import { NavigationGuardProvider } from "./contexts/NavigationGuard.jsx";
 
-// Lazy routes
+// Lazy routes — завантажуються тільки при першому відвідуванні маршруту
+const Main           = lazy(() => import("./Components/Main.jsx"));
+const MainMobile     = lazy(() => import("./Components/MainMobile.jsx"));
 const AboutUs        = lazy(() => import("./Components/AboutUs.jsx"));
 const ContactForm    = lazy(() => import("./Components/ContactForm.jsx"));
 const Newsletter     = lazy(() => import("./Components/Newsletter.jsx"));

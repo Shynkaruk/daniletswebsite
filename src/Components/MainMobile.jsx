@@ -59,43 +59,41 @@ const SLIDES = [
 
 const MainMobile = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [prevImageIndex, setPrevImageIndex]       = useState(null);
+  const currIdxRef   = useRef(0);
+  const prevTimerRef = useRef(null);
+  const intervalRef  = useRef(null);
   const [autoPlay, setAutoPlay] = useState(true);
-  const intervalRef = useRef(null);
 
-  // AUTO ROTATION — 5s
+  const goTo = (nextIdx) => {
+    setPrevImageIndex(currIdxRef.current);
+    clearTimeout(prevTimerRef.current);
+    prevTimerRef.current = setTimeout(() => setPrevImageIndex(null), 700);
+    currIdxRef.current = nextIdx;
+    setCurrentImageIndex(nextIdx);
+  };
+
   useEffect(() => {
     if (!autoPlay) return;
-
     intervalRef.current = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % SLIDES.length);
+      goTo((currIdxRef.current + 1) % SLIDES.length);
     }, 5000);
+    return () => clearInterval(intervalRef.current);
+  }, [autoPlay]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, [autoPlay]);
+  useEffect(() => () => {
+    clearTimeout(prevTimerRef.current);
+    clearInterval(intervalRef.current);
+  }, []);
 
   const stopAutoPlay = () => {
     if (!autoPlay) return;
     setAutoPlay(false);
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
+    clearInterval(intervalRef.current);
   };
 
-  const goNext = () => {
-    stopAutoPlay();
-    setCurrentImageIndex((prev) => (prev + 1) % SLIDES.length);
-  };
-
-  const goPrev = () => {
-    stopAutoPlay();
-    setCurrentImageIndex((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
-  };
+  const goNext = () => { stopAutoPlay(); goTo((currIdxRef.current + 1) % SLIDES.length); };
+  const goPrev = () => { stopAutoPlay(); goTo((currIdxRef.current - 1 + SLIDES.length) % SLIDES.length); };
 
   const currentSlide = SLIDES[currentImageIndex];
 
@@ -110,25 +108,27 @@ const MainMobile = () => {
 
       {/* HERO */}
       <main className="relative min-h-[100dvh] overflow-hidden">
-        {/* 🔥 Фонова карусель */}
-        <div className="absolute inset-0">
-          {SLIDES.map((slide, index) => (
+        {/* 🔥 Фонова карусель — тільки поточний + попередній слайд у DOM */}
+        <div className=”absolute inset-0”>
+          {[
+            prevImageIndex !== null ? { ...SLIDES[prevImageIndex], role: “prev” } : null,
+            { ...SLIDES[currentImageIndex], role: “curr” },
+          ].filter(Boolean).map((slide) => (
             <img
-              key={slide.id}
+              key={slide.id + slide.role}
               src={slide.image}
               alt={slide.alt}
-              loading={index === 0 ? "eager" : "lazy"}
-              fetchPriority={index === 0 ? "high" : "low"}
-              className={`
-        absolute inset-0
-        w-full h-full
-        transition-opacity duration-700
-        ${index === currentImageIndex ? "opacity-100" : "opacity-0"}
-
-        /* ✅ щоб “як на прикладі”: машина знизу, картинка не надто збільшена */
-        object-cover object-bottom
-        scale-[1.00]
-      `}
+              loading=”eager”
+              fetchPriority={slide.role === “curr” && currentImageIndex === 0 ? “high” : “auto”}
+              decoding={slide.role === “curr” ? “sync” : “async”}
+              width={828}
+              height={1792}
+              className={[
+                “absolute inset-0 w-full h-full”,
+                “object-cover object-bottom scale-[1.00]”,
+                “transition-opacity duration-700”,
+                slide.role === “curr” ? “opacity-100” : “opacity-0”,
+              ].join(“ “)}
             />
           ))}
 
