@@ -109,26 +109,26 @@ const MainMobile = () => {
       {/* HERO */}
       <main className="relative min-h-[100dvh] overflow-hidden">
         {/* 🔥 Фонова карусель — тільки поточний + попередній слайд у DOM */}
-        <div className=”absolute inset-0”>
+        <div className="absolute inset-0">
           {[
-            prevImageIndex !== null ? { ...SLIDES[prevImageIndex], role: “prev” } : null,
-            { ...SLIDES[currentImageIndex], role: “curr” },
+            prevImageIndex !== null ? { ...SLIDES[prevImageIndex], role: "prev" } : null,
+            { ...SLIDES[currentImageIndex], role: "curr" },
           ].filter(Boolean).map((slide) => (
             <img
               key={slide.id + slide.role}
               src={slide.image}
               alt={slide.alt}
-              loading=”eager”
-              fetchPriority={slide.role === “curr” && currentImageIndex === 0 ? “high” : “auto”}
-              decoding={slide.role === “curr” ? “sync” : “async”}
+              loading="eager"
+              fetchPriority={slide.role === "curr" && currentImageIndex === 0 ? "high" : "auto"}
+              decoding={slide.role === "curr" ? "sync" : "async"}
               width={828}
               height={1792}
               className={[
-                “absolute inset-0 w-full h-full”,
-                “object-cover object-bottom scale-[1.00]”,
-                “transition-opacity duration-700”,
-                slide.role === “curr” ? “opacity-100” : “opacity-0”,
-              ].join(“ “)}
+                "absolute inset-0 w-full h-full",
+                "object-cover object-bottom scale-[1.00]",
+                "transition-opacity duration-700",
+                slide.role === "curr" ? "opacity-100" : "opacity-0",
+              ].join(" ")}
             />
           ))}
 
@@ -141,7 +141,7 @@ const MainMobile = () => {
     "
           />
 
-          {/* ✅ 2) Віньєтка по краях + легке затемнення низу (як “рамка” на скріні) */}
+          {/* ✅ 2) Віньєтка по краях + легке затемнення низу (як "рамка" на скріні) */}
           <div
             className="
       absolute inset-0
