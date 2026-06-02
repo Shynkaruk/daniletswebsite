@@ -108,14 +108,14 @@ export const auth = {
   },
 
   async register(payload) {
-    // створює юзера + одразу шле OTP на email (backend уже це робить)
+    // Створює юзера + шле OTP на email.
+    // Токен НЕ зберігаємо — юзер ще не підтвердив email.
+    // Токен зберігається пізніше, після успішного verifyOtp.
     const data = await sendJsonNoAutoLogout(
       `${API}/api/auth/register`,
       "POST",
       payload
     );
-    if (data.token) setToken(data.token);
-    if (data.user) setUser(data.user);
     return data;
   },
 
@@ -181,11 +181,16 @@ auth.requestOtp = async function requestOtp(email, purpose = "verify") {
 };
 
 auth.verifyOtp = async function verifyOtp({ email, code, purpose = "verify" }) {
-  return sendJsonNoAutoLogout(`${API}/api/auth/otp/verify`, "POST", {
+  const data = await sendJsonNoAutoLogout(`${API}/api/auth/otp/verify`, "POST", {
     email,
     code,
     purpose,
   });
+  // Для purpose="signup" бекенд повертає { user, token } — зберігаємо
+  // Для purpose="reset" бекенд повертає { ok: true } — нічого зберігати
+  if (data?.token) setToken(data.token);
+  if (data?.user) setUser(data.user);
+  return data;
 };
 
 /* ===== Старі OTP-роути (reset password / verify email) =====

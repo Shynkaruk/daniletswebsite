@@ -77,8 +77,8 @@ export default function OtpModal({
     setErr("");
     setLoading(true);
     try {
-      await auth.verifyOtp({ email, code, purpose: mode === "reset" ? "reset" : "verify" });
-      onVerified?.();
+      const data = await auth.verifyOtp({ email, code, purpose: mode === "reset" ? "reset" : "verify" });
+      onVerified?.(data);
     } catch (e) {
       setErr(e?.error || "Invalid code, please try again.");
     } finally {
@@ -105,7 +105,9 @@ export default function OtpModal({
             <FaTimes />
           </button>
 
-          <h2 className="text-xl font-extrabold mb-4">Forgot password?</h2>
+          <h2 className="text-xl font-extrabold mb-4">
+            {mode === "reset" ? "Forgot password?" : "Confirm your email"}
+          </h2>
 
           {/* Code inputs */}
           <form onSubmit={handleSubmit}>

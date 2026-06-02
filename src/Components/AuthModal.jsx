@@ -127,6 +127,13 @@ return (
                 window.location.href = "/account";
               }
             }}
+            onNeedsVerification={async (email) => {
+              // Email не підтверджено — надсилаємо новий OTP і відкриваємо модалку
+              try { await auth.requestOtp(email, "verify"); } catch {}
+              setOtpEmail(email);
+              setPendingUser(null);
+              setOtpOpen(true);
+            }}
           />
         ) : (
           <SignupForm
@@ -186,13 +193,15 @@ return (
       email={otpEmail}
       mode="verify"
       onClose={() => setOtpOpen(false)}
-      onVerified={() => {
-        if (pendingUser) onAuth?.(pendingUser);
+      onVerified={(data) => {
+        // data.user — верифікований юзер з токеном (вже збережений у api.js)
+        const verifiedUser = data?.user || pendingUser;
+        if (verifiedUser) onAuth?.(verifiedUser);
         setPendingUser(null);
         setOtpEmail("");
         setOtpOpen(false);
         onClose?.();
-        if (!onAuth) window.location.reload();
+        window.location.href = "/account";
       }}
     />
   </div>
@@ -201,7 +210,7 @@ return (
 }
 
 /* ---------- Login ---------- */
-function LoginForm({ onSuccess }) {
+function LoginForm({ onSuccess, onNeedsVerification }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState(null);
@@ -215,6 +224,11 @@ function LoginForm({ onSuccess }) {
       const { user } = await auth.login({ email, password });
       onSuccess?.(user);
     } catch (e) {
+      // Бекенд повернув 403 з email_not_verified — відкриваємо OTP для верифікації
+      if (e?.error === "email_not_verified") {
+        onNeedsVerification?.(e.email || email);
+        return;
+      }
       setErr(e?.error || "Login failed");
     } finally {
       setLoading(false);

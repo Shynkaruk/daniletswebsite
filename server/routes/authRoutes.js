@@ -195,7 +195,12 @@ router.post("/login", async (req, res) => {
     const ok = bcrypt.compareSync(password, userDoc.password);
     if (!ok) return res.status(401).json({ error: "invalid credentials" });
 
-    const user = { id: userDoc._id.toString(), email: userDoc.email, first_name: userDoc.first_name, last_name: userDoc.last_name, phone: userDoc.phone, is_admin: userDoc.is_admin };
+    // Блокуємо логін до підтвердження email (тільки для password-юзерів)
+    if (!userDoc.email_verified) {
+      return res.status(403).json({ error: "email_not_verified", email: userDoc.email });
+    }
+
+    const user = { id: userDoc._id.toString(), email: userDoc.email, first_name: userDoc.first_name, last_name: userDoc.last_name, phone: userDoc.phone, is_admin: userDoc.is_admin, email_verified: true };
     res.json({ user, token: signToken(user) });
   } catch (e) {
     console.error(e);
