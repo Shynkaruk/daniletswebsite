@@ -164,20 +164,47 @@ if (fs.existsSync(DIST_DIR)) {
 // ІНІЦІАЛІЗАЦІЯ БАЗИ ДАНИХ І ЗАПУСК СЕРВЕРА
 // ============================================================
 
-// ---- Функція для створення першого адміна (one-time seed) ----
+// ---- Функція для створення / оновлення адміна ----
+// Якщо адмін вже існує і SEED_ADMIN_EMAIL відрізняється від поточного —
+// оновлює email (і пароль якщо SEED_ADMIN_PASSWORD задано).
 async function seedAdmin() {
   try {
-    const exists = await User.findOne({ is_admin: true }).lean();
-    if (exists) { console.log("[seedAdmin] Admin already exists:", exists.email); return; }
-
     const email = process.env.SEED_ADMIN_EMAIL || "admin@example.com";
-    const pass  = process.env.SEED_ADMIN_PASSWORD || "admin123";
-    const hash  = bcrypt.hashSync(pass, 10);
+    const pass  = process.env.SEED_ADMIN_PASSWORD;
 
-    const doc = await User.create({ email, password: hash, first_name: "Admin", last_name: "User", phone: "", is_admin: true });
-    console.log(`[seedAdmin] Created admin: ${email} / ${pass} (id=${doc._id})`);
+    const exists = await User.findOne({ is_admin: true });
+
+    if (!exists) {
+      // Перший запуск — створюємо адміна
+      const hash = bcrypt.hashSync(pass || "admin123", 10);
+      const doc  = await User.create({ email, password: hash, first_name: "Admin", last_name: "User", phone: "", is_admin: true, email_verified: true });
+      console.log(`[seedAdmin] Created admin: ${email} (id=${doc._id})`);
+      return;
+    }
+
+    // Адмін існує — перевіряємо чи треба оновити email/пароль
+    const updates = {};
+    if (exists.email !== email) {
+      updates.email = email;
+      console.log(`[seedAdmin] Updating admin email: ${exists.email} → ${email}`);
+    }
+    if (pass && !bcrypt.compareSync(pass, exists.password || "")) {
+      updates.password = bcrypt.hashSync(pass, 10);
+      console.log(`[seedAdmin] Updating admin password`);
+    }
+    // Переконуємось що email_verified = true для адміна
+    if (!exists.email_verified) {
+      updates.email_verified = true;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await User.findByIdAndUpdate(exists._id, { $set: updates });
+      console.log(`[seedAdmin] Admin updated:`, Object.keys(updates).join(", "));
+    } else {
+      console.log(`[seedAdmin] Admin OK: ${exists.email}`);
+    }
   } catch (err) {
-    console.error("[seedAdmin] Failed to create admin:", err);
+    console.error("[seedAdmin] Failed:", err);
   }
 }
 
