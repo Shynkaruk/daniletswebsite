@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /admin
+Disallow: /admin/
+Disallow: /account
+Disallow: /account/
+Disallow: /api/
+Disallow: /auth/
+
+Allow: /
+
+Sitemap: https://danilets.com/sitemap.xml
