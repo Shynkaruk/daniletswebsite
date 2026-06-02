@@ -124,7 +124,7 @@ const Main = () => {
               width={1920}
               height={1080}
               className={[
-                "w-full h-full object-contain scale-[1] object-center",
+                "w-full h-full object-cover object-center",
                 "absolute inset-0 transition-opacity duration-700",
                 slide.role === "curr" ? "opacity-100" : "opacity-0",
               ].join(" ")}

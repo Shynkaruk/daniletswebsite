@@ -195,8 +195,9 @@ router.post("/login", async (req, res) => {
     const ok = bcrypt.compareSync(password, userDoc.password);
     if (!ok) return res.status(401).json({ error: "invalid credentials" });
 
-    // Блокуємо логін до підтвердження email (тільки для password-юзерів)
-    if (!userDoc.email_verified) {
+    // Блокуємо логін до підтвердження email
+    // Адміни завжди можуть заходити (їх email верифікується через seedAdmin)
+    if (!userDoc.email_verified && !userDoc.is_admin) {
       return res.status(403).json({ error: "email_not_verified", email: userDoc.email });
     }
 
