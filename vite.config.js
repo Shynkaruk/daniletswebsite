@@ -3,6 +3,10 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
+  // Видаляємо console.* і debugger у продакшн-білді
+  esbuild: {
+    drop: ["console", "debugger"],
+  },
   server: {
     host: "0.0.0.0",
     port: 5173,
@@ -38,10 +42,6 @@ export default defineConfig({
           if (id.includes("node_modules/pdfkit")) return "vendor-pdfkit";
         },
       },
-    },
-    // Прибираємо console.* у продакшн-білді
-    esbuildOptions: {
-      drop: ["console", "debugger"],
     },
   },
 });
