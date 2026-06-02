@@ -485,6 +485,18 @@ export const adminReqApi = {
   },
 };
 
+/** ================= Admin: Users (CRM) ================= **/
+
+export const adminUsersApi = {
+  async list(params = {}) {
+    const q = new URLSearchParams(params).toString();
+    return getJson(`${API}/api/admin/users${q ? `?${q}` : ""}`);
+  },
+  async get(id) {
+    return getJson(`${API}/api/admin/users/${id}`);
+  },
+};
+
 /** ================= Admin: Push Notifications ================= **/
 
 export const pushApi = {

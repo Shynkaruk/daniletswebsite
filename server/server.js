@@ -37,6 +37,7 @@ import profileRouter        from "./routes/profileRoutes.js";
 import requestRouter        from "./routes/requestRoutes.js";
 import pushRouter           from "./routes/pushRoutes.js";
 import adminRequestRouter   from "./routes/adminRequestRoutes.js";
+import adminUsersRouter     from "./routes/adminUsersRoutes.js";
 
 // ---- Існуючий роут для карток (server/routes/cards.js) ----
 import cardsRouter          from "./routes/cards.js";
@@ -110,6 +111,7 @@ app.use("/api/requests",      requestRouter);        // User requests
 // -- Адмін панель --
 app.use("/api/admin/push",    pushRouter);           // Push notifications
 app.use("/api/admin/requests", adminRequestRouter);  // Admin: manage requests
+app.use("/api/admin/users",    adminUsersRouter);    // Admin: CRM users
 
 // ---- Upload файлів (тільки адмін) ----
 const storage = multer.diskStorage({

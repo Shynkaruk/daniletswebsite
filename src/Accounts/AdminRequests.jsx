@@ -1,7 +1,7 @@
 // src/Accounts/AdminRequests.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { adminReqApi, cardsApi } from "../lib/api";
+import { adminReqApi, adminUsersApi, cardsApi } from "../lib/api";
 import PushNotificationToggle from "../Components/PushNotificationToggle";
 import CarPhoto from "../Components/CarPhoto";
 import SEO from "../Components/SEO.jsx";
@@ -190,8 +190,10 @@ export default function AdminRequests() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
 
-        {/* Special Offers panel */}
-        {activeMenu === "special_offers" ? (
+        {/* Users CRM panel */}
+        {activeMenu === "users" ? (
+          <UsersPanel />
+        ) : activeMenu === "special_offers" ? (
           <SpecialOffersPanel />
         ) : (
           <>
@@ -273,6 +275,305 @@ export default function AdminRequests() {
       )}
     </div>
     </>
+  );
+}
+
+// ================== USERS PANEL ==================
+
+function UsersPanel() {
+  const [users,      setUsers]      = useState([]);
+  const [loading,    setLoading]    = useState(true);
+  const [search,     setSearch]     = useState("");
+  const [selected,   setSelected]   = useState(null); // user id for drawer
+  const [debounced,  setDebounced]  = useState("");
+
+  // debounce search
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const data = await adminUsersApi.list({ search: debounced, limit: 200 });
+        setUsers(Array.isArray(data) ? data : []);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [debounced]);
+
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="p-6 border-b bg-white flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-extrabold text-[#111827]">Users</h1>
+          <p className="text-gray-500">Total: <span className="font-semibold">{users.length}</span></p>
+        </div>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by name, email, phone..."
+          className="w-full sm:w-80 h-11 px-5 rounded-2xl border focus:border-[#A8834E] outline-none"
+        />
+      </div>
+
+      {/* Table */}
+      <div className="flex-1 p-6 overflow-auto">
+        {loading ? (
+          <p className="text-center py-12 text-gray-500">Loading users...</p>
+        ) : users.length === 0 ? (
+          <p className="text-center py-12 text-gray-400">No users found.</p>
+        ) : (
+          <div className="bg-white rounded-3xl overflow-hidden shadow-sm">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b bg-gray-50 text-xs uppercase tracking-widest text-gray-500">
+                  <th className="text-left pl-6 py-4 w-10"></th>
+                  <th className="text-left py-4">Name</th>
+                  <th className="text-left">Email</th>
+                  <th className="text-left">Phone</th>
+                  <th className="text-left">Joined</th>
+                  <th className="text-left">Vehicles</th>
+                  <th className="text-left">Requests</th>
+                  <th className="text-left">Auth</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((u) => {
+                  const initials = [u.first_name?.[0], u.last_name?.[0]].filter(Boolean).join("").toUpperCase() || "?";
+                  const authBadge = u.google_id ? "Google" : u.apple_id ? "Apple" : "Email";
+                  const authColor = u.google_id ? "bg-blue-50 text-blue-700" : u.apple_id ? "bg-gray-100 text-gray-700" : "bg-purple-50 text-purple-700";
+                  return (
+                    <tr
+                      key={u.id}
+                      onClick={() => setSelected(u.id)}
+                      className="border-b hover:bg-[#FFF7E6] cursor-pointer transition"
+                    >
+                      {/* Avatar */}
+                      <td className="pl-6 py-4">
+                        <div
+                          className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center text-[13px] font-extrabold text-black shrink-0"
+                          style={{ background: gradient }}
+                        >
+                          {u.avatar
+                            ? <img src={u.avatar} alt="" className="w-full h-full object-cover" />
+                            : initials
+                          }
+                        </div>
+                      </td>
+                      <td className="py-4 pr-3 font-semibold text-[#111827] text-sm">
+                        {[u.first_name, u.last_name].filter(Boolean).join(" ") || <span className="text-gray-400 italic">—</span>}
+                      </td>
+                      <td className="pr-3 text-sm text-gray-600">{u.email || "—"}</td>
+                      <td className="pr-3 text-sm text-gray-600">{u.phone || "—"}</td>
+                      <td className="pr-3 text-sm text-gray-500">{formatDate(u.created_at)}</td>
+                      <td className="pr-3 text-sm text-center font-semibold text-[#111827]">{u.vehicles_count}</td>
+                      <td className="pr-3 text-sm text-center font-semibold text-[#111827]">{u.requests_count}</td>
+                      <td className="pr-4">
+                        <span className={`inline-flex items-center px-2.5 h-6 rounded-full text-[11px] font-semibold ${authColor}`}>
+                          {authBadge}
+                        </span>
+                      </td>
+                      <td className="pr-6 text-right text-gray-400">⋯</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Drawer */}
+      {selected && (
+        <UserDrawer userId={selected} onClose={() => setSelected(null)} />
+      )}
+    </div>
+  );
+}
+
+// ---- User Detail Drawer ----
+function UserDrawer({ userId, onClose }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    setData(null);
+    adminUsersApi.get(userId)
+      .then(setData)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [userId]);
+
+  const initials = data
+    ? [data.first_name?.[0], data.last_name?.[0]].filter(Boolean).join("").toUpperCase() || "?"
+    : "?";
+
+  return (
+    <div className="fixed inset-0 z-[300000] flex">
+      {/* backdrop */}
+      <div className="flex-1 bg-black/40" onClick={onClose} />
+
+      {/* drawer */}
+      <div className="w-full max-w-[520px] bg-white h-full flex flex-col shadow-2xl overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <span className="text-[15px] font-extrabold text-[#111827]">User Profile</span>
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-full bg-[#F4F4F5] flex items-center justify-center text-[#374151] hover:bg-[#E5E7EB] transition"
+          >
+            ✕
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="flex-1 flex items-center justify-center text-gray-400">Loading…</div>
+        ) : !data ? (
+          <div className="flex-1 flex items-center justify-center text-red-500">Failed to load user.</div>
+        ) : (
+          <div className="flex-1 overflow-y-auto p-6 space-y-5">
+
+            {/* Avatar + основна інфо */}
+            <div className="flex items-center gap-4">
+              <div
+                className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center text-[26px] font-extrabold text-black shrink-0"
+                style={{ background: gradient }}
+              >
+                {data.avatar
+                  ? <img src={data.avatar} alt="" className="w-full h-full object-cover" />
+                  : initials
+                }
+              </div>
+              <div>
+                <div className="text-[20px] font-extrabold text-[#111827] leading-tight">
+                  {[data.first_name, data.last_name].filter(Boolean).join(" ") || <span className="text-gray-400 italic">No name</span>}
+                </div>
+                <div className="text-sm text-gray-500 mt-0.5">{data.email}</div>
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  {/* Auth badge */}
+                  {data.google_id && <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700">Google</span>}
+                  {data.apple_id  && <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-700">Apple</span>}
+                  {!data.google_id && !data.apple_id && <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-purple-50 text-purple-700">Email</span>}
+                  {/* Verified badge */}
+                  {data.email_verified
+                    ? <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700">✓ Verified</span>
+                    : <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-red-50 text-red-600">✗ Not verified</span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            {/* Контактна інформація */}
+            <DrawerSection title="Contact Information">
+              <DrawerRow label="Phone"   value={data.phone   || "—"} />
+              <DrawerRow label="Email"   value={data.email   || "—"} />
+              <DrawerRow label="Joined"  value={formatDate(data.created_at)} />
+            </DrawerSection>
+
+            {/* Адреси */}
+            {(data.personal_address || data.commercial_address) && (
+              <DrawerSection title="Addresses">
+                {data.personal_address   && <DrawerRow label="Personal"   value={data.personal_address} />}
+                {data.commercial_address && <DrawerRow label="Commercial" value={data.commercial_address} />}
+              </DrawerSection>
+            )}
+
+            {/* Автомобілі */}
+            <DrawerSection title={`Vehicles (${data.vehicles?.length || 0})`}>
+              {!data.vehicles?.length ? (
+                <p className="text-sm text-gray-400 italic">No vehicles added.</p>
+              ) : (
+                <div className="space-y-3">
+                  {data.vehicles.map((v) => (
+                    <div key={v.id} className="flex items-center gap-3 rounded-[14px] bg-[#F9F9FB] border border-[#EAEAEA] px-3 py-2.5">
+                      {v.photo_url ? (
+                        <img src={v.photo_url} alt="" className="w-12 h-12 rounded-xl object-cover shrink-0" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-xl bg-[#F0F0F2] flex items-center justify-center text-xl shrink-0">
+                          {v.category === "commercial" ? "🏢" : "🚗"}
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <div className="text-[13px] font-semibold text-[#111827] truncate">
+                          {[v.year, v.make, v.model].filter(Boolean).join(" ") || "Unnamed"}
+                        </div>
+                        <div className="text-[12px] text-gray-400">
+                          {[v.color, v.plate && `Plate: ${v.plate}`].filter(Boolean).join(" · ")}
+                        </div>
+                        {v.notes && <div className="text-[11px] text-gray-400 italic truncate">{v.notes}</div>}
+                      </div>
+                      <span className={`ml-auto shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold ${v.category === "commercial" ? "bg-amber-50 text-amber-700" : "bg-blue-50 text-blue-700"}`}>
+                        {v.category}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </DrawerSection>
+
+            {/* Запити / Замовлення */}
+            <DrawerSection title={`Requests (${data.requests?.length || 0})`}>
+              {!data.requests?.length ? (
+                <p className="text-sm text-gray-400 italic">No requests yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {data.requests.map((r) => {
+                    const sm = STATUS_META[r.status] || STATUS_META.processing;
+                    const svcLabel = {
+                      detailing_quote_personal:   "Detailing — Personal",
+                      detailing_quote_business:   "Detailing — Business",
+                      cleaning_quote_residential: "Cleaning — Residential",
+                      cleaning_quote_commercial:  "Cleaning — Commercial",
+                    }[r.service_type] || r.service_type;
+                    return (
+                      <div key={r.id} className="flex items-center justify-between gap-3 rounded-[12px] bg-[#F9F9FB] border border-[#EAEAEA] px-3 py-2.5">
+                        <div>
+                          <div className="text-[13px] font-semibold text-[#111827]">{svcLabel}</div>
+                          <div className="text-[11px] text-gray-400">{formatDate(r.created_at)}</div>
+                        </div>
+                        <span className={`px-3 py-0.5 rounded-full text-[11px] font-semibold border ${sm.cls}`}>
+                          {sm.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </DrawerSection>
+
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DrawerSection({ title, children }) {
+  return (
+    <div>
+      <div className="text-[11px] font-extrabold tracking-widest text-[#9CA3AF] uppercase mb-2">{title}</div>
+      <div className="rounded-[16px] bg-[#F9F9FB] border border-[#EAEAEA] p-4 space-y-2">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function DrawerRow({ label, value }) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <span className="text-[12px] text-gray-400 shrink-0 pt-px">{label}</span>
+      <span className="text-[13px] font-semibold text-[#111827] text-right break-all leading-snug">{value}</span>
+    </div>
   );
 }
 
