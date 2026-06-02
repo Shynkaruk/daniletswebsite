@@ -23,12 +23,13 @@ router.get("/profile", auth, async (req, res) => {
   res.json({ ...u, id: u._id.toString(), _id: undefined });
 });
 
-// ---- Оновити профіль (ім'я, прізвище, телефон, адреси) ----
+// ---- Оновити профіль (ім'я, прізвище, телефон, адреси, аватар) ----
 router.put("/profile", auth, async (req, res) => {
-  const { first_name, last_name, phone, personal_address, commercial_address } = req.body || {};
+  const { first_name, last_name, phone, personal_address, commercial_address, avatar } = req.body || {};
   const update = { first_name, last_name, phone };
   if (personal_address   !== undefined) update.personal_address   = personal_address;
   if (commercial_address !== undefined) update.commercial_address = commercial_address;
+  if (avatar             !== undefined) update.avatar             = avatar;
   await User.findByIdAndUpdate(req.user.uid, { $set: update });
   const userDoc = await User.findById(req.user.uid).lean();
   if (!userDoc) return res.status(404).json({ error: "not found" });

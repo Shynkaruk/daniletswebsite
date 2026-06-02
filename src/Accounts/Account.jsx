@@ -1,5 +1,5 @@
 // src/pages/Account.jsx
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import Head from "../Components/Head";
 import Footer from "../Components/Footer";
 import { meApi, reqApi } from "../lib/api";
@@ -120,9 +120,12 @@ function ProfileCard({ openModal }) {
     email: "",
     personal_address: "",
     commercial_address: "",
+    avatar: "",
   });
   const [addressMode, setAddressMode] = useState("Personal");
   const [saving, setSaving] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -136,6 +139,7 @@ function ProfileCard({ openModal }) {
             email:               u.email               || "",
             personal_address:    u.personal_address    || "",
             commercial_address:  u.commercial_address  || "",
+            avatar:              u.avatar              || "",
           });
           // Auto-select mode based on saved data
           const hasPers = !!(u.personal_address);
@@ -147,6 +151,22 @@ function ProfileCard({ openModal }) {
       } catch {}
     })();
   }, []);
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarUploading(true);
+    try {
+      const url = await meApi.uploadAvatar(file);
+      setForm((f) => ({ ...f, avatar: url }));
+    } catch {
+      openModal?.("error", "Upload failed", "Could not upload photo. Please try again.");
+    } finally {
+      setAvatarUploading(false);
+      // скидаємо input щоб можна було завантажити те саме фото повторно
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
+    }
+  };
 
   const onSave = async () => {
     setSaving(true);
@@ -169,8 +189,87 @@ function ProfileCard({ openModal }) {
   const showPersonal   = addressMode === "Personal"   || addressMode === "Both";
   const showCommercial = addressMode === "Commercial" || addressMode === "Both";
 
+  // Ініціали для fallback аватара
+  const initials = [form.first_name?.[0], form.last_name?.[0]]
+    .filter(Boolean)
+    .join("")
+    .toUpperCase() || "?";
+
   return (
     <Section title="Personal Information">
+
+      {/* ── Avatar ── */}
+      <div className="flex flex-col items-center mb-6">
+        <div className="relative group">
+          {/* Коло аватара */}
+          <div
+            onClick={() => !avatarUploading && avatarInputRef.current?.click()}
+            className="w-24 h-24 rounded-full overflow-hidden cursor-pointer select-none"
+            style={{ background: GRADIENT }}
+          >
+            {form.avatar ? (
+              <img
+                src={form.avatar}
+                alt="Avatar"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-[28px] font-extrabold text-black">
+                {initials}
+              </div>
+            )}
+
+            {/* Overlay при hover / upload */}
+            <div className={[
+              "absolute inset-0 rounded-full flex items-center justify-center transition-opacity",
+              "bg-black/40",
+              avatarUploading ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+            ].join(" ")}>
+              {avatarUploading ? (
+                <svg className="w-6 h-6 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                </svg>
+              ) : (
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+              )}
+            </div>
+          </div>
+
+          {/* Маленька кнопка-камера у правому нижньому куті */}
+          {!avatarUploading && (
+            <button
+              type="button"
+              onClick={() => avatarInputRef.current?.click()}
+              className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-white shadow-md border border-[#E5E7EB] flex items-center justify-center hover:bg-[#F9F9FB] transition"
+              aria-label="Upload avatar"
+            >
+              <svg className="w-3.5 h-3.5 text-[#374151]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </button>
+          )}
+
+          {/* Прихований input */}
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarUpload}
+            disabled={avatarUploading}
+          />
+        </div>
+
+        <p className="mt-2 text-[12px] text-[#9CA3AF]">
+          {avatarUploading ? "Uploading…" : "Click to change photo"}
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
         <Input
           placeholder="First Name"

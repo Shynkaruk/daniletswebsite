@@ -22,6 +22,10 @@ export function setUser(user) {
   else localStorage.removeItem("user");
 }
 
+export function getUser() {
+  return USER;
+}
+
 function authHeaders() {
   return TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {};
 }
@@ -334,6 +338,23 @@ export const meApi = {
       body: form,
     });
     return parseJsonSafe(r); // { url }
+  },
+
+  // Завантажує фото аватара і одразу зберігає в профілі
+  async uploadAvatar(file) {
+    const form = new FormData();
+    form.append("file", file);
+    const r = await fetch(`${API}/api/upload`, {
+      method: "POST",
+      headers: { ...authHeaders() },
+      body: form,
+    });
+    const { url } = await parseJsonSafe(r); // { url }
+    // Зберігаємо URL в профілі і оновлюємо локального юзера
+    await meApi.updateProfile({ avatar: url });
+    const user = auth.getUser();
+    if (user) setUser({ ...user, avatar: url });
+    return url;
   },
 
   // payment methods
