@@ -1,17 +1,8 @@
 import express from 'express';
 import { Card } from '../db.js';
+import { auth, requireAdmin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
-
-/* --------- Auth guards --------- */
-function requireAuth(req, res, next) {
-  if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-  next();
-}
-function requireAdmin(req, res, next) {
-  if (!req.user?.is_admin) return res.status(403).json({ error: 'Forbidden' });
-  next();
-}
 
 /* LIST: /api/cards?type=service|addon&published=1&q=...&limit=&offset= */
 router.get('/', async (req, res) => {
@@ -50,7 +41,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', requireAuth, requireAdmin, express.json(), async (req, res) => {
+router.post('/', auth, requireAdmin, express.json(), async (req, res) => {
   try {
     const { type, title, subtitle = null, body = null, image_url = null,
             price = 0, slug = null, sort_order = 0, published = true } = req.body || {};
@@ -72,7 +63,7 @@ router.post('/', requireAuth, requireAdmin, express.json(), async (req, res) => 
   }
 });
 
-router.put('/:id', requireAuth, requireAdmin, express.json(), async (req, res) => {
+router.put('/:id', auth, requireAdmin, express.json(), async (req, res) => {
   try {
     const cur = await Card.findById(req.params.id);
     if (!cur) return res.status(404).json({ error: 'Not found' });
@@ -97,7 +88,7 @@ router.put('/:id', requireAuth, requireAdmin, express.json(), async (req, res) =
   }
 });
 
-router.delete('/:id', requireAuth, requireAdmin, async (req, res) => {
+router.delete('/:id', auth, requireAdmin, async (req, res) => {
   try {
     await Card.deleteOne({ _id: req.params.id });
     res.json({ ok: true });
