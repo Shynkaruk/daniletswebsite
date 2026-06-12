@@ -194,6 +194,37 @@ export default function AdminSettings() {
 
   const isAnyLoading = Object.values(fields).some((f) => f.loading);
 
+  // ---- Notification email (додатковий отримувач) ----
+  const [notifyEmail, setNotifyEmail] = useState({ value: "", id: null, loading: true, saving: false, saved: false, error: null });
+
+  useEffect(() => {
+    contentApi.getByKey("notify_email_extra")
+      .then((block) => setNotifyEmail((s) => ({ ...s, value: block?.value || "", id: block?.id || null, loading: false })))
+      .catch(() => setNotifyEmail((s) => ({ ...s, loading: false })));
+  }, []);
+
+  async function saveNotifyEmail() {
+    setNotifyEmail((s) => ({ ...s, saving: true, saved: false, error: null }));
+    try {
+      const result = await contentApi.upsertByKey("notify_email_extra", notifyEmail.value.trim());
+      setNotifyEmail((s) => ({ ...s, id: result?.id || s.id, saving: false, saved: true }));
+      setTimeout(() => setNotifyEmail((s) => ({ ...s, saved: false })), 3000);
+    } catch (e) {
+      setNotifyEmail((s) => ({ ...s, saving: false, error: e?.error || "Failed to save" }));
+    }
+  }
+
+  async function clearNotifyEmail() {
+    setNotifyEmail((s) => ({ ...s, saving: true, error: null }));
+    try {
+      if (notifyEmail.id) await contentApi.save({ id: notifyEmail.id, key: "notify_email_extra", value: "", page: "settings", lang: "en", published: true });
+      setNotifyEmail((s) => ({ ...s, value: "", saving: false, saved: true }));
+      setTimeout(() => setNotifyEmail((s) => ({ ...s, saved: false })), 3000);
+    } catch (e) {
+      setNotifyEmail((s) => ({ ...s, saving: false, error: e?.error || "Failed to clear" }));
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#F4F4F5] pt-6 pb-16 px-4 sm:px-8">
 
@@ -263,6 +294,56 @@ export default function AdminSettings() {
             </div>
           );
         })}
+      </div>
+
+      {/* Notification Emails */}
+      <div className="max-w-2xl mx-auto mt-5">
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5 shadow-sm">
+          <label className="block text-sm font-semibold text-[#111827] mb-1">
+            📧 Notification Emails
+          </label>
+          <p className="text-xs text-[#9CA3AF] mb-1">
+            New quote requests are always sent to <span className="font-medium text-[#374151]">daniletswebsite@gmail.com</span> (default, cannot be changed here).
+          </p>
+          <p className="text-xs text-[#9CA3AF] mb-3">
+            Add an extra email below to receive copies of every new request notification.
+          </p>
+
+          <div className="flex gap-3 items-center">
+            <input
+              type="email"
+              value={notifyEmail.value}
+              onChange={(e) => setNotifyEmail((s) => ({ ...s, value: e.target.value, saved: false, error: null }))}
+              placeholder={notifyEmail.loading ? "Loading..." : "e.g. manager@example.com"}
+              disabled={notifyEmail.loading || notifyEmail.saving}
+              className="flex-1 h-11 px-4 rounded-xl border border-[#E5E7EB] text-sm text-[#111827] bg-[#F9FAFB] focus:outline-none focus:border-[#111827] transition disabled:opacity-50"
+              onKeyDown={(e) => e.key === "Enter" && saveNotifyEmail()}
+            />
+            <button
+              onClick={saveNotifyEmail}
+              disabled={notifyEmail.loading || notifyEmail.saving || !notifyEmail.value.trim()}
+              className="h-11 px-5 rounded-xl bg-[#111827] text-white text-sm font-semibold hover:brightness-110 transition disabled:opacity-40 shrink-0"
+            >
+              {notifyEmail.saving ? "Saving..." : "Save"}
+            </button>
+            {notifyEmail.value && !notifyEmail.saving && (
+              <button
+                onClick={clearNotifyEmail}
+                disabled={notifyEmail.saving}
+                className="h-11 px-4 rounded-xl border border-[#E5E7EB] text-xs text-[#6B7280] hover:border-red-400 hover:text-red-500 transition shrink-0"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          {notifyEmail.saved && (
+            <p className="mt-2 text-xs text-green-600">✓ Saved — new requests will be sent to both addresses.</p>
+          )}
+          {notifyEmail.error && (
+            <p className="mt-2 text-xs text-red-500">{notifyEmail.error}</p>
+          )}
+        </div>
       </div>
 
       {/* Push Notifications */}

@@ -1,7 +1,7 @@
 // email.js
 import { Resend } from "resend";
 import webpush from "web-push";
-import { PushSubscription } from "./db.js";
+import { PushSubscription, ContentBlock } from "./db.js";
 
 const SERVICE_LABELS = {
   detailing_quote_personal: "Detailing – Personal",
@@ -45,8 +45,20 @@ export async function sendAdminNewRequestNotification({
   customerPhone,
   notes,
 }) {
-  const adminEmail = process.env.ADMIN_NOTIFY_EMAIL;
-  if (!adminEmail) return; // not configured — skip silently
+  const defaultEmail = process.env.ADMIN_NOTIFY_EMAIL || "daniletswebsite@gmail.com";
+
+  // Додатковий email збережений адміном через CRM-налаштування
+  let extraEmail = null;
+  try {
+    const block = await ContentBlock.findOne({ key: "notify_email_extra", lang: "en" }).lean();
+    if (block?.value?.trim()) extraEmail = block.value.trim();
+  } catch { /* не критично — продовжуємо без додаткового email */ }
+
+  // Збираємо унікальний список отримувачів
+  const recipients = [...new Set([defaultEmail, extraEmail].filter(Boolean))];
+  if (!recipients.length) return;
+
+  const adminEmail = recipients; // resend підтримує масив
 
   const serviceLabel =
     SERVICE_LABELS[serviceType] || serviceType || "Unknown Service";
