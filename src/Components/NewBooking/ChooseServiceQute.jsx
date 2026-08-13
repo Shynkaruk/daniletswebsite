@@ -150,11 +150,6 @@ export default function Step1Search({
           {showDetailingPills && (
             <>
               <Pill
-                label="Personal"
-                active={local === "personal"}
-                onClick={() => setSelected("personal")}
-              />
-              <Pill
                 label="Business"
                 active={local === "business"}
                 onClick={() => setSelected("business")}

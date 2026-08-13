@@ -199,7 +199,7 @@ const Booking = () => {
   const [cleaningStep, setCleaningStep] = useState(2);
 
   // Detailing: Personal/Business
-  const [detailingMode, setDetailingMode] = useState("personal"); // "personal" | "business"
+  const [detailingMode, setDetailingMode] = useState("business"); // "personal" | "business"
   const isPersonalDetailing = !isCleaning && detailingMode === "personal";
   const isBusinessDetailing = !isCleaning && detailingMode === "business";
 

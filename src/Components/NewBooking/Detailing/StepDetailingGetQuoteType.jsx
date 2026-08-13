@@ -75,24 +75,6 @@ const StepDetailingGetQuoteType = ({
 
 {/* BUTTONS */}
 <div className="flex w-full gap-3">
-  {/* PERSONAL */}
-  <button
-    type="button"
-    onClick={() => handleSelect("personal")}
-    className={`flex-1 h-[48px] rounded-[16px] border text-sm font-semibold
-      ${
-        currentType === "personal"
-          ? "border-transparent text-black"
-          : "border-[#E5E7EB] text-[#4B5563] bg-white"
-      }`}
-    style={{
-      background:
-        currentType === "personal" ? GOLD_GRADIENT : undefined,
-    }}
-  >
-    Personal
-  </button>
-
   {/* BUSINESS */}
   <button
     type="button"

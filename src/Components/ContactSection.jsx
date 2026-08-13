@@ -209,7 +209,12 @@ const ContactSection = () => {
 
             <Link
               to={isAboutPage ? "/" : "/about-us"}
-              className="mt-6 inline-flex items-center gap-2 px-5 py-3 rounded-full bg.white bg-white border border-neutral-300 shadow-sm text-base font-semibold text.black text-black hover:bg-neutral-100 transition"
+              className="mt-6 inline-flex items-center gap-2 px-5 py-3 rounded-full text-base font-semibold transition hover:opacity-90"
+              style={
+                isDetailingPage || isCleaningPage
+                  ? { background: "linear-gradient(107.27deg, #8B3434 -27.97%, #A84E4E -12.13%, #F29292 22.69%, #FF9E9E 45.99%, #E17B7B 77.51%)", color: "#1c1c1c" }
+                  : { background: "#fff", border: "1px solid #d4d4d4", color: "#000" }
+              }
             >
               {isAboutPage ? "Home" : "About Us"}
               <img src={iconArrow} alt="" className="w-4 h-4" />
